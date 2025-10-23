@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/.env" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/algorithms/__init__.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/algorithms/oturma_planlama.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/algorithms/sinav_planlama.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/config/__init__.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/config/database_config.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/controllers/__init__.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/controllers/ders_controller.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/controllers/derslik_controller.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/controllers/login_controller.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/controllers/ogrenci_controller.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/controllers/oturma_controller.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/controllers/sinav_controller.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/models/__init__.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/models/database.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/models/ders_model.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/models/derslik_model.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/models/ogrenci_model.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/models/oturma_model.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/models/sinav_model.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/models/user_model.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/styles/__init__.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/utils/__init__.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/utils/excel_parser.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/utils/export_utils.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/utils/password_utils.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/utils/validators.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/views/__init__.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/views/koordinator/__init__.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/views/koordinator/ayarlar_view.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/views/koordinator/ders_yukle_view.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/views/koordinator/ogrenci_yukle_view.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/views/koordinator/oturma_plani_view.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/views/koordinator/raporlar_view.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/views/koordinator/sinav_olustur_view.py" charset="UTF-8" />
+  </component>
+</project>

@@ -1,0 +1,238 @@
+KOCAELİ ÜNİVERSİTESİ
+BİLGİSAYAR MÜHENDİSLİĞİ BÖLÜMÜ
+YAZILIM LAB. I- I.Proje
+PROJE TESLİM TARİHİ: 26.10.2025
+Dinamik Sınav Takvimi Oluşturma Sistemi
+Üniversitelerde sınav takvimi hazırlanması genellikle karmaşık bir süreçtir. Bu proje ile
+dersler, öğrenciler, öğretim üyeleri ve derslikler dikkate alınarak otomatik ve optimize
+edilmiş programlar oluşturulacaktır. Sistem, kullanıcı dostu bir masaüstü uygulaması olacak
+ve aynı zamanda raporlama özellikleriyle çıktılar alınabilecektir.
+Amaç:
+● Masaüstü programlama konusunda bilgi ve beceri kazanılması,
+● Masaüstü oluşturma, veritabanı tasarımı ve yönetimi becerilerinin geliştirilmesi,
+● Dinamik ve kullanıcı dostu bir masaüstü uygulaması oluşturulması,
+● Projede yer alan teknik zorluklar üzerinden ekip çalışması ve problem çözme
+yeteneklerinin güçlendirilmesi.
+Proje Hedefi:
+● Öğretim üyeleri, dersler, öğrenciler ve dersliklerin tanımlanabilmesi.
+● Ders ve sınav programlarının otomatik oluşturulması.
+● Kapasite ve uygunluk kısıtlarının dikkate alınması.
+● Programların görsel olarak tablo veya takvim görünümünde gösterilmesi.
+● Program çıktılarının PDF/Excel olarak alınabilmesi.
+Programlama Dili: Python, C# , Java ...vb(Web ile alakası olan dillere kesinlikle izin yoktur,
+veritabanı olarak nosql kullanılamaz)
+Projenin Genel Yapısı
+Kullanıcı Girişi
+Masaüstü uygulaması açıldığında kullanıcı girişi ekranı gelecektir. Bu alana giriş
+yapıldıktan sonra işlemler gerçekleştirilecektir. Tüm sisteme erişebilen Admin adında bir
+kullanıcı olacaktır. Bu kullanıcıyı Default olarak veritabanında tanımlamanız gereklidir.
+● Sistemde yeni kullanıcı ekleme işlemi admin tarafından yapılacaktır.
+● Sistemde işlemler için toplamda 5 adet Bölüm (Bilgisayar Müh., Yazılım Müh.,
+Elektrik Müh. Elektronik Müh. İnşaat Müh.) sistemde aktif olarak çalışmalıdır.
+● Kullanıcılar e-posta + şifre ile sisteme giriş yapacaklardır.
+● Admin tüm bölümlerin bilgilerin görebilir. Bölüm koordinatörü ise sadece kendi
+bölümüne ait bilgileri görülebilecektir.
+● Roller:
+○ Admin: Tüm bölümlere erişim, her işlemi yapabilme.
+○ Bölüm Koordinatörü: Sadece kendi bölümü için ders, derslik ve program
+işlemlerini yapacaktır.
+Derslik Girişi
+Giriş Yetkisi: Yalnızca Bölüm Koordinatörü sisteme giriş yaptıktan sonra bu sayfayı görebilecektir.
+Bölüm koordinatörü sistem giriş yaptığında derslik kısmını seçerek derslik bilgilerini giriş yapmalıdır.
+Amaç: Bölüme ait tüm dersliklerin sisteme kaydı ve sınav programına uygun kapasite ve oturma
+düzeni bilgisinin saklanması için yapılacaktır.
+Bu alanda girilecek bilgiler şu şekildedir:
+● Bölüm Adı
+● Derslik Kodu
+● Derslik Adı
+● Derslik Kapasitesi (Sınav yapılabileceği öğrenci sayısı)
+● Enine Sıra Sayısı (sütun sayısı)
+● Boyuna Sıra Sayısı (satır sayısı)
+● Sıra yapısı (2 şerli mi veya 3 erli mi)
+Tüm derslikler sisteme giriş yapılmalıdır. (Örnek Tablo: Sınıf_id, Sınıf_ismi, Kapasite, Sıra, Sütun)
+Bilgisayar Mühendisliği için kullanılacak Derslikler ve Bilgileri Aşağıdaki gibidir. Diğer Bölümlerin
+derslikleri kendiniz belirleyebilirsiniz.
+Bölüm Adı
+Derslik
+Kodu
+Derslik
+Adı
+Derslik
+Kapasitesi
+Enine Sıra
+Sayısı
+Boyuna Sıra
+Sayısı Sıra yapısı
+Bilgisayar
+Mühendisliği 3001 301 42 3 7 3
+Bilgisayar
+Mühendisliği 3002
+Büyük
+Amfi 48 3 8 4
+Bilgisayar
+Mühendisliği 3003 303 42 3 7 3
+Bilgisayar
+Mühendisliği 3004 EDA 30 5 6 2
+Bilgisayar
+Mühendisliği 3005 305 42 3 7 3
+Derslik Ekleme/Düzenleme/Silme: Bölüm koordinatörü kendi bölümüne ait derslik bilgilerini ekler
+ve düzenleyebilir ve silebilir.
+Arama: Sınıf_id ile arama yapılacaktır.. Arama sonucunda çıkan sınıf bilgileri ve sınıfın yapısı
+görseleştirilecektir.
+Görselleştirme:
+● Arama sonucunda sınıfın oturma düzeni görsel olarak gösterilir.
+● Örnek: Satır=14, Sütun=6 → 14 sıra × 6 sütunluk bir düzen çizilir.
+● İkişerli veya üçerli sıralar gibi oturma grupları gösterilebilir.
+Not: Derslik bilgileri girilip tamamlanmadan diğer alanlar açılmayacaktır.
+Ders Listesi Yükleme
+Yetki: Yalnızca Bölüm Koordinatörü görebilir.
+Amaç: Bölüme ait derslerin listelerini Excel dosyası üzerinde sisteme aktarılarak ders listesini
+oluşturmaktadır.
+İşleyiş
+1. Bölüm Koordinatörü, “Ders Listesi Yükle” alanına girilecektir.
+2. Bölümüne ait Excel listesini sisteme yükleme alanını tıklayarak Excel yükleyecektir.
+3. İlgili Excel dosyası yüklenir.
+4. Sistem Excel parser ile Ders kodu, Ders isim isimlerini ve Dersi veren hocanın isimleri
+çıkarır. Dersin hangi sınıfa ait olduğu ve Dersin yapısı (Zorunlu veya Seçmeli) olduğu bilgisi
+de çıkartılarak kayıt edilir.
+5. Çıkan veriler veritabanına toplu olarak kaydedilir.
+6. Daha sonra verilecek öğrenci Excel listesi parse edilerek tüm öğrencilerin hangi dersleri aldığı
+veritabanına kaydedilecektir. Bu excel dosyaları verilecektir.
+Öğrenci Listesi Yükleme
+Yetki: Yalnızca Bölüm Koordinatörü görebilir.
+Amaç: Bölüme ait öğrencilerin listelerini Excel dosyası üzerinde sisteme aktarılarak hangi dersi
+hangi öğrencilerin alacağına dair listeler oluşturulacaktır.
+İşleyiş
+● Bölüm Koordinatörü, “Öğrenci Listesi Yükle” alanına girilecektir.
+● Bölümüne ait Excel listesini sisteme yükleme alanını tıklayarak Excel yükleyecektir.
+● İlgili Excel dosyası yüklenir.
+● Sistem Excel parser ile Öğrenci No, Öğrenci Ad-Soyad, Sınıfı, Dersin kodunu çıkarır.
+Öğrencilerin hangi dersleri aldığına dair bilgiler çıkartılır.
+● Çıkan veriler veritabanına toplu olarak kaydedilir.
+Hata Kontrolü
+● Excel dosyasında okuma sırasında hata olursa, sistem hangi satırda veya sayfada sorun
+olduğunu bildirir.
+● Kullanıcı sorunlu satırı düzelterek tekrar yükleme yapabilecektir.
+Not:Örnek Excel Ekte paylaşılmıştır.
+Öğrenci ve Ders listeleri
+Exceller yükleme işlemi tamamlandıktan sonra uygulamada otomatik olarak iki yeni menü açılır:
+● Öğrenci Listesi Menüsü
+● Ders Listesi Menüsü
+Bu menüler, Excel parser ile alınan verilerin kullanıcıya kolay görüntülenmesini sağlayacaktır.
+Öğrenci Listesi Menüsü
+● Ekranda bir arama kutusu bulunur. Öğrenci numarasına göre arama yapılacaktır.
+● Kullanıcı öğrenci numarasını yazıp “Ara” dediğinde:
+○ Öğrencinin adı-soyadı
+○ Aldığı tüm dersler
+○ Derslerin kodları
+💡 Örnek:
+Arama kutusuna 260201001 girildiğinde
+Öğrenci: Ayşe Yılmaz
+Aldığı Dersler:
+- Algoritmalar (Kodu: CSE301)
+- Veri Yapıları (Kodu: CSE201)
+Ders Listesi Menüsü
+● Excellerden gelen tüm dersler bu menüde listelenecektir.
+● Liste ders kodu + ders adı şeklinde gösterilecektir.
+● Kullanıcı bir dersin üzerine tıkladığında:
+○ Bu dersi alan tüm öğrencilerin numaraları ve ad-soyadları görüntülenir.
+💡 Örnek:
+Dersler listesinde CSE301 – Algoritmalar tıklanınca:
+Dersi Alan Öğrenciler:
+2025001 – Ayşe Yılmaz
+2025003 – Mehmet Demir
+2025010 – Zeynep Acar
+Sınav Programı Oluşturulması
+Genel Akış
+● Exceller yüklendikten sonra bölüm koordinatörünün ekranında “Sınav Programı Oluştur”
+menüsü açılır.
+● Tıklanınca sınav programı ekranı ve “Kısıtlar” bölümü açılır. Bu bölümde sınav programı
+ayarları yapılacaktır.
+● Kısıtlar girildikten sonra “Programı Oluştur” butonuyla sistem sınav programını otomatik
+üretir.
+Kısıtlar Bölümü (Gerekli Ayarlar)
+1. Ders Seçimi:
+○ Sistemde kayıtlı tüm dersler listelenir. Burada tüm dersler listelenmeli çıkarılması
+gereken dersler çıkarılmalıdır.
+○ Programa dahil olmaması istenen dersler işaretlenerek çıkarılır.
+2. Sınav Tarihleri ve Günleri:
+○ Sınav takvimi için kullanılacak tarih aralığı seçilir.
+○ Belirtilen tarih aralığında sınav programına dahil olmayan günler
+işaretlenir.(Cumartesi, Pazar gibi)
+○ Her dersin sınav günü ve saati otomatik planlanır.
+3. Sınav Türü:
+○ Vize / Final / Bütünleme gibi sınav türü seçilir.
+4. Sınav Süresi (Default ve İstisna):
+○ Varsayılan sınav süresi: 75 dk
+○ İstisna: Bu süre dışında uzun veya kısa sınavlar olabilir. Bunlar için dersin seçilmesi
+ve sınav süresinin girilmesi işlemi yapılacaktır.
+5. Bekleme Süresi:
+○ Varsayılan: 15 dk
+○ Koordinatör gerekirse bu süreyi değiştirebilecektir.
+6. Sınavların Aynı Zamana Denk Gelmemesi
+○ Bu ekranda buna ait bir seçenek olacaktır. Bu seçenek tıklı olduğunda hiç bir dersin
+sınavı aynı anda olamayacaktır. Örneğin Matematik dersinin sınavı başladığında bu
+dersin sınavı bitene kadar başka sınav başlamayacaktır.
+Kısıtlar girdikten sonra sınav programı oluşturulması gereklidir. Bu kısımda sınav programı
+oluşturulurken dikkat edilmesi gereken durumlar aşağıda yer almaktadır.
+Oluşturma Mantığı (Optimizasyon Kuralları)
+● Aynı sınıfa (ör. 1. sınıf) ait dersler farklı günlere dağıtılır.
+○ sınıfın 8 dersi, 5 güne şu şekilde dağıtılabilir:
+○ 3 gün × 2 sınav
+○ 2 gün × 1 sınav
+● Dersler öğrenci bazlı aynı saate denk gelmeyecek şekilde planlanır (Öğrencinin aynı saatte
+iki sınavı olmayacak.).
+● Derslik kullanımı en aza indirgeyecek şekilde yerleştirme yapılır.
+● Kapasitesi yetersiz dersliklerde sınav planlanmaz; sistem uyarı verir.
+● Öğrenci sınavları arasında en az “bekleme süresi” kadar boşluk bırakılır.
+Program çıktısını sonucunda bir excel belgesi oluşturulmalıdır. Bu Excel indirilebilir belge olması
+gereklidir. Örnek: Bir gün için oluşturulan excel gösterimi aşağıdaki gibidir.
+Hata ve Uyarı Mantığı
+Program çalışırken kısıtlara uymayan durumlar olursa sistem hata mesajı döndürür ve programı
+oluşturmaz: Örnek uyarılar:
+● “Sınıf kapasitesi yetersiz!”
+● “Öğrencinin dersleri çakışıyor!”
+● “Seçilen tarih aralığı sınavları barındırmıyor!”
+● “Derslik bulunamadı!”
+Her hata, hangi ders/öğrenci/derslikte olduğunu belirtmelidir (örneğin “Ders X için kapasite yetersiz”
+gibi).
+Ders Bazlı Oturma Programı
+Genel Akış
+● Sınav programı oluşturulduktan sonra “Oturma Planı” alanı aktif olacaktır.
+● Bu ekranda sistemdeki tüm sınavlar listelenir:
+○ Sınavın adı
+○ Sınavın günü ve saati
+○ Sınavın yapılacağı derslik(ler)
+● Kullanıcı bu listeden bir sınava tıklayarak oturma düzeni görülebilecektir.
+○ Seçilen sınav için dersliklerin düzeni (satır × sütun) görsel olarak
+gösterilecektir.
+○ Her koltuk/masa bir “slot” gibi gösterilir.
+Derse ait dersliklerin oturma düzeni oluştursun tıklanılarak derse ait oturma düzeni
+oluşturulacaktır. Oturma planı ekranda görsel olarak gösterilecektir. Plan PDF olarak
+indirilebilecektir.
+Listede her öğrencinin:
+● Adı / numarası
+● Derslik adı
+● Sıra ve sütun bilgisi
+gösterilir.
+Hata/Uyarı Mantığı
+Oturma düzeni oluşturulurken aynı saate denk gelme veya kapasite sorunları varsa sistem
+uyarı verir:
+● “Belirtilen öğrenci ön sıraya yerleştirilemedi (kapasite dolu)!”
+● “Bu iki öğrenci yan yana oturmayacak şekilde plan oluşturulamadı!”
+Hata mesajı, hangi sınav/öğrenci/derslikte olduğunu net olarak belirtir.
+Proje Teslimi
+● Rapor IEEE formatında (önceki yıllarda verilen formatta) 4 sayfa, akış
+diyagramı veya yalancı kod içeren, özet, giriş, yöntem, örnek görseller, sonuç
+ve kaynakça bölümünden oluşmalıdır. Raporda oluşturulan veri tababına ait
+class diyagramları ve use case diyagramları bulunmalıdır.
+● Dersin takibi projenin teslimi dahil edestek.kocaeli.edu.tr sistemi üzerinden
+yapılacaktır. edestek.kocaeli.edu.tr sitesinde belirtilen tarihten sonra getirilen
+projeler kabul edilmeyecektir.
+● Proje ile ilgili sorular edestek.kocaeli.edu.tr sitesindeki forum üzerinden Arş.
+Gör. Emin ÖLMEZ veya Arş. Gör. Yılmaz Dikilitaş’a sorulabilir.
+● Demo sırasında algoritma, geliştirdiğiniz kodun çeşitli kısımlarının ne amaçla
+yazıldığı ve geliştirme ortamı hakkında sorular sorulabilir.
+● Kullandığınız herhangi bir satır kodu açıklamanız istenebilir.
+● Proje grupları her ögretim kendi içinde olmak üzere en fazla iki kişiden
+oluşturulmalıdır.

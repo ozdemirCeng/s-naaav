@@ -1,0 +1,1031 @@
+2025-10-23 21:23:38,424 - __main__ - INFO - ======================================================================
+2025-10-23 21:23:38,424 - __main__ - INFO - Kocaeli Üniversitesi Sınav Takvimi Sistemi - Başlatılıyor
+2025-10-23 21:23:38,424 - __main__ - INFO - ======================================================================
+2025-10-23 21:23:41,699 - models.database - ERROR - Cursor hatası: 0
+2025-10-23 21:23:41,699 - models.database - ERROR - Veritabanı işlem hatası: 0
+2025-10-23 21:23:41,699 - models.database - ERROR - Bağlantı testi başarısız: 0
+2025-10-23 21:23:41,699 - __main__ - ERROR - ❌ Veritabanı bağlantısı başarısız
+2025-10-23 21:23:46,843 - models.database - ERROR - Cursor hatası: 0
+2025-10-23 21:23:46,843 - models.database - ERROR - Veritabanı işlem hatası: 0
+2025-10-23 21:23:46,843 - models.database - ERROR - Bağlantı testi başarısız: 0
+2025-10-23 21:23:46,843 - __main__ - ERROR - ❌ Veritabanı bağlantısı başarısız
+2025-10-23 21:23:49,737 - __main__ - INFO - Uygulama kullanıcı tarafından kapatıldı
+2025-10-23 21:26:25,863 - __main__ - INFO - ======================================================================
+2025-10-23 21:26:25,863 - __main__ - INFO - Kocaeli Üniversitesi Sınav Takvimi Sistemi - Başlatılıyor
+2025-10-23 21:26:25,863 - __main__ - INFO - ======================================================================
+2025-10-23 21:26:28,882 - models.database - ERROR - Cursor hatası: 0
+2025-10-23 21:26:28,882 - models.database - ERROR - Veritabanı işlem hatası: 0
+2025-10-23 21:26:28,882 - models.database - ERROR - Bağlantı testi başarısız: 0
+2025-10-23 21:26:28,882 - __main__ - ERROR - ❌ Veritabanı bağlantısı başarısız
+2025-10-23 21:26:32,916 - models.database - ERROR - Cursor hatası: 0
+2025-10-23 21:26:32,916 - models.database - ERROR - Veritabanı işlem hatası: 0
+2025-10-23 21:26:32,916 - models.database - ERROR - Bağlantı testi başarısız: 0
+2025-10-23 21:26:32,916 - __main__ - ERROR - ❌ Veritabanı bağlantısı başarısız
+2025-10-23 21:26:37,413 - __main__ - INFO - Uygulama kullanıcı tarafından kapatıldı
+2025-10-23 21:33:55,540 - __main__ - INFO - ======================================================================
+2025-10-23 21:33:55,541 - __main__ - INFO - Kocaeli Üniversitesi Sınav Takvimi Sistemi - Başlatılıyor
+2025-10-23 21:33:55,541 - __main__ - INFO - ======================================================================
+2025-10-23 21:33:58,459 - models.database - ERROR - Cursor hatası: 0
+2025-10-23 21:33:58,459 - models.database - ERROR - Veritabanı işlem hatası: 0
+2025-10-23 21:33:58,459 - models.database - ERROR - Database connection test failed: 0
+Traceback (most recent call last):
+  File "C:\Users\omer\Pycharm\PythonProject\models\database.py", line 138, in test_connection
+    success = result[0] == 1
+              ~~~~~~^^^
+KeyError: 0
+2025-10-23 21:33:58,459 - __main__ - ERROR - ❌ Veritabanı bağlantısı başarısız
+2025-10-23 21:34:04,450 - __main__ - INFO - Uygulama kullanıcı tarafından kapatıldı
+2025-10-23 21:35:03,280 - __main__ - INFO - ======================================================================
+2025-10-23 21:35:03,280 - __main__ - INFO - Kocaeli Üniversitesi Sınav Takvimi Sistemi - Başlatılıyor
+2025-10-23 21:35:03,280 - __main__ - INFO - ======================================================================
+2025-10-23 21:35:06,080 - models.database - ERROR - Cursor hatası: 0
+2025-10-23 21:35:06,081 - models.database - ERROR - Veritabanı işlem hatası: 0
+2025-10-23 21:35:06,081 - models.database - ERROR - Database connection test failed: 0
+Traceback (most recent call last):
+  File "C:\Users\omer\Pycharm\PythonProject\models\database.py", line 142, in test_connection
+    success = result[0] == 1
+              ~~~~~~^^^
+KeyError: 0
+2025-10-23 21:35:06,081 - __main__ - ERROR - ❌ Veritabanı bağlantısı başarısız
+2025-10-23 21:35:15,179 - models.database - ERROR - Cursor hatası: 0
+2025-10-23 21:35:15,180 - models.database - ERROR - Veritabanı işlem hatası: 0
+2025-10-23 21:35:15,180 - models.database - ERROR - Database connection test failed: 0
+Traceback (most recent call last):
+  File "C:\Users\omer\Pycharm\PythonProject\models\database.py", line 142, in test_connection
+    success = result[0] == 1
+              ~~~~~~^^^
+KeyError: 0
+2025-10-23 21:35:15,180 - __main__ - ERROR - ❌ Veritabanı bağlantısı başarısız
+2025-10-23 21:35:16,679 - __main__ - INFO - Uygulama kullanıcı tarafından kapatıldı
+2025-10-23 21:36:58,002 - __main__ - INFO - ======================================================================
+2025-10-23 21:36:58,002 - __main__ - INFO - Kocaeli Üniversitesi Sınav Takvimi Sistemi - Başlatılıyor
+2025-10-23 21:36:58,002 - __main__ - INFO - ======================================================================
+2025-10-23 21:37:00,724 - models.database - ERROR - Cursor hatası: 0
+2025-10-23 21:37:00,724 - models.database - ERROR - Veritabanı işlem hatası: 0
+2025-10-23 21:37:00,724 - models.database - ERROR - Database connection test failed: 0
+Traceback (most recent call last):
+  File "C:\Users\omer\Pycharm\PythonProject\models\database.py", line 142, in test_connection
+    success = result[0] == 1
+              ~~~~~~^^^
+KeyError: 0
+2025-10-23 21:37:00,724 - __main__ - ERROR - ❌ Veritabanı bağlantısı başarısız
+2025-10-23 21:37:02,810 - __main__ - INFO - Uygulama kullanıcı tarafından kapatıldı
+2025-10-23 21:41:20,738 - __main__ - INFO - ======================================================================
+2025-10-23 21:41:20,740 - __main__ - INFO - Kocaeli Üniversitesi Sınav Takvimi Sistemi - Başlatılıyor
+2025-10-23 21:41:20,741 - __main__ - INFO - ======================================================================
+2025-10-23 21:41:23,530 - models.database - INFO - ✅ Database connection test successful
+2025-10-23 21:41:23,530 - __main__ - INFO - ✅ Veritabanı bağlantısı başarılı
+2025-10-23 21:41:25,357 - __main__ - INFO - Login ekranı gösteriliyor
+2025-10-23 21:41:54,860 - models.database - ERROR - Cursor hatası: HATA:  "password" sütunu mevcut değil
+LINE 2:             SELECT user_id, email, password, ad_soyad, role,...
+                                           ^
+
+2025-10-23 21:41:54,860 - models.database - ERROR - Veritabanı işlem hatası: HATA:  "password" sütunu mevcut değil
+LINE 2:             SELECT user_id, email, password, ad_soyad, role,...
+                                           ^
+
+2025-10-23 21:41:54,860 - controllers.login_controller - ERROR - Login error: HATA:  "password" sütunu mevcut değil
+LINE 2:             SELECT user_id, email, password, ad_soyad, role,...
+                                           ^
+
+2025-10-23 21:41:54,893 - models.database - ERROR - Cursor hatası: HATA:  "password" sütunu mevcut değil
+LINE 2:             SELECT user_id, email, password, ad_soyad, role,...
+                                           ^
+
+2025-10-23 21:41:54,894 - models.database - ERROR - Veritabanı işlem hatası: HATA:  "password" sütunu mevcut değil
+LINE 2:             SELECT user_id, email, password, ad_soyad, role,...
+                                           ^
+
+2025-10-23 21:41:54,894 - controllers.login_controller - ERROR - Login error: HATA:  "password" sütunu mevcut değil
+LINE 2:             SELECT user_id, email, password, ad_soyad, role,...
+                                           ^
+
+2025-10-23 21:42:04,824 - models.database - ERROR - Cursor hatası: HATA:  "password" sütunu mevcut değil
+LINE 2:             SELECT user_id, email, password, ad_soyad, role,...
+                                           ^
+
+2025-10-23 21:42:04,824 - models.database - ERROR - Veritabanı işlem hatası: HATA:  "password" sütunu mevcut değil
+LINE 2:             SELECT user_id, email, password, ad_soyad, role,...
+                                           ^
+
+2025-10-23 21:42:04,825 - controllers.login_controller - ERROR - Login error: HATA:  "password" sütunu mevcut değil
+LINE 2:             SELECT user_id, email, password, ad_soyad, role,...
+                                           ^
+
+2025-10-23 21:42:04,827 - models.database - ERROR - Cursor hatası: HATA:  "password" sütunu mevcut değil
+LINE 2:             SELECT user_id, email, password, ad_soyad, role,...
+                                           ^
+
+2025-10-23 21:42:04,828 - models.database - ERROR - Veritabanı işlem hatası: HATA:  "password" sütunu mevcut değil
+LINE 2:             SELECT user_id, email, password, ad_soyad, role,...
+                                           ^
+
+2025-10-23 21:42:04,828 - controllers.login_controller - ERROR - Login error: HATA:  "password" sütunu mevcut değil
+LINE 2:             SELECT user_id, email, password, ad_soyad, role,...
+                                           ^
+
+2025-10-23 21:42:07,057 - models.database - ERROR - Cursor hatası: HATA:  "password" sütunu mevcut değil
+LINE 2:             SELECT user_id, email, password, ad_soyad, role,...
+                                           ^
+
+2025-10-23 21:42:07,057 - models.database - ERROR - Veritabanı işlem hatası: HATA:  "password" sütunu mevcut değil
+LINE 2:             SELECT user_id, email, password, ad_soyad, role,...
+                                           ^
+
+2025-10-23 21:42:07,058 - controllers.login_controller - ERROR - Login error: HATA:  "password" sütunu mevcut değil
+LINE 2:             SELECT user_id, email, password, ad_soyad, role,...
+                                           ^
+
+2025-10-23 21:42:07,069 - models.database - ERROR - Cursor hatası: HATA:  "password" sütunu mevcut değil
+LINE 2:             SELECT user_id, email, password, ad_soyad, role,...
+                                           ^
+
+2025-10-23 21:42:07,069 - models.database - ERROR - Veritabanı işlem hatası: HATA:  "password" sütunu mevcut değil
+LINE 2:             SELECT user_id, email, password, ad_soyad, role,...
+                                           ^
+
+2025-10-23 21:42:07,069 - controllers.login_controller - ERROR - Login error: HATA:  "password" sütunu mevcut değil
+LINE 2:             SELECT user_id, email, password, ad_soyad, role,...
+                                           ^
+
+2025-10-23 21:45:54,244 - __main__ - INFO - ======================================================================
+2025-10-23 21:45:54,244 - __main__ - INFO - Kocaeli Üniversitesi Sınav Takvimi Sistemi - Başlatılıyor
+2025-10-23 21:45:54,244 - __main__ - INFO - ======================================================================
+2025-10-23 21:45:57,015 - models.database - INFO - ✅ Database connection test successful
+2025-10-23 21:45:57,015 - __main__ - INFO - ✅ Veritabanı bağlantısı başarılı
+2025-10-23 21:45:58,771 - __main__ - INFO - Login ekranı gösteriliyor
+2025-10-23 21:46:23,604 - controllers.login_controller - INFO - Successful login for user: admin@kocaeli.edu.tr
+2025-10-23 21:46:23,821 - controllers.login_controller - INFO - Successful login for user: admin@kocaeli.edu.tr
+2025-10-23 21:46:24,419 - __main__ - INFO - ✅ Kullanıcı girişi başarılı: admin@kocaeli.edu.tr
+2025-10-23 21:46:24,465 - models.database - ERROR - Cursor hatası: HATA:  "sinav_programlari" nesnesi mevcut değil
+LINE 4:             FROM sinav_programlari
+                         ^
+
+2025-10-23 21:46:24,465 - models.database - ERROR - Veritabanı işlem hatası: HATA:  "sinav_programlari" nesnesi mevcut değil
+LINE 4:             FROM sinav_programlari
+                         ^
+
+2025-10-23 21:46:24,465 - views.main_window - ERROR - Dashboard stats error: HATA:  "sinav_programlari" nesnesi mevcut değil
+LINE 4:             FROM sinav_programlari
+                         ^
+
+2025-10-23 21:46:24,683 - __main__ - INFO - Ana pencere gösteriliyor
+2025-10-23 21:46:24,831 - __main__ - INFO - ✅ Kullanıcı girişi başarılı: admin@kocaeli.edu.tr
+2025-10-23 21:46:24,837 - models.database - ERROR - Cursor hatası: HATA:  "sinav_programlari" nesnesi mevcut değil
+LINE 4:             FROM sinav_programlari
+                         ^
+
+2025-10-23 21:46:24,837 - models.database - ERROR - Veritabanı işlem hatası: HATA:  "sinav_programlari" nesnesi mevcut değil
+LINE 4:             FROM sinav_programlari
+                         ^
+
+2025-10-23 21:46:24,837 - views.main_window - ERROR - Dashboard stats error: HATA:  "sinav_programlari" nesnesi mevcut değil
+LINE 4:             FROM sinav_programlari
+                         ^
+
+2025-10-23 21:46:24,905 - __main__ - INFO - Ana pencere gösteriliyor
+2025-10-23 21:46:31,219 - views.main_window - INFO - Creating page: derslikler
+2025-10-23 21:46:31,274 - views.main_window - INFO - Page created successfully: derslikler
+2025-10-23 21:46:54,556 - models.database - INFO - Tüm veritabanı bağlantıları kapatıldı
+2025-10-23 21:46:54,557 - __main__ - INFO - Veritabanı bağlantıları kapatıldı
+2025-10-23 21:46:54,559 - __main__ - INFO - ======================================================================
+2025-10-23 21:46:54,560 - __main__ - INFO - Uygulama kapatıldı
+2025-10-23 21:46:54,560 - __main__ - INFO - ======================================================================
+2025-10-23 21:46:55,739 - __main__ - INFO - Kullanıcı çıkış yaptı
+2025-10-23 21:46:57,631 - models.database - INFO - Tüm veritabanı bağlantıları kapatıldı
+2025-10-23 21:46:57,636 - __main__ - INFO - Veritabanı bağlantıları kapatıldı
+2025-10-23 21:46:57,639 - __main__ - INFO - ======================================================================
+2025-10-23 21:46:57,642 - __main__ - INFO - Uygulama kapatıldı
+2025-10-23 21:46:57,643 - __main__ - INFO - ======================================================================
+2025-10-23 21:47:15,924 - __main__ - INFO - ======================================================================
+2025-10-23 21:47:15,924 - __main__ - INFO - Kocaeli Üniversitesi Sınav Takvimi Sistemi - Başlatılıyor
+2025-10-23 21:47:15,924 - __main__ - INFO - ======================================================================
+2025-10-23 21:47:18,688 - models.database - INFO - ✅ Database connection test successful
+2025-10-23 21:47:18,688 - __main__ - INFO - ✅ Veritabanı bağlantısı başarılı
+2025-10-23 21:47:20,351 - __main__ - INFO - Login ekranı gösteriliyor
+2025-10-23 21:47:33,355 - controllers.login_controller - INFO - Successful login for user: admin@kocaeli.edu.tr
+2025-10-23 21:47:33,581 - controllers.login_controller - INFO - Successful login for user: admin@kocaeli.edu.tr
+2025-10-23 21:47:34,161 - __main__ - INFO - ✅ Kullanıcı girişi başarılı: admin@kocaeli.edu.tr
+2025-10-23 21:47:34,186 - models.database - ERROR - Cursor hatası: HATA:  "sinav_programlari" nesnesi mevcut değil
+LINE 4:             FROM sinav_programlari
+                         ^
+
+2025-10-23 21:47:34,186 - models.database - ERROR - Veritabanı işlem hatası: HATA:  "sinav_programlari" nesnesi mevcut değil
+LINE 4:             FROM sinav_programlari
+                         ^
+
+2025-10-23 21:47:34,186 - views.main_window - ERROR - Dashboard stats error: HATA:  "sinav_programlari" nesnesi mevcut değil
+LINE 4:             FROM sinav_programlari
+                         ^
+
+2025-10-23 21:47:34,295 - __main__ - INFO - Ana pencere gösteriliyor
+2025-10-23 21:47:34,434 - __main__ - INFO - ✅ Kullanıcı girişi başarılı: admin@kocaeli.edu.tr
+2025-10-23 21:47:34,438 - models.database - ERROR - Cursor hatası: HATA:  "sinav_programlari" nesnesi mevcut değil
+LINE 4:             FROM sinav_programlari
+                         ^
+
+2025-10-23 21:47:34,438 - models.database - ERROR - Veritabanı işlem hatası: HATA:  "sinav_programlari" nesnesi mevcut değil
+LINE 4:             FROM sinav_programlari
+                         ^
+
+2025-10-23 21:47:34,439 - views.main_window - ERROR - Dashboard stats error: HATA:  "sinav_programlari" nesnesi mevcut değil
+LINE 4:             FROM sinav_programlari
+                         ^
+
+2025-10-23 21:47:34,483 - __main__ - INFO - Ana pencere gösteriliyor
+2025-10-23 21:47:44,886 - views.main_window - INFO - Creating page: derslikler
+2025-10-23 21:47:44,896 - views.main_window - INFO - Page created successfully: derslikler
+2025-10-23 21:47:51,401 - models.database - INFO - Tüm veritabanı bağlantıları kapatıldı
+2025-10-23 21:47:51,401 - __main__ - INFO - Veritabanı bağlantıları kapatıldı
+2025-10-23 21:47:51,401 - __main__ - INFO - ======================================================================
+2025-10-23 21:47:51,402 - __main__ - INFO - Uygulama kapatıldı
+2025-10-23 21:47:51,402 - __main__ - INFO - ======================================================================
+2025-10-23 21:52:32,112 - __main__ - INFO - ======================================================================
+2025-10-23 21:52:32,112 - __main__ - INFO - Kocaeli Üniversitesi Sınav Takvimi Sistemi - Başlatılıyor
+2025-10-23 21:52:32,112 - __main__ - INFO - ======================================================================
+2025-10-23 21:52:34,941 - models.database - INFO - ✅ Database connection test successful
+2025-10-23 21:52:34,941 - __main__ - INFO - ✅ Veritabanı bağlantısı başarılı
+2025-10-23 21:52:36,682 - __main__ - INFO - Login ekranı gösteriliyor
+2025-10-23 21:52:57,144 - controllers.login_controller - INFO - Successful login for user: admin@kocaeli.edu.tr
+2025-10-23 21:52:57,957 - __main__ - INFO - ✅ Kullanıcı girişi başarılı: admin@kocaeli.edu.tr
+2025-10-23 21:52:58,009 - models.database - ERROR - Cursor hatası: HATA:  "kredi" sütunu mevcut değil
+LINE 2: ...   SELECT ders_id, bolum_id, ders_kodu, ders_adi, kredi, yar...
+                                                             ^
+
+2025-10-23 21:52:58,011 - models.database - ERROR - Veritabanı işlem hatası: HATA:  "kredi" sütunu mevcut değil
+LINE 2: ...   SELECT ders_id, bolum_id, ders_kodu, ders_adi, kredi, yar...
+                                                             ^
+
+2025-10-23 21:52:58,011 - views.main_window - ERROR - Dashboard stats error: HATA:  "kredi" sütunu mevcut değil
+LINE 2: ...   SELECT ders_id, bolum_id, ders_kodu, ders_adi, kredi, yar...
+                                                             ^
+
+2025-10-23 21:52:58,201 - __main__ - INFO - Ana pencere gösteriliyor
+2025-10-23 21:53:00,166 - views.main_window - INFO - Creating page: derslikler
+2025-10-23 21:53:00,177 - views.main_window - INFO - Page created successfully: derslikler
+2025-10-23 21:53:01,983 - views.main_window - INFO - Creating page: dersler
+2025-10-23 21:53:01,997 - models.database - ERROR - Cursor hatası: HATA:  "kredi" sütunu mevcut değil
+LINE 2: ...   SELECT ders_id, bolum_id, ders_kodu, ders_adi, kredi, yar...
+                                                             ^
+
+2025-10-23 21:53:01,997 - models.database - ERROR - Veritabanı işlem hatası: HATA:  "kredi" sütunu mevcut değil
+LINE 2: ...   SELECT ders_id, bolum_id, ders_kodu, ders_adi, kredi, yar...
+                                                             ^
+
+2025-10-23 21:53:01,998 - views.koordinator.ders_yukle_view - ERROR - Error loading courses: HATA:  "kredi" sütunu mevcut değil
+LINE 2: ...   SELECT ders_id, bolum_id, ders_kodu, ders_adi, kredi, yar...
+                                                             ^
+
+2025-10-23 21:53:08,161 - views.main_window - INFO - Page created successfully: dersler
+2025-10-23 21:53:09,166 - views.main_window - INFO - Creating page: ogrenciler
+2025-10-23 21:53:09,168 - models.database - ERROR - Cursor hatası: HATA:  "email" sütunu mevcut değil
+LINE 2: ...    SELECT ogrenci_no, bolum_id, ad_soyad, sinif, email, akt...
+                                                             ^
+
+2025-10-23 21:53:09,169 - models.database - ERROR - Veritabanı işlem hatası: HATA:  "email" sütunu mevcut değil
+LINE 2: ...    SELECT ogrenci_no, bolum_id, ad_soyad, sinif, email, akt...
+                                                             ^
+
+2025-10-23 21:53:09,169 - views.koordinator.ogrenci_yukle_view - ERROR - Error loading students: HATA:  "email" sütunu mevcut değil
+LINE 2: ...    SELECT ogrenci_no, bolum_id, ad_soyad, sinif, email, akt...
+                                                             ^
+
+2025-10-23 21:53:13,490 - views.main_window - INFO - Page created successfully: ogrenciler
+2025-10-23 21:53:14,439 - views.main_window - INFO - Creating page: sinavlar
+2025-10-23 21:53:14,478 - models.database - ERROR - Cursor hatası: HATA:  "kredi" sütunu mevcut değil
+LINE 2: ...   SELECT ders_id, bolum_id, ders_kodu, ders_adi, kredi, yar...
+                                                             ^
+
+2025-10-23 21:53:14,478 - models.database - ERROR - Veritabanı işlem hatası: HATA:  "kredi" sütunu mevcut değil
+LINE 2: ...   SELECT ders_id, bolum_id, ders_kodu, ders_adi, kredi, yar...
+                                                             ^
+
+2025-10-23 21:53:14,478 - views.koordinator.sinav_olustur_view - ERROR - Error loading data: HATA:  "kredi" sütunu mevcut değil
+LINE 2: ...   SELECT ders_id, bolum_id, ders_kodu, ders_adi, kredi, yar...
+                                                             ^
+
+2025-10-23 21:53:14,483 - views.main_window - INFO - Page created successfully: sinavlar
+2025-10-23 21:53:16,189 - views.main_window - INFO - Creating page: oturma
+2025-10-23 21:53:17,804 - views.main_window - INFO - Page created successfully: oturma
+2025-10-23 21:53:25,591 - views.main_window - INFO - Creating page: raporlar
+2025-10-23 21:53:25,600 - views.main_window - INFO - Page created successfully: raporlar
+2025-10-23 21:53:26,472 - views.main_window - INFO - Creating page: ayarlar
+2025-10-23 21:53:26,477 - views.main_window - INFO - Page created successfully: ayarlar
+2025-10-23 21:53:30,011 - __main__ - INFO - Kullanıcı çıkış yaptı
+2025-10-23 21:53:31,878 - models.database - INFO - Tüm veritabanı bağlantıları kapatıldı
+2025-10-23 21:53:31,881 - __main__ - INFO - Veritabanı bağlantıları kapatıldı
+2025-10-23 21:53:31,882 - __main__ - INFO - ======================================================================
+2025-10-23 21:53:31,883 - __main__ - INFO - Uygulama kapatıldı
+2025-10-23 21:53:31,883 - __main__ - INFO - ======================================================================
+2025-10-23 21:56:55,476 - __main__ - INFO - ======================================================================
+2025-10-23 21:56:55,476 - __main__ - INFO - Kocaeli Üniversitesi Sınav Takvimi Sistemi - Başlatılıyor
+2025-10-23 21:56:55,477 - __main__ - INFO - ======================================================================
+2025-10-23 21:56:55,478 - models.database - INFO - ✅ Database connection test successful
+2025-10-23 21:56:55,479 - __main__ - INFO - ✅ Veritabanı bağlantısı başarılı
+2025-10-23 21:56:56,029 - __main__ - INFO - ✅ Uygulama başlatıldı - Login ekranı
+2025-10-23 21:57:09,692 - controllers.login_controller - INFO - Successful login for user: admin@kocaeli.edu.tr
+2025-10-23 21:57:10,503 - __main__ - INFO - ✅ Kullanıcı girişi başarılı: admin@kocaeli.edu.tr
+2025-10-23 21:57:10,694 - __main__ - INFO - Ana ekran gösteriliyor
+2025-10-23 21:57:12,748 - views.main_window - INFO - Creating page: derslikler
+2025-10-23 21:57:12,758 - views.main_window - INFO - Page created successfully: derslikler
+2025-10-23 21:57:14,316 - views.main_window - INFO - Creating page: dersler
+2025-10-23 21:57:14,321 - views.main_window - INFO - Page created successfully: dersler
+2025-10-23 21:57:15,360 - views.main_window - INFO - Creating page: ogrenciler
+2025-10-23 21:57:15,365 - views.main_window - INFO - Page created successfully: ogrenciler
+2025-10-23 21:57:16,209 - views.main_window - INFO - Creating page: sinavlar
+2025-10-23 21:57:21,329 - views.main_window - INFO - Page created successfully: sinavlar
+2025-10-23 21:57:22,712 - views.main_window - INFO - Creating page: oturma
+2025-10-23 21:57:24,664 - views.main_window - INFO - Page created successfully: oturma
+2025-10-23 21:57:25,629 - views.main_window - INFO - Creating page: raporlar
+2025-10-23 21:57:25,633 - views.main_window - INFO - Page created successfully: raporlar
+2025-10-23 21:57:40,199 - __main__ - INFO - Kullanıcı çıkış yaptı
+2025-10-23 21:57:40,227 - __main__ - INFO - Login ekranına dönüldü
+2025-10-23 21:57:42,768 - models.database - INFO - Tüm veritabanı bağlantıları kapatıldı
+2025-10-23 21:57:42,769 - __main__ - INFO - Veritabanı bağlantıları kapatıldı
+2025-10-23 21:57:42,769 - __main__ - INFO - ======================================================================
+2025-10-23 21:57:42,769 - __main__ - INFO - Uygulama kapatıldı
+2025-10-23 21:57:42,772 - __main__ - INFO - ======================================================================
+2025-10-23 22:03:45,638 - __main__ - INFO - ======================================================================
+2025-10-23 22:03:45,638 - __main__ - INFO - Kocaeli Üniversitesi Sınav Takvimi Sistemi - Başlatılıyor
+2025-10-23 22:03:45,638 - __main__ - INFO - ======================================================================
+2025-10-23 22:03:45,647 - models.database - INFO - ✅ Database connection test successful
+2025-10-23 22:03:45,648 - __main__ - INFO - ✅ Veritabanı bağlantısı başarılı
+2025-10-23 22:03:46,182 - __main__ - INFO - ✅ Uygulama başlatıldı - Login ekranı
+2025-10-23 22:03:58,938 - controllers.login_controller - INFO - Successful login for user: admin@kocaeli.edu.tr
+2025-10-23 22:03:59,761 - __main__ - INFO - ✅ Kullanıcı girişi başarılı: admin@kocaeli.edu.tr
+2025-10-23 22:03:59,928 - __main__ - INFO - Ana ekran gösteriliyor
+2025-10-23 22:04:02,437 - views.main_window - INFO - Creating page: users
+2025-10-23 22:04:02,438 - views.main_window - INFO - Page created successfully: users
+2025-10-23 22:04:02,448 - views.main_window - INFO - ✅ Switched to page: users
+2025-10-23 22:04:05,254 - views.main_window - INFO - Creating page: derslikler
+2025-10-23 22:04:05,267 - views.main_window - INFO - Page created successfully: derslikler
+2025-10-23 22:04:05,280 - views.main_window - INFO - ✅ Switched to page: derslikler
+2025-10-23 22:04:14,491 - views.main_window - INFO - Creating page: dersler
+2025-10-23 22:04:14,496 - views.main_window - INFO - Page created successfully: dersler
+2025-10-23 22:04:14,503 - views.main_window - INFO - ✅ Switched to page: dersler
+2025-10-23 22:04:18,249 - views.main_window - INFO - Creating page: raporlar
+2025-10-23 22:04:18,253 - views.main_window - INFO - Page created successfully: raporlar
+2025-10-23 22:04:18,270 - views.main_window - INFO - ✅ Switched to page: raporlar
+2025-10-23 22:04:38,964 - views.main_window - INFO - ✅ Switched to page: derslikler
+2025-10-23 22:04:39,901 - views.main_window - INFO - ✅ Switched to page: users
+2025-10-23 22:04:41,058 - views.main_window - INFO - ✅ Switched to page: dashboard
+2025-10-23 22:04:44,648 - views.main_window - INFO - ✅ Switched to page: derslikler
+2025-10-23 22:04:47,691 - views.main_window - INFO - ✅ Switched to page: users
+2025-10-23 22:04:48,658 - views.main_window - INFO - ✅ Switched to page: derslikler
+2025-10-23 22:04:49,798 - views.main_window - INFO - ✅ Switched to page: dashboard
+2025-10-23 22:04:50,876 - views.main_window - INFO - ✅ Switched to page: derslikler
+2025-10-23 22:04:51,905 - views.main_window - INFO - ✅ Switched to page: users
+2025-10-23 22:04:52,844 - views.main_window - INFO - ✅ Switched to page: dashboard
+2025-10-23 22:04:53,703 - views.main_window - INFO - ✅ Switched to page: derslikler
+2025-10-23 22:04:54,829 - views.main_window - INFO - ✅ Switched to page: users
+2025-10-23 22:04:55,516 - views.main_window - INFO - ✅ Switched to page: dashboard
+2025-10-23 22:04:56,502 - views.main_window - INFO - ✅ Switched to page: derslikler
+2025-10-23 22:05:01,231 - views.main_window - INFO - ✅ Switched to page: users
+2025-10-23 22:05:02,144 - views.main_window - INFO - ✅ Switched to page: derslikler
+2025-10-23 22:05:05,535 - views.main_window - INFO - ✅ Switched to page: users
+2025-10-23 22:05:07,208 - views.main_window - INFO - ✅ Switched to page: dersler
+2025-10-23 22:05:10,583 - views.main_window - INFO - ✅ Switched to page: dersler
+2025-10-23 22:05:11,956 - views.main_window - INFO - ✅ Switched to page: derslikler
+2025-10-23 22:05:12,863 - views.main_window - INFO - ✅ Switched to page: users
+2025-10-23 22:05:13,785 - views.main_window - INFO - ✅ Switched to page: dashboard
+2025-10-23 22:05:15,770 - views.main_window - INFO - ✅ Switched to page: dersler
+2025-10-23 22:05:23,693 - utils.excel_parser - ERROR - Excel parse hatası: Eksik sütunlar: ders_kodu, ders_adi
+2025-10-23 22:05:34,309 - views.main_window - INFO - ✅ Switched to page: users
+2025-10-23 22:05:34,981 - views.main_window - INFO - ✅ Switched to page: dashboard
+2025-10-23 22:05:37,989 - views.main_window - INFO - Creating page: sinavlar
+2025-10-23 22:05:37,990 - views.main_window - WARNING - Unknown page_id: sinavlar
+2025-10-23 22:05:37,990 - views.main_window - WARNING - Page widget is None for: sinavlar
+2025-10-23 22:05:39,365 - views.main_window - INFO - Creating page: sinavlar
+2025-10-23 22:05:39,366 - views.main_window - WARNING - Unknown page_id: sinavlar
+2025-10-23 22:05:39,366 - views.main_window - WARNING - Page widget is None for: sinavlar
+2025-10-23 22:05:43,541 - models.database - INFO - Tüm veritabanı bağlantıları kapatıldı
+2025-10-23 22:05:43,542 - __main__ - INFO - Veritabanı bağlantıları kapatıldı
+2025-10-23 22:05:43,542 - __main__ - INFO - ======================================================================
+2025-10-23 22:05:43,542 - __main__ - INFO - Uygulama kapatıldı
+2025-10-23 22:05:43,542 - __main__ - INFO - ======================================================================
+2025-10-23 22:09:59,824 - __main__ - INFO - ======================================================================
+2025-10-23 22:09:59,824 - __main__ - INFO - Kocaeli Üniversitesi Sınav Takvimi Sistemi - Başlatılıyor
+2025-10-23 22:09:59,824 - __main__ - INFO - ======================================================================
+2025-10-23 22:09:59,827 - models.database - INFO - ✅ Database connection test successful
+2025-10-23 22:09:59,828 - __main__ - INFO - ✅ Veritabanı bağlantısı başarılı
+2025-10-23 22:10:00,806 - __main__ - INFO - ✅ Uygulama başlatıldı - Login ekranı
+2025-10-23 22:10:16,118 - controllers.login_controller - INFO - Successful login for user: admin@kocaeli.edu.tr
+2025-10-23 22:10:16,930 - __main__ - INFO - ✅ Kullanıcı girişi başarılı: admin@kocaeli.edu.tr
+2025-10-23 22:10:17,126 - __main__ - INFO - Ana ekran gösteriliyor
+2025-10-23 22:10:19,793 - views.main_window - INFO - Creating page: users
+2025-10-23 22:10:19,793 - views.main_window - INFO - Page created successfully: users
+2025-10-23 22:10:19,799 - views.main_window - INFO - ✅ Switched to page: users
+2025-10-23 22:10:22,530 - views.main_window - INFO - Creating page: derslikler
+2025-10-23 22:10:22,539 - views.main_window - INFO - Page created successfully: derslikler
+2025-10-23 22:10:22,549 - views.main_window - INFO - ✅ Switched to page: derslikler
+2025-10-23 22:10:23,926 - views.main_window - INFO - Creating page: ogrenciler
+2025-10-23 22:10:23,930 - views.main_window - INFO - Page created successfully: ogrenciler
+2025-10-23 22:10:23,935 - views.main_window - INFO - ✅ Switched to page: ogrenciler
+2025-10-23 22:10:30,877 - utils.excel_parser - ERROR - Excel parse hatası: invalid literal for int() with base 10: '5. Sınıf'
+2025-10-23 22:10:57,016 - views.main_window - INFO - Creating page: dersler
+2025-10-23 22:10:57,022 - views.main_window - INFO - Page created successfully: dersler
+2025-10-23 22:10:57,030 - views.main_window - INFO - ✅ Switched to page: dersler
+2025-10-23 22:11:00,177 - views.main_window - INFO - ✅ Switched to page: derslikler
+2025-10-23 22:11:02,733 - views.main_window - INFO - ✅ Switched to page: dersler
+2025-10-23 22:11:07,160 - views.main_window - INFO - ✅ Switched to page: derslikler
+2025-10-23 22:11:09,896 - views.main_window - INFO - ✅ Switched to page: users
+2025-10-23 22:11:11,529 - views.main_window - INFO - ✅ Switched to page: dashboard
+2025-10-23 22:11:15,618 - views.main_window - INFO - ✅ Switched to page: dersler
+2025-10-23 22:11:17,846 - views.main_window - INFO - ✅ Switched to page: dashboard
+2025-10-23 22:11:20,085 - views.main_window - INFO - ✅ Switched to page: dersler
+2025-10-23 22:11:23,637 - views.main_window - INFO - ✅ Switched to page: dashboard
+2025-10-23 22:11:25,360 - views.main_window - INFO - Creating page: sinavlar
+2025-10-23 22:11:29,141 - views.main_window - INFO - Page created successfully: sinavlar
+2025-10-23 22:11:29,144 - views.main_window - INFO - ✅ Switched to page: sinavlar
+2025-10-23 22:11:32,326 - views.main_window - INFO - ✅ Switched to page: dashboard
+2025-10-23 22:11:34,212 - views.main_window - INFO - Creating page: raporlar
+2025-10-23 22:11:34,216 - views.main_window - INFO - Page created successfully: raporlar
+2025-10-23 22:11:34,235 - views.main_window - INFO - ✅ Switched to page: raporlar
+2025-10-23 22:11:36,087 - views.main_window - INFO - ✅ Switched to page: dashboard
+2025-10-23 22:11:37,513 - views.main_window - INFO - Creating page: ayarlar
+2025-10-23 22:11:37,517 - views.main_window - INFO - Page created successfully: ayarlar
+2025-10-23 22:11:37,524 - views.main_window - INFO - ✅ Switched to page: ayarlar
+2025-10-23 22:12:05,386 - views.main_window - INFO - ✅ Switched to page: dashboard
+2025-10-23 22:12:09,843 - views.main_window - INFO - ✅ Switched to page: users
+2025-10-23 22:12:12,759 - views.main_window - INFO - ✅ Switched to page: dashboard
+2025-10-23 22:12:14,722 - views.main_window - INFO - ✅ Switched to page: derslikler
+2025-10-23 22:12:16,228 - views.main_window - INFO - ✅ Switched to page: dersler
+2025-10-23 22:12:20,372 - utils.excel_parser - ERROR - Excel parse hatası: Eksik sütunlar: ders_kodu, ders_adi
+2025-10-23 22:17:55,543 - __main__ - INFO - ======================================================================
+2025-10-23 22:17:55,543 - __main__ - INFO - Kocaeli Üniversitesi Sınav Takvimi Sistemi - Başlatılıyor
+2025-10-23 22:17:55,543 - __main__ - INFO - ======================================================================
+2025-10-23 22:17:55,544 - models.database - INFO - ✅ Database connection test successful
+2025-10-23 22:17:55,545 - __main__ - INFO - ✅ Veritabanı bağlantısı başarılı
+2025-10-23 22:17:56,388 - __main__ - INFO - ✅ Uygulama başlatıldı - Login ekranı
+2025-10-23 22:18:15,776 - controllers.login_controller - INFO - Successful login for user: admin@kocaeli.edu.tr
+2025-10-23 22:18:16,590 - __main__ - INFO - ✅ Kullanıcı girişi başarılı: admin@kocaeli.edu.tr
+2025-10-23 22:18:16,735 - __main__ - INFO - Ana ekran gösteriliyor
+2025-10-23 22:18:18,836 - views.main_window - INFO - Creating page: users
+2025-10-23 22:18:18,837 - views.main_window - INFO - Page created successfully: users
+2025-10-23 22:18:18,840 - views.main_window - INFO - ✅ Switched to page: users
+2025-10-23 22:18:20,131 - views.main_window - INFO - Creating page: derslikler
+2025-10-23 22:18:20,138 - views.main_window - INFO - Page created successfully: derslikler
+2025-10-23 22:18:20,149 - views.main_window - INFO - ✅ Switched to page: derslikler
+2025-10-23 22:18:25,618 - views.main_window - INFO - Creating page: dersler
+2025-10-23 22:18:25,622 - views.main_window - INFO - Page created successfully: dersler
+2025-10-23 22:18:25,629 - views.main_window - INFO - ✅ Switched to page: dersler
+2025-10-23 22:18:31,917 - utils.excel_parser - ERROR - Excel parse hatası: Eksik sütunlar: ders_kodu, ders_adi
+2025-10-23 22:18:35,811 - models.database - INFO - Tüm veritabanı bağlantıları kapatıldı
+2025-10-23 22:18:35,811 - __main__ - INFO - Veritabanı bağlantıları kapatıldı
+2025-10-23 22:18:35,811 - __main__ - INFO - ======================================================================
+2025-10-23 22:18:35,811 - __main__ - INFO - Uygulama kapatıldı
+2025-10-23 22:18:35,811 - __main__ - INFO - ======================================================================
+2025-10-23 22:19:06,332 - models.database - INFO - Tüm veritabanı bağlantıları kapatıldı
+2025-10-23 22:19:06,332 - __main__ - INFO - Veritabanı bağlantıları kapatıldı
+2025-10-23 22:19:06,334 - __main__ - INFO - ======================================================================
+2025-10-23 22:19:06,335 - __main__ - INFO - Uygulama kapatıldı
+2025-10-23 22:19:06,336 - __main__ - INFO - ======================================================================
+2025-10-23 22:21:26,952 - __main__ - INFO - ======================================================================
+2025-10-23 22:21:26,952 - __main__ - INFO - Kocaeli Üniversitesi Sınav Takvimi Sistemi - Başlatılıyor
+2025-10-23 22:21:26,952 - __main__ - INFO - ======================================================================
+2025-10-23 22:21:26,953 - models.database - INFO - ✅ Database connection test successful
+2025-10-23 22:21:26,953 - __main__ - INFO - ✅ Veritabanı bağlantısı başarılı
+2025-10-23 22:21:27,457 - __main__ - INFO - ✅ Uygulama başlatıldı - Login ekranı
+2025-10-23 22:21:39,402 - controllers.login_controller - INFO - Successful login for user: admin@kocaeli.edu.tr
+2025-10-23 22:21:40,216 - __main__ - INFO - ✅ Kullanıcı girişi başarılı: admin@kocaeli.edu.tr
+2025-10-23 22:21:40,386 - __main__ - INFO - Ana ekran gösteriliyor
+2025-10-23 22:21:43,278 - views.main_window - INFO - Creating page: users
+2025-10-23 22:21:43,279 - views.main_window - INFO - Page created successfully: users
+2025-10-23 22:21:43,284 - views.main_window - INFO - ✅ Switched to page: users
+2025-10-23 22:21:44,390 - views.main_window - INFO - Creating page: derslikler
+2025-10-23 22:21:44,403 - views.main_window - INFO - Page created successfully: derslikler
+2025-10-23 22:21:44,414 - views.main_window - INFO - ✅ Switched to page: derslikler
+2025-10-23 22:21:45,314 - views.main_window - INFO - ✅ Switched to page: dashboard
+2025-10-23 22:21:46,063 - views.main_window - INFO - ✅ Switched to page: users
+2025-10-23 22:21:49,017 - views.main_window - INFO - ✅ Switched to page: dashboard
+2025-10-23 22:21:50,105 - views.main_window - INFO - ✅ Switched to page: derslikler
+2025-10-23 22:21:54,953 - views.main_window - INFO - Creating page: dersler
+2025-10-23 22:21:54,958 - views.main_window - INFO - Page created successfully: dersler
+2025-10-23 22:21:54,963 - views.main_window - INFO - ✅ Switched to page: dersler
+2025-10-23 22:21:59,545 - utils.excel_parser - ERROR - Excel parse hatası: Eksik sütunlar: ders_kodu, ders_adi
+2025-10-23 22:22:15,229 - __main__ - INFO - Kullanıcı çıkış yaptı
+2025-10-23 22:22:15,249 - __main__ - INFO - Login ekranına dönüldü
+2025-10-23 22:22:16,693 - models.database - INFO - Tüm veritabanı bağlantıları kapatıldı
+2025-10-23 22:22:16,693 - __main__ - INFO - Veritabanı bağlantıları kapatıldı
+2025-10-23 22:22:16,693 - __main__ - INFO - ======================================================================
+2025-10-23 22:22:16,693 - __main__ - INFO - Uygulama kapatıldı
+2025-10-23 22:22:16,693 - __main__ - INFO - ======================================================================
+2025-10-23 22:32:34,715 - __main__ - INFO - ======================================================================
+2025-10-23 22:32:34,715 - __main__ - INFO - Kocaeli Üniversitesi Sınav Takvimi Sistemi - Başlatılıyor
+2025-10-23 22:32:34,715 - __main__ - INFO - ======================================================================
+2025-10-23 22:32:34,732 - models.database - INFO - ✅ Database connection test successful
+2025-10-23 22:32:34,732 - __main__ - INFO - ✅ Veritabanı bağlantısı başarılı
+2025-10-23 22:32:35,918 - __main__ - INFO - ✅ Uygulama başlatıldı - Login ekranı
+2025-10-23 22:32:49,503 - controllers.login_controller - INFO - Successful login for user: admin@kocaeli.edu.tr
+2025-10-23 22:32:50,321 - __main__ - INFO - ✅ Kullanıcı girişi başarılı: admin@kocaeli.edu.tr
+2025-10-23 22:32:50,487 - __main__ - INFO - Ana ekran gösteriliyor
+2025-10-23 22:32:52,547 - views.main_window - INFO - Creating page: derslikler
+2025-10-23 22:32:52,597 - views.main_window - INFO - Page created successfully: derslikler
+2025-10-23 22:32:52,612 - views.main_window - INFO - ✅ Switched to page: derslikler
+2025-10-23 22:32:53,466 - views.main_window - INFO - Creating page: dersler
+2025-10-23 22:32:53,481 - views.main_window - INFO - Page created successfully: dersler
+2025-10-23 22:32:53,488 - views.main_window - INFO - ✅ Switched to page: dersler
+2025-10-23 22:32:59,553 - utils.excel_parser - ERROR - Excel parse hatası: Eksik sütunlar: ders_kodu, ders_adi
+2025-10-23 22:33:05,235 - utils.excel_parser - ERROR - Excel parse hatası: Eksik sütunlar: ders_kodu, ders_adi
+2025-10-23 22:37:46,928 - __main__ - INFO - ======================================================================
+2025-10-23 22:37:46,928 - __main__ - INFO - Kocaeli Üniversitesi Sınav Takvimi Sistemi - Başlatılıyor
+2025-10-23 22:37:46,928 - __main__ - INFO - ======================================================================
+2025-10-23 22:37:46,929 - models.database - INFO - ✅ Database connection test successful
+2025-10-23 22:37:46,929 - __main__ - INFO - ✅ Veritabanı bağlantısı başarılı
+2025-10-23 22:37:51,459 - __main__ - INFO - ======================================================================
+2025-10-23 22:37:51,459 - __main__ - INFO - Kocaeli Üniversitesi Sınav Takvimi Sistemi - Başlatılıyor
+2025-10-23 22:37:51,459 - __main__ - INFO - ======================================================================
+2025-10-23 22:37:51,461 - models.database - INFO - ✅ Database connection test successful
+2025-10-23 22:37:51,461 - __main__ - INFO - ✅ Veritabanı bağlantısı başarılı
+2025-10-23 22:37:51,989 - __main__ - INFO - ✅ Uygulama başlatıldı - Login ekranı
+2025-10-23 22:38:04,139 - controllers.login_controller - INFO - Successful login for user: admin@kocaeli.edu.tr
+2025-10-23 22:38:04,962 - __main__ - INFO - ✅ Kullanıcı girişi başarılı: admin@kocaeli.edu.tr
+2025-10-23 22:38:05,111 - __main__ - INFO - Ana ekran gösteriliyor
+2025-10-23 22:38:09,992 - views.main_window - INFO - Creating page: users
+2025-10-23 22:38:09,993 - views.main_window - INFO - Page created successfully: users
+2025-10-23 22:38:09,998 - views.main_window - INFO - ✅ Switched to page: users
+2025-10-23 22:38:11,040 - views.main_window - INFO - Creating page: derslikler
+2025-10-23 22:38:11,051 - views.main_window - INFO - Page created successfully: derslikler
+2025-10-23 22:38:11,059 - views.main_window - INFO - ✅ Switched to page: derslikler
+2025-10-23 22:38:12,453 - views.main_window - INFO - Creating page: dersler
+2025-10-23 22:38:12,457 - views.main_window - INFO - Page created successfully: dersler
+2025-10-23 22:38:12,462 - views.main_window - INFO - ✅ Switched to page: dersler
+2025-10-23 22:38:17,287 - utils.excel_parser - INFO - ✅ 39 ders Excel'den yüklendi (bölüm formatı)
+2025-10-23 22:38:21,211 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (1, null, AIT109, Atatürk İlkeleri ve İnkılap Tarihi I, Öğr. Gör. Melih Yiğit, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,211 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (1, null, AIT109, Atatürk İlkeleri ve İnkılap Tarihi I, Öğr. Gör. Melih Yiğit, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,211 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (1, null, AIT109, Atatürk İlkeleri ve İnkılap Tarihi I, Öğr. Gör. Melih Yiğit, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,211 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: AIT109 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (1, null, AIT109, Atatürk İlkeleri ve İnkılap Tarihi I, Öğr. Gör. Melih Yiğit, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,213 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (2, null, TDB107, Türk Dili I, Öğr. Gör. Şiva Koçak, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,213 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (2, null, TDB107, Türk Dili I, Öğr. Gör. Şiva Koçak, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,213 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (2, null, TDB107, Türk Dili I, Öğr. Gör. Şiva Koçak, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,213 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: TDB107 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (2, null, TDB107, Türk Dili I, Öğr. Gör. Şiva Koçak, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,216 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (3, null, YDB117, İngilizce I, Öğr. Gör. Ali SEZER, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,216 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (3, null, YDB117, İngilizce I, Öğr. Gör. Ali SEZER, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,216 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (3, null, YDB117, İngilizce I, Öğr. Gör. Ali SEZER, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,216 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: YDB117 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (3, null, YDB117, İngilizce I, Öğr. Gör. Ali SEZER, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,218 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (4, null, FEF111, Fizik I, Prof. Dr. Jale Süngü Yılmazkaya, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,218 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (4, null, FEF111, Fizik I, Prof. Dr. Jale Süngü Yılmazkaya, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,221 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (4, null, FEF111, Fizik I, Prof. Dr. Jale Süngü Yılmazkaya, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,221 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: FEF111 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (4, null, FEF111, Fizik I, Prof. Dr. Jale Süngü Yılmazkaya, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,222 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (5, null, FEF113, Lineer Cebir, Doç. Dr. Yücel Türker Ulutaş, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,223 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (5, null, FEF113, Lineer Cebir, Doç. Dr. Yücel Türker Ulutaş, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,223 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (5, null, FEF113, Lineer Cebir, Doç. Dr. Yücel Türker Ulutaş, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,223 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: FEF113 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (5, null, FEF113, Lineer Cebir, Doç. Dr. Yücel Türker Ulutaş, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,224 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (6, null, FEF115, Matematik I, Prof. Dr. Selda Çalkavur, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,224 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (6, null, FEF115, Matematik I, Prof. Dr. Selda Çalkavur, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,224 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (6, null, FEF115, Matematik I, Prof. Dr. Selda Çalkavur, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,225 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: FEF115 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (6, null, FEF115, Matematik I, Prof. Dr. Selda Çalkavur, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,225 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (7, null, BLM101, Bilgisayar Laboratuvarı I, Öğr. Gör. Dr. Onur Gök, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,226 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (7, null, BLM101, Bilgisayar Laboratuvarı I, Öğr. Gör. Dr. Onur Gök, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,226 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (7, null, BLM101, Bilgisayar Laboratuvarı I, Öğr. Gör. Dr. Onur Gök, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,226 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM101 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (7, null, BLM101, Bilgisayar Laboratuvarı I, Öğr. Gör. Dr. Onur Gök, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,227 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (8, null, BLM103, Bilgisayar Mühendisliğine Giriş, Dr. Öğr. Üyesi Mehmet Ali Altuncu, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,227 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (8, null, BLM103, Bilgisayar Mühendisliğine Giriş, Dr. Öğr. Üyesi Mehmet Ali Altuncu, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,237 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (8, null, BLM103, Bilgisayar Mühendisliğine Giriş, Dr. Öğr. Üyesi Mehmet Ali Altuncu, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,237 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM103 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (8, null, BLM103, Bilgisayar Mühendisliğine Giriş, Dr. Öğr. Üyesi Mehmet Ali Altuncu, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,239 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (9, null, BLM105, Programlama I, Öğr. Gör. Dr. Onur Gök, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,239 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (9, null, BLM105, Programlama I, Öğr. Gör. Dr. Onur Gök, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,239 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (9, null, BLM105, Programlama I, Öğr. Gör. Dr. Onur Gök, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,239 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM105 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (9, null, BLM105, Programlama I, Öğr. Gör. Dr. Onur Gök, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,240 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (10, null, FEF203, Diferansiyel Denklemler, Arş. Gör. Dr. Gülcan Özkum, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,240 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (10, null, FEF203, Diferansiyel Denklemler, Arş. Gör. Dr. Gülcan Özkum, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,241 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (10, null, FEF203, Diferansiyel Denklemler, Arş. Gör. Dr. Gülcan Özkum, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,241 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: FEF203 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (10, null, FEF203, Diferansiyel Denklemler, Arş. Gör. Dr. Gülcan Özkum, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,242 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (11, null, MUH201, Nesneye Yönelik Programlama, Dr. Öğr. Üyesi Hikmetcan Özcan, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,242 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (11, null, MUH201, Nesneye Yönelik Programlama, Dr. Öğr. Üyesi Hikmetcan Özcan, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,242 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (11, null, MUH201, Nesneye Yönelik Programlama, Dr. Öğr. Üyesi Hikmetcan Özcan, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,242 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: MUH201 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (11, null, MUH201, Nesneye Yönelik Programlama, Dr. Öğr. Üyesi Hikmetcan Özcan, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,253 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (12, null, BLM207, Veri Yapıları ve Algoritmaları, Prof. Dr. Suhap Şahin, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,254 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (12, null, BLM207, Veri Yapıları ve Algoritmaları, Prof. Dr. Suhap Şahin, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,254 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (12, null, BLM207, Veri Yapıları ve Algoritmaları, Prof. Dr. Suhap Şahin, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,254 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM207 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (12, null, BLM207, Veri Yapıları ve Algoritmaları, Prof. Dr. Suhap Şahin, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,255 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (13, null, BLM209, Programlama Laboratuvarı - I, Dr. Öğr. Üyesi Burak İnner, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,255 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (13, null, BLM209, Programlama Laboratuvarı - I, Dr. Öğr. Üyesi Burak İnner, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,255 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (13, null, BLM209, Programlama Laboratuvarı - I, Dr. Öğr. Üyesi Burak İnner, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,256 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM209 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (13, null, BLM209, Programlama Laboratuvarı - I, Dr. Öğr. Üyesi Burak İnner, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,258 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (14, null, BLM211, Mantıksal Tasarım ve Uygulamalar, Dr. Öğr. Üyesi Fidan Kaya Gülağız, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,258 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (14, null, BLM211, Mantıksal Tasarım ve Uygulamalar, Dr. Öğr. Üyesi Fidan Kaya Gülağız, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,258 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (14, null, BLM211, Mantıksal Tasarım ve Uygulamalar, Dr. Öğr. Üyesi Fidan Kaya Gülağız, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,258 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM211 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (14, null, BLM211, Mantıksal Tasarım ve Uygulamalar, Dr. Öğr. Üyesi Fidan Kaya Gülağız, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,259 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (15, null, BLM205, Ayrık Matematik, Doç. Dr. Alev Mutlu, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,259 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (15, null, BLM205, Ayrık Matematik, Doç. Dr. Alev Mutlu, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,268 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (15, null, BLM205, Ayrık Matematik, Doç. Dr. Alev Mutlu, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,268 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM205 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (15, null, BLM205, Ayrık Matematik, Doç. Dr. Alev Mutlu, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,270 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (16, null, BLM213, Staj I, Dr. Öğr. Üyesi Fidan Kaya Gülağız, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,270 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (16, null, BLM213, Staj I, Dr. Öğr. Üyesi Fidan Kaya Gülağız, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,270 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (16, null, BLM213, Staj I, Dr. Öğr. Üyesi Fidan Kaya Gülağız, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,270 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM213 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (16, null, BLM213, Staj I, Dr. Öğr. Üyesi Fidan Kaya Gülağız, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,271 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (17, null, MUH301, Sayısal Yöntemler, Doç. Dr. MİNE AYLİN BAYRAK, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,272 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (17, null, MUH301, Sayısal Yöntemler, Doç. Dr. MİNE AYLİN BAYRAK, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,272 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (17, null, MUH301, Sayısal Yöntemler, Doç. Dr. MİNE AYLİN BAYRAK, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,272 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: MUH301 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (17, null, MUH301, Sayısal Yöntemler, Doç. Dr. MİNE AYLİN BAYRAK, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,273 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (18, null, BLM303, İşaret ve Sistemler, Prof. Dr. Adnan Kavak, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,273 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (18, null, BLM303, İşaret ve Sistemler, Prof. Dr. Adnan Kavak, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,273 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (18, null, BLM303, İşaret ve Sistemler, Prof. Dr. Adnan Kavak, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,273 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM303 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (18, null, BLM303, İşaret ve Sistemler, Prof. Dr. Adnan Kavak, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,285 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (19, null, BLM305, İşletim Sistemleri, Prof. Dr. Suhap Şahin, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,286 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (19, null, BLM305, İşletim Sistemleri, Prof. Dr. Suhap Şahin, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,286 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (19, null, BLM305, İşletim Sistemleri, Prof. Dr. Suhap Şahin, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,286 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM305 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (19, null, BLM305, İşletim Sistemleri, Prof. Dr. Suhap Şahin, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,287 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (20, null, BLM325, Mikroişlemci Sistemleri, Doç. Dr. Meltem Kurt Pehlivanoğlu, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,287 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (20, null, BLM325, Mikroişlemci Sistemleri, Doç. Dr. Meltem Kurt Pehlivanoğlu, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,287 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (20, null, BLM325, Mikroişlemci Sistemleri, Doç. Dr. Meltem Kurt Pehlivanoğlu, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,287 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM325 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (20, null, BLM325, Mikroişlemci Sistemleri, Doç. Dr. Meltem Kurt Pehlivanoğlu, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,288 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (21, null, BLM307, Yazılım Laboratuvarı I, Dr. Öğr. Üyesi Furkan Göz, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,288 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (21, null, BLM307, Yazılım Laboratuvarı I, Dr. Öğr. Üyesi Furkan Göz, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,288 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (21, null, BLM307, Yazılım Laboratuvarı I, Dr. Öğr. Üyesi Furkan Göz, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,288 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM307 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (21, null, BLM307, Yazılım Laboratuvarı I, Dr. Öğr. Üyesi Furkan Göz, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,290 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (22, null, BLM309, Staj II, Dr. Öğr. Üyesi Fidan Kaya Gülağız, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,290 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (22, null, BLM309, Staj II, Dr. Öğr. Üyesi Fidan Kaya Gülağız, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,300 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (22, null, BLM309, Staj II, Dr. Öğr. Üyesi Fidan Kaya Gülağız, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,300 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM309 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (22, null, BLM309, Staj II, Dr. Öğr. Üyesi Fidan Kaya Gülağız, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,302 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (23, null, BLM323, Bilgi Güvenliği ve Kriptografi, Doç. Dr. Meltem Kurt Pehlivanoğlu, 3, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,302 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (23, null, BLM323, Bilgi Güvenliği ve Kriptografi, Doç. Dr. Meltem Kurt Pehlivanoğlu, 3, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,302 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (23, null, BLM323, Bilgi Güvenliği ve Kriptografi, Doç. Dr. Meltem Kurt Pehlivanoğlu, 3, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,302 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM323 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (23, null, BLM323, Bilgi Güvenliği ve Kriptografi, Doç. Dr. Meltem Kurt Pehlivanoğlu, 3, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,303 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (24, null, BLM321, Robotlar için Matematik Temelleri, Dr. Öğr. Üyesi Burak İnner, 3, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,303 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (24, null, BLM321, Robotlar için Matematik Temelleri, Dr. Öğr. Üyesi Burak İnner, 3, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,304 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (24, null, BLM321, Robotlar için Matematik Temelleri, Dr. Öğr. Üyesi Burak İnner, 3, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,304 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM321 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (24, null, BLM321, Robotlar için Matematik Temelleri, Dr. Öğr. Üyesi Burak İnner, 3, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,305 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (25, null, MUH403, Araştırma Problemleri, Ders Veren Bölüm Öğretim Elemanları, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,305 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (25, null, MUH403, Araştırma Problemleri, Ders Veren Bölüm Öğretim Elemanları, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,305 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (25, null, MUH403, Araştırma Problemleri, Ders Veren Bölüm Öğretim Elemanları, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,315 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: MUH403 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (25, null, MUH403, Araştırma Problemleri, Ders Veren Bölüm Öğretim Elemanları, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,317 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (26, null, MUH402, Bitirme Çalışması, Ders Veren Bölüm Öğretim Elemanları, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,317 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (26, null, MUH402, Bitirme Çalışması, Ders Veren Bölüm Öğretim Elemanları, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,317 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (26, null, MUH402, Bitirme Çalışması, Ders Veren Bölüm Öğretim Elemanları, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,317 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: MUH402 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (26, null, MUH402, Bitirme Çalışması, Ders Veren Bölüm Öğretim Elemanları, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,319 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (27, null, BLM401, Bilgisayar Ağları, Doç. Dr. Pınar Onay Durdu, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,319 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (27, null, BLM401, Bilgisayar Ağları, Doç. Dr. Pınar Onay Durdu, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,319 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (27, null, BLM401, Bilgisayar Ağları, Doç. Dr. Pınar Onay Durdu, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,319 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM401 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (27, null, BLM401, Bilgisayar Ağları, Doç. Dr. Pınar Onay Durdu, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,321 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (28, null, BLM405, İş Hayatı ve İş Güvenliğine Hazırlık, Öğr. Gör. Resul Özkan, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,321 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (28, null, BLM405, İş Hayatı ve İş Güvenliğine Hazırlık, Öğr. Gör. Resul Özkan, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,321 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (28, null, BLM405, İş Hayatı ve İş Güvenliğine Hazırlık, Öğr. Gör. Resul Özkan, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,321 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM405 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (28, null, BLM405, İş Hayatı ve İş Güvenliğine Hazırlık, Öğr. Gör. Resul Özkan, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 22:38:21,322 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (29, null, BLM417, Programlanabilir Yapılar, Dr. Öğr. Üyesi Mehmet Ali Altuncu, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,332 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (29, null, BLM417, Programlanabilir Yapılar, Dr. Öğr. Üyesi Mehmet Ali Altuncu, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,332 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (29, null, BLM417, Programlanabilir Yapılar, Dr. Öğr. Üyesi Mehmet Ali Altuncu, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,332 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM417 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (29, null, BLM417, Programlanabilir Yapılar, Dr. Öğr. Üyesi Mehmet Ali Altuncu, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,334 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (30, null, BLM421, Yazılım Proje Yönetimi, Doç. Dr. Pınar Onay Durdu, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,334 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (30, null, BLM421, Yazılım Proje Yönetimi, Doç. Dr. Pınar Onay Durdu, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,334 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (30, null, BLM421, Yazılım Proje Yönetimi, Doç. Dr. Pınar Onay Durdu, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,334 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM421 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (30, null, BLM421, Yazılım Proje Yönetimi, Doç. Dr. Pınar Onay Durdu, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,336 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (31, null, BLM449, Bilgisayarlı Görmenin Temelleri, Doç. Dr. Orhan Akbulut, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,336 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (31, null, BLM449, Bilgisayarlı Görmenin Temelleri, Doç. Dr. Orhan Akbulut, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,336 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (31, null, BLM449, Bilgisayarlı Görmenin Temelleri, Doç. Dr. Orhan Akbulut, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,336 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM449 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (31, null, BLM449, Bilgisayarlı Görmenin Temelleri, Doç. Dr. Orhan Akbulut, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,338 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (32, null, BLM429, Veri Madenciliğine Giriş, Prof. Dr. Sevinç İlhan Omurca, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,338 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (32, null, BLM429, Veri Madenciliğine Giriş, Prof. Dr. Sevinç İlhan Omurca, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,338 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (32, null, BLM429, Veri Madenciliğine Giriş, Prof. Dr. Sevinç İlhan Omurca, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,347 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM429 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (32, null, BLM429, Veri Madenciliğine Giriş, Prof. Dr. Sevinç İlhan Omurca, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,349 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (33, null, BLM441, Mobil Programlama, Öğr. Gör. Uğur Yıldız, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,349 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (33, null, BLM441, Mobil Programlama, Öğr. Gör. Uğur Yıldız, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,350 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (33, null, BLM441, Mobil Programlama, Öğr. Gör. Uğur Yıldız, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,350 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM441 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (33, null, BLM441, Mobil Programlama, Öğr. Gör. Uğur Yıldız, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,351 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (34, null, MUH445, Mühendisler için İstatistik, Doç. Dr. Orhan Akbulut, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,351 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (34, null, MUH445, Mühendisler için İstatistik, Doç. Dr. Orhan Akbulut, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,351 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (34, null, MUH445, Mühendisler için İstatistik, Doç. Dr. Orhan Akbulut, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,351 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: MUH445 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (34, null, MUH445, Mühendisler için İstatistik, Doç. Dr. Orhan Akbulut, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,353 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (35, null, BLM451, Derin Öğrenmenin Temelleri, Dr. Öğr. Üyesi Burcu Kır Savaş, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,353 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (35, null, BLM451, Derin Öğrenmenin Temelleri, Dr. Öğr. Üyesi Burcu Kır Savaş, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,353 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (35, null, BLM451, Derin Öğrenmenin Temelleri, Dr. Öğr. Üyesi Burcu Kır Savaş, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,354 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM451 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (35, null, BLM451, Derin Öğrenmenin Temelleri, Dr. Öğr. Üyesi Burcu Kır Savaş, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,355 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (36, null, BLM443, Doğal Dil İşleme ve Metin Madenciliğine Giriş, Dr. Öğr. Üyesi Furkan Göz, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,363 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (36, null, BLM443, Doğal Dil İşleme ve Metin Madenciliğine Giriş, Dr. Öğr. Üyesi Furkan Göz, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,363 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (36, null, BLM443, Doğal Dil İşleme ve Metin Madenciliğine Giriş, Dr. Öğr. Üyesi Furkan Göz, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,363 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM443 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (36, null, BLM443, Doğal Dil İşleme ve Metin Madenciliğine Giriş, Dr. Öğr. Üyesi Furkan Göz, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,365 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (37, null, MUH413, Gezgin Robotlara Giriş, Dr. Öğr. Üyesi Burak İnner, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,365 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (37, null, MUH413, Gezgin Robotlara Giriş, Dr. Öğr. Üyesi Burak İnner, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,365 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (37, null, MUH413, Gezgin Robotlara Giriş, Dr. Öğr. Üyesi Burak İnner, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,365 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: MUH413 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (37, null, MUH413, Gezgin Robotlara Giriş, Dr. Öğr. Üyesi Burak İnner, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,366 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (38, null, BLM435, Biyoinformatiğe Giriş, Doç. Dr. Alev Mutlu, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,367 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (38, null, BLM435, Biyoinformatiğe Giriş, Doç. Dr. Alev Mutlu, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,367 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (38, null, BLM435, Biyoinformatiğe Giriş, Doç. Dr. Alev Mutlu, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,367 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM435 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (38, null, BLM435, Biyoinformatiğe Giriş, Doç. Dr. Alev Mutlu, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,368 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (39, null, BLM411, Bilgisayar Semineri, Arş. Gör. Dr. Ayşe Gül Eker, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,368 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (39, null, BLM411, Bilgisayar Semineri, Arş. Gör. Dr. Ayşe Gül Eker, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,368 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (39, null, BLM411, Bilgisayar Semineri, Arş. Gör. Dr. Ayşe Gül Eker, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:21,378 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM411 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (39, null, BLM411, Bilgisayar Semineri, Arş. Gör. Dr. Ayşe Gül Eker, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 22:38:37,417 - views.main_window - INFO - Creating page: ogrenciler
+2025-10-23 22:38:37,423 - views.main_window - INFO - Page created successfully: ogrenciler
+2025-10-23 22:38:37,431 - views.main_window - INFO - ✅ Switched to page: ogrenciler
+2025-10-23 22:38:38,953 - views.main_window - INFO - Creating page: sinavlar
+2025-10-23 22:38:42,371 - views.main_window - INFO - Page created successfully: sinavlar
+2025-10-23 22:38:42,379 - views.main_window - INFO - ✅ Switched to page: sinavlar
+2025-10-23 22:38:44,343 - views.main_window - INFO - Creating page: oturma
+2025-10-23 22:38:46,743 - views.main_window - INFO - Page created successfully: oturma
+2025-10-23 22:38:46,754 - views.main_window - INFO - ✅ Switched to page: oturma
+2025-10-23 22:38:48,150 - views.main_window - INFO - ✅ Switched to page: dersler
