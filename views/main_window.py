@@ -17,6 +17,7 @@ from PySide6.QtGui import QFont, QColor
 sys.path.append(str(Path(__file__).parent.parent))
 
 # Import views
+from views.koordinator.bolum_secim_view import BolumSecimView
 from views.koordinator.derslik_view import DerslikView
 from views.koordinator.ders_yukle_view import DersYukleView
 from views.koordinator.ogrenci_yukle_view import OgrenciYukleView
@@ -291,10 +292,15 @@ class MainWindow(QMainWindow):
     def __init__(self, user_data, parent=None):
         super().__init__(parent)
         self.user_data = user_data
+        self.selected_bolum = None  # Seçilen bölüm bilgisi
         self.theme = Theme(dark_mode=False)
         self.sidebar_collapsed = False
         self.active_menu = 'dashboard'
         self.pages = {}  # Page cache
+        
+        # Admin için bölüm kontrolü
+        self.is_admin = user_data.get('role') == 'Admin'
+        self.needs_bolum_selection = self.is_admin and not user_data.get('bolum_id')
 
         self.setWindowTitle(f"KOÜ Sınav Takvimi - {user_data.get('ad_soyad')}")
         self.setMinimumSize(1400, 800)
@@ -329,10 +335,18 @@ class MainWindow(QMainWindow):
         # Main content - QStackedWidget for page transitions
         self.content_stack = QStackedWidget()
 
-        # Dashboard page
-        self.dashboard_page = self.create_dashboard_page()
-        self.content_stack.addWidget(self.dashboard_page)
-        self.pages['dashboard'] = self.dashboard_page
+        # Dashboard page veya Bölüm Seçim
+        if self.needs_bolum_selection:
+            # Admin için bölüm seçim sayfası
+            self.bolum_secim_page = BolumSecimView(self.user_data)
+            self.bolum_secim_page.bolum_selected.connect(self.on_bolum_selected)
+            self.content_stack.addWidget(self.bolum_secim_page)
+            self.pages['bolum_secim'] = self.bolum_secim_page
+        else:
+            # Normal kullanıcılar için dashboard
+            self.dashboard_page = self.create_dashboard_page()
+            self.content_stack.addWidget(self.dashboard_page)
+            self.pages['dashboard'] = self.dashboard_page
 
         content_layout.addWidget(self.content_stack, 1)
 
@@ -454,13 +468,19 @@ class MainWindow(QMainWindow):
         layout.setContentsMargins(16, 16, 16, 16)
         layout.setSpacing(4)
 
-        # Menu items based on role
+        # Menu items based on role and bolum selection
         user_role = self.user_data.get('role', 'Bölüm Koordinatörü')
         
-        if user_role == 'Admin':
-            # Admin: TAM YETKİ - Hem yönetim hem operasyonel
+        if self.needs_bolum_selection:
+            # Admin bölüm seçmemiş - sadece bölüm seçim sayfası
+            menu_items = [
+                ('🎓', 'Bölüm Seçimi', 'bolum_secim')
+            ]
+        elif user_role == 'Admin':
+            # Admin bölüm seçmiş - TAM YETKİ
             menu_items = [
                 ('🏠', 'Ana Sayfa', 'dashboard'),
+                ('🎓', 'Bölüm Değiştir', 'bolum_secim'),
                 ('👥', 'Kullanıcı Yönetimi', 'users'),
                 ('🏛', 'Derslikler', 'derslikler'),
                 ('📚', 'Ders Listesi', 'dersler'),
@@ -501,7 +521,38 @@ class MainWindow(QMainWindow):
         layout.addWidget(collapse_btn)
 
         self.collapse_btn = collapse_btn
-        self.menu_buttons[0][0].set_active(True)
+        if self.menu_buttons:
+            self.menu_buttons[0][0].set_active(True)
+        
+        # Seçilen bölüm bilgisi (sadece admin için)
+        if self.is_admin and self.selected_bolum:
+            layout.insertSpacing(0, 8)
+            bolum_info = QFrame()
+            bolum_info_layout = QVBoxLayout(bolum_info)
+            bolum_info_layout.setContentsMargins(12, 12, 12, 12)
+            bolum_info_layout.setSpacing(4)
+            
+            bolum_label = QLabel("Seçili Bölüm:")
+            bolum_label.setFont(QFont("Segoe UI", 9))
+            bolum_label.setStyleSheet(f"color: {self.theme.text_muted};")
+            
+            bolum_name = QLabel(self.selected_bolum.get('bolum_adi', ''))
+            bolum_name.setFont(QFont("Segoe UI", 10, QFont.Bold))
+            bolum_name.setStyleSheet("color: #10b981;")
+            bolum_name.setWordWrap(True)
+            
+            bolum_info_layout.addWidget(bolum_label)
+            bolum_info_layout.addWidget(bolum_name)
+            
+            bolum_info.setStyleSheet("""
+                QFrame {
+                    background: rgba(16, 185, 129, 0.1);
+                    border: 1px solid rgba(16, 185, 129, 0.2);
+                    border-radius: 8px;
+                }
+            """)
+            
+            layout.insertWidget(0, bolum_info)
 
         return sidebar
 
@@ -739,13 +790,75 @@ class MainWindow(QMainWindow):
         else:
             logger.error(f"Page {page_id} not found in pages dict")
 
+    def on_bolum_selected(self, bolum_data):
+        """Handle department selection"""
+        logger.info(f"✅ Department selected: {bolum_data['bolum_adi']}")
+        
+        # Update selected bolum
+        self.selected_bolum = bolum_data
+        
+        # Update user_data with bolum_id
+        self.user_data['bolum_id'] = bolum_data['bolum_id']
+        
+        # No longer needs bolum selection
+        self.needs_bolum_selection = False
+        
+        # Clear pages cache (except bolum_secim)
+        pages_to_remove = [k for k in self.pages.keys() if k != 'bolum_secim']
+        for page_id in pages_to_remove:
+            if page_id in self.pages:
+                widget = self.pages[page_id]
+                self.content_stack.removeWidget(widget)
+                widget.deleteLater()
+                del self.pages[page_id]
+        
+        # Create dashboard
+        self.dashboard_page = self.create_dashboard_page()
+        self.content_stack.addWidget(self.dashboard_page)
+        self.pages['dashboard'] = self.dashboard_page
+        
+        # Recreate sidebar with new menu
+        self.recreate_sidebar()
+        
+        # Switch to dashboard
+        self.switch_menu('dashboard')
+        
+        logger.info("✅ UI updated with department context")
+    
+    def recreate_sidebar(self):
+        """Recreate sidebar with updated menu"""
+        # Remove old sidebar
+        old_sidebar = self.sidebar
+        content = self.centralWidget().layout().itemAt(1).widget()
+        content_layout = content.layout()
+        content_layout.removeWidget(old_sidebar)
+        old_sidebar.deleteLater()
+        
+        # Create new sidebar
+        self.sidebar = self.create_sidebar()
+        content_layout.insertWidget(0, self.sidebar)
+    
     def create_page(self, page_id):
         """Create page widget based on role and page_id"""
         user_role = self.user_data.get('role', 'Bölüm Koordinatörü')
         
-        # Dashboard is pre-created
+        # Dashboard is pre-created (if exists)
         if page_id == 'dashboard':
-            return self.dashboard_page
+            if hasattr(self, 'dashboard_page') and self.dashboard_page:
+                return self.dashboard_page
+            else:
+                # Create dashboard if not exists
+                self.dashboard_page = self.create_dashboard_page()
+                return self.dashboard_page
+        
+        # Bölüm seçim sayfası
+        if page_id == 'bolum_secim':
+            if 'bolum_secim' in self.pages:
+                return self.pages['bolum_secim']
+            else:
+                bolum_secim = BolumSecimView(self.user_data)
+                bolum_secim.bolum_selected.connect(self.on_bolum_selected)
+                return bolum_secim
         
         # Create page based on role
         try:

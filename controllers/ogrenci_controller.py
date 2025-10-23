@@ -5,6 +5,7 @@ Business logic for student management
 
 import logging
 from typing import Dict, List
+from models.database import db
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +15,7 @@ class OgrenciController:
     
     def __init__(self, ogrenci_model):
         self.ogrenci_model = ogrenci_model
+        self.db = db
     
     def create_ogrenci(self, ogrenci_data: Dict) -> Dict:
         """Create new student"""
@@ -37,6 +39,11 @@ class OgrenciController:
             # Create student
             ogrenci_id = self.ogrenci_model.insert_ogrenci(ogrenci_data)
             
+            # Register courses if provided
+            dersler = ogrenci_data.get('dersler', [])
+            if dersler and ogrenci_data.get('bolum_id'):
+                self._register_courses(ogrenci_data['ogrenci_no'], dersler, ogrenci_data['bolum_id'])
+            
             return {
                 'success': True,
                 'message': f"Öğrenci başarıyla oluşturuldu!",
@@ -46,6 +53,30 @@ class OgrenciController:
         except Exception as e:
             logger.error(f"Error creating student: {e}")
             return {'success': False, 'message': str(e)}
+    
+    def _register_courses(self, ogrenci_no: str, ders_kodlari: List[str], bolum_id: int):
+        """Register student to courses"""
+        try:
+            from models.ders_model import DersModel
+            ders_model = DersModel(db)
+            
+            for ders_kodu in ders_kodlari:
+                # Find course by code
+                ders = ders_model.get_ders_by_kod(bolum_id, ders_kodu.strip())
+                if ders:
+                    # Insert course registration
+                    query = """
+                        INSERT INTO ders_kayitlari (ogrenci_no, ders_id)
+                        VALUES (%s, %s)
+                        ON CONFLICT (ogrenci_no, ders_id) DO NOTHING
+                    """
+                    self.db.execute_query(query, (ogrenci_no, ders['ders_id']), fetch=False)
+                    logger.info(f"✅ {ogrenci_no} -> {ders_kodu} kayıt edildi")
+                else:
+                    logger.warning(f"Ders bulunamadı: {ders_kodu}")
+                    
+        except Exception as e:
+            logger.error(f"Error registering courses: {e}")
     
     def update_ogrenci(self, ogrenci_no: str, ogrenci_data: Dict) -> Dict:
         """Update student"""

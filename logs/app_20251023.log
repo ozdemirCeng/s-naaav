@@ -1029,3 +1029,521 @@ DETAIL:  Hata veren satır (39, null, BLM411, Bilgisayar Semineri, Arş. Gör. D
 2025-10-23 22:38:46,743 - views.main_window - INFO - Page created successfully: oturma
 2025-10-23 22:38:46,754 - views.main_window - INFO - ✅ Switched to page: oturma
 2025-10-23 22:38:48,150 - views.main_window - INFO - ✅ Switched to page: dersler
+2025-10-23 23:26:25,409 - __main__ - INFO - ======================================================================
+2025-10-23 23:26:25,409 - __main__ - INFO - Kocaeli Üniversitesi Sınav Takvimi Sistemi - Başlatılıyor
+2025-10-23 23:26:25,409 - __main__ - INFO - ======================================================================
+2025-10-23 23:26:25,430 - models.database - INFO - ✅ Database connection test successful
+2025-10-23 23:26:25,430 - __main__ - INFO - ✅ Veritabanı bağlantısı başarılı
+2025-10-23 23:26:26,233 - __main__ - INFO - ✅ Uygulama başlatıldı - Login ekranı
+2025-10-23 23:26:40,784 - controllers.login_controller - INFO - Successful login for user: admin@kocaeli.edu.tr
+2025-10-23 23:26:41,602 - __main__ - INFO - ✅ Kullanıcı girişi başarılı: admin@kocaeli.edu.tr
+2025-10-23 23:26:41,762 - __main__ - INFO - Ana ekran gösteriliyor
+2025-10-23 23:26:43,809 - views.main_window - INFO - Creating page: users
+2025-10-23 23:26:43,810 - views.main_window - INFO - Page created successfully: users
+2025-10-23 23:26:43,814 - views.main_window - INFO - ✅ Switched to page: users
+2025-10-23 23:26:44,980 - views.main_window - INFO - Creating page: derslikler
+2025-10-23 23:26:45,003 - views.main_window - INFO - Page created successfully: derslikler
+2025-10-23 23:26:45,014 - views.main_window - INFO - ✅ Switched to page: derslikler
+2025-10-23 23:26:46,731 - views.main_window - INFO - Creating page: dersler
+2025-10-23 23:26:46,739 - views.main_window - INFO - Page created successfully: dersler
+2025-10-23 23:26:46,751 - views.main_window - INFO - ✅ Switched to page: dersler
+2025-10-23 23:26:47,734 - views.main_window - INFO - Creating page: ogrenciler
+2025-10-23 23:26:47,738 - views.main_window - INFO - Page created successfully: ogrenciler
+2025-10-23 23:26:47,745 - views.main_window - INFO - ✅ Switched to page: ogrenciler
+2025-10-23 23:26:51,051 - views.main_window - INFO - ✅ Switched to page: ogrenciler
+2025-10-23 23:26:53,692 - views.main_window - INFO - ✅ Switched to page: dersler
+2025-10-23 23:26:58,778 - utils.excel_parser - INFO - ✅ 39 ders Excel'den yüklendi (bölüm formatı)
+2025-10-23 23:27:01,160 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (40, null, AIT109, Atatürk İlkeleri ve İnkılap Tarihi I, Öğr. Gör. Melih Yiğit, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,161 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (40, null, AIT109, Atatürk İlkeleri ve İnkılap Tarihi I, Öğr. Gör. Melih Yiğit, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,161 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (40, null, AIT109, Atatürk İlkeleri ve İnkılap Tarihi I, Öğr. Gör. Melih Yiğit, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,161 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: AIT109 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (40, null, AIT109, Atatürk İlkeleri ve İnkılap Tarihi I, Öğr. Gör. Melih Yiğit, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,163 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (41, null, TDB107, Türk Dili I, Öğr. Gör. Şiva Koçak, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,163 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (41, null, TDB107, Türk Dili I, Öğr. Gör. Şiva Koçak, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,163 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (41, null, TDB107, Türk Dili I, Öğr. Gör. Şiva Koçak, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,163 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: TDB107 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (41, null, TDB107, Türk Dili I, Öğr. Gör. Şiva Koçak, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,164 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (42, null, YDB117, İngilizce I, Öğr. Gör. Ali SEZER, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,166 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (42, null, YDB117, İngilizce I, Öğr. Gör. Ali SEZER, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,166 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (42, null, YDB117, İngilizce I, Öğr. Gör. Ali SEZER, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,166 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: YDB117 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (42, null, YDB117, İngilizce I, Öğr. Gör. Ali SEZER, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,167 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (43, null, FEF111, Fizik I, Prof. Dr. Jale Süngü Yılmazkaya, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,167 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (43, null, FEF111, Fizik I, Prof. Dr. Jale Süngü Yılmazkaya, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,168 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (43, null, FEF111, Fizik I, Prof. Dr. Jale Süngü Yılmazkaya, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,168 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: FEF111 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (43, null, FEF111, Fizik I, Prof. Dr. Jale Süngü Yılmazkaya, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,169 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (44, null, FEF113, Lineer Cebir, Doç. Dr. Yücel Türker Ulutaş, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,169 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (44, null, FEF113, Lineer Cebir, Doç. Dr. Yücel Türker Ulutaş, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,169 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (44, null, FEF113, Lineer Cebir, Doç. Dr. Yücel Türker Ulutaş, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,178 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: FEF113 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (44, null, FEF113, Lineer Cebir, Doç. Dr. Yücel Türker Ulutaş, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,180 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (45, null, FEF115, Matematik I, Prof. Dr. Selda Çalkavur, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,180 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (45, null, FEF115, Matematik I, Prof. Dr. Selda Çalkavur, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,180 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (45, null, FEF115, Matematik I, Prof. Dr. Selda Çalkavur, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,180 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: FEF115 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (45, null, FEF115, Matematik I, Prof. Dr. Selda Çalkavur, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,182 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (46, null, BLM101, Bilgisayar Laboratuvarı I, Öğr. Gör. Dr. Onur Gök, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,182 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (46, null, BLM101, Bilgisayar Laboratuvarı I, Öğr. Gör. Dr. Onur Gök, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,182 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (46, null, BLM101, Bilgisayar Laboratuvarı I, Öğr. Gör. Dr. Onur Gök, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,182 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM101 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (46, null, BLM101, Bilgisayar Laboratuvarı I, Öğr. Gör. Dr. Onur Gök, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,184 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (47, null, BLM103, Bilgisayar Mühendisliğine Giriş, Dr. Öğr. Üyesi Mehmet Ali Altuncu, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,184 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (47, null, BLM103, Bilgisayar Mühendisliğine Giriş, Dr. Öğr. Üyesi Mehmet Ali Altuncu, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,184 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (47, null, BLM103, Bilgisayar Mühendisliğine Giriş, Dr. Öğr. Üyesi Mehmet Ali Altuncu, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,184 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM103 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (47, null, BLM103, Bilgisayar Mühendisliğine Giriş, Dr. Öğr. Üyesi Mehmet Ali Altuncu, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,185 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (48, null, BLM105, Programlama I, Öğr. Gör. Dr. Onur Gök, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,185 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (48, null, BLM105, Programlama I, Öğr. Gör. Dr. Onur Gök, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,194 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (48, null, BLM105, Programlama I, Öğr. Gör. Dr. Onur Gök, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,194 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM105 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (48, null, BLM105, Programlama I, Öğr. Gör. Dr. Onur Gök, 1, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,196 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (49, null, FEF203, Diferansiyel Denklemler, Arş. Gör. Dr. Gülcan Özkum, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,196 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (49, null, FEF203, Diferansiyel Denklemler, Arş. Gör. Dr. Gülcan Özkum, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,196 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (49, null, FEF203, Diferansiyel Denklemler, Arş. Gör. Dr. Gülcan Özkum, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,196 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: FEF203 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (49, null, FEF203, Diferansiyel Denklemler, Arş. Gör. Dr. Gülcan Özkum, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,199 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (50, null, MUH201, Nesneye Yönelik Programlama, Dr. Öğr. Üyesi Hikmetcan Özcan, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,199 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (50, null, MUH201, Nesneye Yönelik Programlama, Dr. Öğr. Üyesi Hikmetcan Özcan, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,200 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (50, null, MUH201, Nesneye Yönelik Programlama, Dr. Öğr. Üyesi Hikmetcan Özcan, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,200 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: MUH201 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (50, null, MUH201, Nesneye Yönelik Programlama, Dr. Öğr. Üyesi Hikmetcan Özcan, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,202 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (51, null, BLM207, Veri Yapıları ve Algoritmaları, Prof. Dr. Suhap Şahin, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,202 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (51, null, BLM207, Veri Yapıları ve Algoritmaları, Prof. Dr. Suhap Şahin, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,202 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (51, null, BLM207, Veri Yapıları ve Algoritmaları, Prof. Dr. Suhap Şahin, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,202 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM207 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (51, null, BLM207, Veri Yapıları ve Algoritmaları, Prof. Dr. Suhap Şahin, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,204 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (52, null, BLM209, Programlama Laboratuvarı - I, Dr. Öğr. Üyesi Burak İnner, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,204 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (52, null, BLM209, Programlama Laboratuvarı - I, Dr. Öğr. Üyesi Burak İnner, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,209 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (52, null, BLM209, Programlama Laboratuvarı - I, Dr. Öğr. Üyesi Burak İnner, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,209 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM209 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (52, null, BLM209, Programlama Laboratuvarı - I, Dr. Öğr. Üyesi Burak İnner, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,210 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (53, null, BLM211, Mantıksal Tasarım ve Uygulamalar, Dr. Öğr. Üyesi Fidan Kaya Gülağız, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,211 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (53, null, BLM211, Mantıksal Tasarım ve Uygulamalar, Dr. Öğr. Üyesi Fidan Kaya Gülağız, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,211 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (53, null, BLM211, Mantıksal Tasarım ve Uygulamalar, Dr. Öğr. Üyesi Fidan Kaya Gülağız, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,211 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM211 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (53, null, BLM211, Mantıksal Tasarım ve Uygulamalar, Dr. Öğr. Üyesi Fidan Kaya Gülağız, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,212 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (54, null, BLM205, Ayrık Matematik, Doç. Dr. Alev Mutlu, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,212 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (54, null, BLM205, Ayrık Matematik, Doç. Dr. Alev Mutlu, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,212 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (54, null, BLM205, Ayrık Matematik, Doç. Dr. Alev Mutlu, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,212 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM205 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (54, null, BLM205, Ayrık Matematik, Doç. Dr. Alev Mutlu, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,213 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (55, null, BLM213, Staj I, Dr. Öğr. Üyesi Fidan Kaya Gülağız, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,213 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (55, null, BLM213, Staj I, Dr. Öğr. Üyesi Fidan Kaya Gülağız, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,214 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (55, null, BLM213, Staj I, Dr. Öğr. Üyesi Fidan Kaya Gülağız, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,214 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM213 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (55, null, BLM213, Staj I, Dr. Öğr. Üyesi Fidan Kaya Gülağız, 2, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,215 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (56, null, MUH301, Sayısal Yöntemler, Doç. Dr. MİNE AYLİN BAYRAK, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,215 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (56, null, MUH301, Sayısal Yöntemler, Doç. Dr. MİNE AYLİN BAYRAK, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,225 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (56, null, MUH301, Sayısal Yöntemler, Doç. Dr. MİNE AYLİN BAYRAK, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,225 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: MUH301 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (56, null, MUH301, Sayısal Yöntemler, Doç. Dr. MİNE AYLİN BAYRAK, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,226 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (57, null, BLM303, İşaret ve Sistemler, Prof. Dr. Adnan Kavak, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,227 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (57, null, BLM303, İşaret ve Sistemler, Prof. Dr. Adnan Kavak, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,227 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (57, null, BLM303, İşaret ve Sistemler, Prof. Dr. Adnan Kavak, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,227 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM303 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (57, null, BLM303, İşaret ve Sistemler, Prof. Dr. Adnan Kavak, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,228 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (58, null, BLM305, İşletim Sistemleri, Prof. Dr. Suhap Şahin, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,228 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (58, null, BLM305, İşletim Sistemleri, Prof. Dr. Suhap Şahin, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,228 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (58, null, BLM305, İşletim Sistemleri, Prof. Dr. Suhap Şahin, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,228 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM305 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (58, null, BLM305, İşletim Sistemleri, Prof. Dr. Suhap Şahin, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,229 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (59, null, BLM325, Mikroişlemci Sistemleri, Doç. Dr. Meltem Kurt Pehlivanoğlu, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,229 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (59, null, BLM325, Mikroişlemci Sistemleri, Doç. Dr. Meltem Kurt Pehlivanoğlu, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,229 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (59, null, BLM325, Mikroişlemci Sistemleri, Doç. Dr. Meltem Kurt Pehlivanoğlu, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,229 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM325 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (59, null, BLM325, Mikroişlemci Sistemleri, Doç. Dr. Meltem Kurt Pehlivanoğlu, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,231 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (60, null, BLM307, Yazılım Laboratuvarı I, Dr. Öğr. Üyesi Furkan Göz, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,241 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (60, null, BLM307, Yazılım Laboratuvarı I, Dr. Öğr. Üyesi Furkan Göz, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,241 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (60, null, BLM307, Yazılım Laboratuvarı I, Dr. Öğr. Üyesi Furkan Göz, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,241 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM307 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (60, null, BLM307, Yazılım Laboratuvarı I, Dr. Öğr. Üyesi Furkan Göz, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,243 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (61, null, BLM309, Staj II, Dr. Öğr. Üyesi Fidan Kaya Gülağız, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,243 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (61, null, BLM309, Staj II, Dr. Öğr. Üyesi Fidan Kaya Gülağız, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,243 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (61, null, BLM309, Staj II, Dr. Öğr. Üyesi Fidan Kaya Gülağız, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,243 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM309 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (61, null, BLM309, Staj II, Dr. Öğr. Üyesi Fidan Kaya Gülağız, 3, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,244 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (62, null, BLM323, Bilgi Güvenliği ve Kriptografi, Doç. Dr. Meltem Kurt Pehlivanoğlu, 3, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,244 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (62, null, BLM323, Bilgi Güvenliği ve Kriptografi, Doç. Dr. Meltem Kurt Pehlivanoğlu, 3, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,244 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (62, null, BLM323, Bilgi Güvenliği ve Kriptografi, Doç. Dr. Meltem Kurt Pehlivanoğlu, 3, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,244 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM323 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (62, null, BLM323, Bilgi Güvenliği ve Kriptografi, Doç. Dr. Meltem Kurt Pehlivanoğlu, 3, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,246 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (63, null, BLM321, Robotlar için Matematik Temelleri, Dr. Öğr. Üyesi Burak İnner, 3, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,246 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (63, null, BLM321, Robotlar için Matematik Temelleri, Dr. Öğr. Üyesi Burak İnner, 3, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,246 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (63, null, BLM321, Robotlar için Matematik Temelleri, Dr. Öğr. Üyesi Burak İnner, 3, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,246 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM321 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (63, null, BLM321, Robotlar için Matematik Temelleri, Dr. Öğr. Üyesi Burak İnner, 3, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,257 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (64, null, MUH403, Araştırma Problemleri, Ders Veren Bölüm Öğretim Elemanları, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,257 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (64, null, MUH403, Araştırma Problemleri, Ders Veren Bölüm Öğretim Elemanları, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,257 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (64, null, MUH403, Araştırma Problemleri, Ders Veren Bölüm Öğretim Elemanları, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,257 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: MUH403 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (64, null, MUH403, Araştırma Problemleri, Ders Veren Bölüm Öğretim Elemanları, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,259 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (65, null, MUH402, Bitirme Çalışması, Ders Veren Bölüm Öğretim Elemanları, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,259 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (65, null, MUH402, Bitirme Çalışması, Ders Veren Bölüm Öğretim Elemanları, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,259 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (65, null, MUH402, Bitirme Çalışması, Ders Veren Bölüm Öğretim Elemanları, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,259 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: MUH402 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (65, null, MUH402, Bitirme Çalışması, Ders Veren Bölüm Öğretim Elemanları, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,259 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (66, null, BLM401, Bilgisayar Ağları, Doç. Dr. Pınar Onay Durdu, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,259 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (66, null, BLM401, Bilgisayar Ağları, Doç. Dr. Pınar Onay Durdu, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,261 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (66, null, BLM401, Bilgisayar Ağları, Doç. Dr. Pınar Onay Durdu, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,261 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM401 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (66, null, BLM401, Bilgisayar Ağları, Doç. Dr. Pınar Onay Durdu, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,262 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (67, null, BLM405, İş Hayatı ve İş Güvenliğine Hazırlık, Öğr. Gör. Resul Özkan, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,262 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (67, null, BLM405, İş Hayatı ve İş Güvenliğine Hazırlık, Öğr. Gör. Resul Özkan, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,271 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (67, null, BLM405, İş Hayatı ve İş Güvenliğine Hazırlık, Öğr. Gör. Resul Özkan, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,271 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM405 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (67, null, BLM405, İş Hayatı ve İş Güvenliğine Hazırlık, Öğr. Gör. Resul Özkan, 4, Zorunlu, t) içeriyor.
+
+2025-10-23 23:27:01,273 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (68, null, BLM417, Programlanabilir Yapılar, Dr. Öğr. Üyesi Mehmet Ali Altuncu, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,273 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (68, null, BLM417, Programlanabilir Yapılar, Dr. Öğr. Üyesi Mehmet Ali Altuncu, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,273 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (68, null, BLM417, Programlanabilir Yapılar, Dr. Öğr. Üyesi Mehmet Ali Altuncu, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,273 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM417 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (68, null, BLM417, Programlanabilir Yapılar, Dr. Öğr. Üyesi Mehmet Ali Altuncu, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,275 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (69, null, BLM421, Yazılım Proje Yönetimi, Doç. Dr. Pınar Onay Durdu, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,275 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (69, null, BLM421, Yazılım Proje Yönetimi, Doç. Dr. Pınar Onay Durdu, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,275 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (69, null, BLM421, Yazılım Proje Yönetimi, Doç. Dr. Pınar Onay Durdu, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,275 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM421 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (69, null, BLM421, Yazılım Proje Yönetimi, Doç. Dr. Pınar Onay Durdu, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,276 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (70, null, BLM449, Bilgisayarlı Görmenin Temelleri, Doç. Dr. Orhan Akbulut, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,276 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (70, null, BLM449, Bilgisayarlı Görmenin Temelleri, Doç. Dr. Orhan Akbulut, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,276 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (70, null, BLM449, Bilgisayarlı Görmenin Temelleri, Doç. Dr. Orhan Akbulut, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,276 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM449 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (70, null, BLM449, Bilgisayarlı Görmenin Temelleri, Doç. Dr. Orhan Akbulut, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,289 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (71, null, BLM429, Veri Madenciliğine Giriş, Prof. Dr. Sevinç İlhan Omurca, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,289 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (71, null, BLM429, Veri Madenciliğine Giriş, Prof. Dr. Sevinç İlhan Omurca, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,289 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (71, null, BLM429, Veri Madenciliğine Giriş, Prof. Dr. Sevinç İlhan Omurca, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,289 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM429 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (71, null, BLM429, Veri Madenciliğine Giriş, Prof. Dr. Sevinç İlhan Omurca, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,290 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (72, null, BLM441, Mobil Programlama, Öğr. Gör. Uğur Yıldız, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,292 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (72, null, BLM441, Mobil Programlama, Öğr. Gör. Uğur Yıldız, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,292 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (72, null, BLM441, Mobil Programlama, Öğr. Gör. Uğur Yıldız, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,292 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM441 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (72, null, BLM441, Mobil Programlama, Öğr. Gör. Uğur Yıldız, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,293 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (73, null, MUH445, Mühendisler için İstatistik, Doç. Dr. Orhan Akbulut, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,294 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (73, null, MUH445, Mühendisler için İstatistik, Doç. Dr. Orhan Akbulut, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,294 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (73, null, MUH445, Mühendisler için İstatistik, Doç. Dr. Orhan Akbulut, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,294 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: MUH445 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (73, null, MUH445, Mühendisler için İstatistik, Doç. Dr. Orhan Akbulut, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,295 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (74, null, BLM451, Derin Öğrenmenin Temelleri, Dr. Öğr. Üyesi Burcu Kır Savaş, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,295 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (74, null, BLM451, Derin Öğrenmenin Temelleri, Dr. Öğr. Üyesi Burcu Kır Savaş, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,302 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (74, null, BLM451, Derin Öğrenmenin Temelleri, Dr. Öğr. Üyesi Burcu Kır Savaş, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,302 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM451 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (74, null, BLM451, Derin Öğrenmenin Temelleri, Dr. Öğr. Üyesi Burcu Kır Savaş, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,304 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (75, null, BLM443, Doğal Dil İşleme ve Metin Madenciliğine Giriş, Dr. Öğr. Üyesi Furkan Göz, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,304 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (75, null, BLM443, Doğal Dil İşleme ve Metin Madenciliğine Giriş, Dr. Öğr. Üyesi Furkan Göz, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,304 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (75, null, BLM443, Doğal Dil İşleme ve Metin Madenciliğine Giriş, Dr. Öğr. Üyesi Furkan Göz, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,304 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM443 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (75, null, BLM443, Doğal Dil İşleme ve Metin Madenciliğine Giriş, Dr. Öğr. Üyesi Furkan Göz, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,305 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (76, null, MUH413, Gezgin Robotlara Giriş, Dr. Öğr. Üyesi Burak İnner, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,305 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (76, null, MUH413, Gezgin Robotlara Giriş, Dr. Öğr. Üyesi Burak İnner, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,305 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (76, null, MUH413, Gezgin Robotlara Giriş, Dr. Öğr. Üyesi Burak İnner, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,305 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: MUH413 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (76, null, MUH413, Gezgin Robotlara Giriş, Dr. Öğr. Üyesi Burak İnner, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,306 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (77, null, BLM435, Biyoinformatiğe Giriş, Doç. Dr. Alev Mutlu, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,307 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (77, null, BLM435, Biyoinformatiğe Giriş, Doç. Dr. Alev Mutlu, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,307 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (77, null, BLM435, Biyoinformatiğe Giriş, Doç. Dr. Alev Mutlu, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,307 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM435 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (77, null, BLM435, Biyoinformatiğe Giriş, Doç. Dr. Alev Mutlu, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,308 - models.database - ERROR - Cursor hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (78, null, BLM411, Bilgisayar Semineri, Arş. Gör. Dr. Ayşe Gül Eker, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,318 - models.database - ERROR - Veritabanı işlem hatası: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (78, null, BLM411, Bilgisayar Semineri, Arş. Gör. Dr. Ayşe Gül Eker, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,318 - controllers.ders_controller - ERROR - Error creating course: HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (78, null, BLM411, Bilgisayar Semineri, Arş. Gör. Dr. Ayşe Gül Eker, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:01,318 - views.koordinator.ders_yukle_view - WARNING - Failed to save course: BLM411 - HATA:  null value in column "bolum_id" of relation "dersler" violates not-null constraint
+DETAIL:  Hata veren satır (78, null, BLM411, Bilgisayar Semineri, Arş. Gör. Dr. Ayşe Gül Eker, 4, Seçmeli, t) içeriyor.
+
+2025-10-23 23:27:06,536 - views.main_window - INFO - Creating page: sinavlar
+2025-10-23 23:27:10,173 - views.main_window - INFO - Page created successfully: sinavlar
+2025-10-23 23:27:10,182 - views.main_window - INFO - ✅ Switched to page: sinavlar
+2025-10-23 23:27:11,414 - views.main_window - INFO - Creating page: oturma
+2025-10-23 23:27:13,210 - views.main_window - INFO - Page created successfully: oturma
+2025-10-23 23:27:13,224 - views.main_window - INFO - ✅ Switched to page: oturma
+2025-10-23 23:27:17,128 - views.main_window - INFO - Creating page: ayarlar
+2025-10-23 23:27:17,133 - views.main_window - INFO - Page created successfully: ayarlar
+2025-10-23 23:27:17,147 - views.main_window - INFO - ✅ Switched to page: ayarlar
+2025-10-23 23:27:18,736 - views.main_window - INFO - Creating page: raporlar
+2025-10-23 23:27:18,753 - views.main_window - INFO - Page created successfully: raporlar
+2025-10-23 23:27:18,773 - views.main_window - INFO - ✅ Switched to page: raporlar
+2025-10-23 23:27:19,990 - views.main_window - INFO - ✅ Switched to page: ayarlar
+2025-10-23 23:27:21,164 - views.main_window - INFO - ✅ Switched to page: raporlar
+2025-10-23 23:27:23,410 - views.main_window - INFO - ✅ Switched to page: ayarlar
+2025-10-23 23:27:24,691 - views.main_window - INFO - ✅ Switched to page: users
+2025-10-23 23:27:25,899 - views.main_window - INFO - ✅ Switched to page: dashboard
+2025-10-23 23:27:27,136 - views.main_window - INFO - ✅ Switched to page: dersler
+2025-10-23 23:27:28,793 - views.main_window - INFO - ✅ Switched to page: dashboard
+2025-10-23 23:27:30,228 - __main__ - INFO - Kullanıcı çıkış yaptı
+2025-10-23 23:27:30,247 - __main__ - INFO - Login ekranına dönüldü
+2025-10-23 23:27:31,716 - models.database - INFO - Tüm veritabanı bağlantıları kapatıldı
+2025-10-23 23:27:31,716 - __main__ - INFO - Veritabanı bağlantıları kapatıldı
+2025-10-23 23:27:31,716 - __main__ - INFO - ======================================================================
+2025-10-23 23:27:31,716 - __main__ - INFO - Uygulama kapatıldı
+2025-10-23 23:27:31,716 - __main__ - INFO - ======================================================================

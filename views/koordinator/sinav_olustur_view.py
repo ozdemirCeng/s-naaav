@@ -9,7 +9,8 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QFrame, QComboBox, QDateTimeEdit, QMessageBox,
     QGroupBox, QFormLayout, QSpinBox, QTableWidget,
-    QTableWidgetItem, QHeaderView, QProgressBar
+    QTableWidgetItem, QHeaderView, QProgressBar, QCheckBox,
+    QLineEdit, QScrollArea, QFileDialog
 )
 from PySide6.QtCore import Qt, QDateTime, QThread, Signal
 from PySide6.QtGui import QFont
@@ -99,27 +100,86 @@ class SinavOlusturView(QWidget):
         self.bitis_tarih.setDisplayFormat("dd.MM.yyyy HH:mm")
         params_layout.addRow("Bitiş Tarihi:", self.bitis_tarih)
         
-        self.gun_basina_sinav = QSpinBox()
-        self.gun_basina_sinav.setMinimum(1)
-        self.gun_basina_sinav.setMaximum(10)
-        self.gun_basina_sinav.setValue(3)
-        params_layout.addRow("Gün Başına Sınav:", self.gun_basina_sinav)
-        
         self.sinav_suresi = QSpinBox()
         self.sinav_suresi.setMinimum(60)
         self.sinav_suresi.setMaximum(240)
-        self.sinav_suresi.setValue(120)
+        self.sinav_suresi.setValue(75)
         self.sinav_suresi.setSuffix(" dakika")
         params_layout.addRow("Sınav Süresi:", self.sinav_suresi)
         
         self.ara_suresi = QSpinBox()
         self.ara_suresi.setMinimum(0)
         self.ara_suresi.setMaximum(120)
-        self.ara_suresi.setValue(30)
+        self.ara_suresi.setValue(15)
         self.ara_suresi.setSuffix(" dakika")
-        params_layout.addRow("Aralar Süresi:", self.ara_suresi)
+        params_layout.addRow("Bekleme Süresi:", self.ara_suresi)
         
         layout.addWidget(params_card)
+        
+        # Weekday selection
+        gunler_card = QGroupBox("Program Dahil Olacak Günler")
+        gunler_layout = QVBoxLayout(gunler_card)
+        
+        gunler_grid = QHBoxLayout()
+        self.gun_checkboxes = {}
+        gun_isimleri = {
+            0: "Pazartesi",
+            1: "Salı",
+            2: "Çarşamba",
+            3: "Perşembe",
+            4: "Cuma",
+            5: "Cumartesi",
+            6: "Pazar"
+        }
+        
+        for day_num, day_name in gun_isimleri.items():
+            checkbox = QCheckBox(day_name)
+            # Weekdays checked by default
+            if day_num < 5:
+                checkbox.setChecked(True)
+            self.gun_checkboxes[day_num] = checkbox
+            gunler_grid.addWidget(checkbox)
+        
+        gunler_layout.addLayout(gunler_grid)
+        layout.addWidget(gunler_card)
+        
+        # Course selection
+        ders_card = QGroupBox("Programa Dahil Olacak Dersler")
+        ders_layout = QVBoxLayout(ders_card)
+        
+        # Search and select all
+        ders_toolbar = QHBoxLayout()
+        self.ders_search = QLineEdit()
+        self.ders_search.setPlaceholderText("Ders ara...")
+        self.ders_search.textChanged.connect(self.filter_courses)
+        
+        select_all_btn = QPushButton("Tümünü Seç/Kaldır")
+        select_all_btn.clicked.connect(self.toggle_all_courses)
+        select_all_btn.setFixedWidth(150)
+        
+        ders_toolbar.addWidget(self.ders_search)
+        ders_toolbar.addWidget(select_all_btn)
+        ders_layout.addLayout(ders_toolbar)
+        
+        # Scrollable course list
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setMaximumHeight(250)
+        
+        self.ders_container = QWidget()
+        self.ders_container_layout = QVBoxLayout(self.ders_container)
+        self.ders_container_layout.setSpacing(4)
+        self.ders_checkboxes = {}
+        
+        scroll.setWidget(self.ders_container)
+        ders_layout.addWidget(scroll)
+        
+        # Stats
+        self.ders_stats_label = QLabel("Yükleniyor...")
+        self.ders_stats_label.setStyleSheet("color: #6b7280; font-size: 11px; padding: 4px;")
+        ders_layout.addWidget(self.ders_stats_label)
+        
+        layout.addWidget(ders_card)
         
         # Progress
         self.progress_bar = QProgressBar()
@@ -175,12 +235,22 @@ class SinavOlusturView(QWidget):
         
         results_layout.addWidget(self.results_table)
         
+        btn_layout = QHBoxLayout()
+        
         save_btn = QPushButton("💾 Programı Kaydet")
         save_btn.setObjectName("primaryBtn")
         save_btn.setFixedHeight(40)
         save_btn.clicked.connect(self.save_schedule)
         
-        results_layout.addWidget(save_btn)
+        export_btn = QPushButton("📊 Excel'e Aktar")
+        export_btn.setObjectName("secondaryBtn")
+        export_btn.setFixedHeight(40)
+        export_btn.clicked.connect(self.export_to_excel)
+        
+        btn_layout.addWidget(save_btn)
+        btn_layout.addWidget(export_btn)
+        
+        results_layout.addLayout(btn_layout)
         
         layout.addWidget(self.results_group)
         layout.addStretch()
@@ -194,12 +264,63 @@ class SinavOlusturView(QWidget):
             
             if not dersler:
                 QMessageBox.warning(self, "Uyarı", "Henüz ders tanımlanmamış!")
+                return
             
             if not derslikler:
                 QMessageBox.warning(self, "Uyarı", "Henüz derslik tanımlanmamış!")
+                return
+            
+            # Populate course checkboxes
+            self.populate_course_list(dersler)
                 
         except Exception as e:
             logger.error(f"Error loading data: {e}")
+    
+    def populate_course_list(self, dersler):
+        """Populate course selection checkboxes"""
+        # Clear existing
+        while self.ders_container_layout.count():
+            item = self.ders_container_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+        
+        self.ders_checkboxes.clear()
+        
+        for ders in dersler:
+            checkbox = QCheckBox(f"{ders['ders_kodu']} - {ders['ders_adi']}")
+            checkbox.setChecked(True)  # All selected by default
+            checkbox.setProperty('ders_id', ders['ders_id'])
+            checkbox.setProperty('ders_kodu', ders['ders_kodu'])
+            checkbox.stateChanged.connect(self.update_course_stats)
+            self.ders_checkboxes[ders['ders_id']] = checkbox
+            self.ders_container_layout.addWidget(checkbox)
+        
+        self.update_course_stats()
+    
+    def filter_courses(self):
+        """Filter courses based on search"""
+        search_text = self.ders_search.text().lower()
+        
+        for ders_id, checkbox in self.ders_checkboxes.items():
+            text = checkbox.text().lower()
+            checkbox.setVisible(search_text in text)
+    
+    def toggle_all_courses(self):
+        """Toggle all course selections"""
+        # Check if all are selected
+        all_checked = all(cb.isChecked() for cb in self.ders_checkboxes.values())
+        
+        # Toggle
+        for checkbox in self.ders_checkboxes.values():
+            checkbox.setChecked(not all_checked)
+        
+        self.update_course_stats()
+    
+    def update_course_stats(self):
+        """Update course selection statistics"""
+        total = len(self.ders_checkboxes)
+        selected = sum(1 for cb in self.ders_checkboxes.values() if cb.isChecked())
+        self.ders_stats_label.setText(f"Seçili: {selected} / {total} ders")
     
     def create_schedule(self):
         """Create exam schedule"""
@@ -208,14 +329,29 @@ class SinavOlusturView(QWidget):
             QMessageBox.warning(self, "Uyarı", "Bitiş tarihi başlangıç tarihinden sonra olmalıdır!")
             return
         
+        # Get allowed weekdays
+        allowed_weekdays = [day for day, checkbox in self.gun_checkboxes.items() if checkbox.isChecked()]
+        
+        if not allowed_weekdays:
+            QMessageBox.warning(self, "Uyarı", "En az bir gün seçmelisiniz!")
+            return
+        
+        # Get selected courses
+        selected_ders_ids = [ders_id for ders_id, checkbox in self.ders_checkboxes.items() if checkbox.isChecked()]
+        
+        if not selected_ders_ids:
+            QMessageBox.warning(self, "Uyarı", "En az bir ders seçmelisiniz!")
+            return
+        
         params = {
             'bolum_id': self.bolum_id,
             'sinav_tipi': self.sinav_tipi_combo.currentText(),
             'baslangic_tarih': self.baslangic_tarih.dateTime().toPython(),
             'bitis_tarih': self.bitis_tarih.dateTime().toPython(),
-            'gun_basina_sinav': self.gun_basina_sinav.value(),
             'sinav_suresi': self.sinav_suresi.value(),
-            'ara_suresi': self.ara_suresi.value()
+            'ara_suresi': self.ara_suresi.value(),
+            'allowed_weekdays': allowed_weekdays,
+            'selected_ders_ids': selected_ders_ids
         }
         
         # Show progress
@@ -243,17 +379,30 @@ class SinavOlusturView(QWidget):
         self.progress_label.setVisible(False)
         self.create_btn.setEnabled(True)
         
+        schedule = result.get('schedule', [])
+        
+        if schedule:
+            # Show partial or complete schedule
+            self.current_schedule = schedule
+            self.display_schedule(schedule)
+        
         if result.get('success'):
-            self.current_schedule = result['schedule']
-            self.display_schedule(result['schedule'])
             QMessageBox.information(
                 self,
                 "Başarılı",
                 f"✅ Sınav programı başarıyla oluşturuldu!\n\n"
-                f"Toplam {len(result['schedule'])} sınav planlandı."
+                f"Toplam {len(schedule)} sınav planlandı."
             )
         else:
-            QMessageBox.warning(self, "Uyarı", result.get('message', 'Program oluşturulamadı!'))
+            # Show warning with details and partial schedule
+            unassigned = result.get('unassigned_courses', [])
+            message = result.get('message', 'Program oluşturulamadı!')
+            
+            if schedule:
+                message += f"\n\n✅ {len(schedule)} sınav yerleştirildi."
+                message += f"\n❌ {len(unassigned)} ders yerleştirilemedi."
+            
+            QMessageBox.warning(self, "Kısmi Program Oluşturuldu", message)
     
     def on_planning_error(self, error_msg):
         """Handle planning error"""
@@ -311,3 +460,85 @@ class SinavOlusturView(QWidget):
             except Exception as e:
                 logger.error(f"Error saving schedule: {e}")
                 QMessageBox.critical(self, "Hata", f"Program kaydedilirken hata oluştu:\n{str(e)}")
+    
+    def export_to_excel(self):
+        """Export schedule to Excel file"""
+        if not hasattr(self, 'current_schedule') or not self.current_schedule:
+            QMessageBox.warning(self, "Uyarı", "Aktarılacak program bulunamadı!")
+            return
+        
+        import pandas as pd
+        
+        # Ask for save location
+        default_name = f"sinav_programi_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Excel Dosyası Kaydet",
+            default_name,
+            "Excel Files (*.xlsx)"
+        )
+        
+        if not file_path:
+            return
+        
+        try:
+            # Prepare data
+            data = []
+            for sinav in self.current_schedule:
+                tarih = datetime.fromisoformat(sinav['tarih_saat']) if isinstance(sinav['tarih_saat'], str) else sinav['tarih_saat']
+                
+                data.append({
+                    'Tarih': tarih.strftime('%d.%m.%Y'),
+                    'Saat': tarih.strftime('%H:%M'),
+                    'Gün': ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'][tarih.weekday()],
+                    'Ders Kodu': sinav.get('ders_kodu', ''),
+                    'Ders Adı': sinav.get('ders_adi', ''),
+                    'Derslik': sinav.get('derslik_kodu', ''),
+                    'Öğrenci Sayısı': sinav.get('ogrenci_sayisi', 0),
+                    'Sınav Türü': sinav.get('sinav_tipi', ''),
+                    'Süre (dk)': sinav.get('sure', 0)
+                })
+            
+            # Create DataFrame
+            df = pd.DataFrame(data)
+            
+            # Create Excel writer
+            with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
+                df.to_excel(writer, sheet_name='Sınav Programı', index=False)
+                
+                # Get workbook and worksheet
+                workbook = writer.book
+                worksheet = writer.sheets['Sınav Programı']
+                
+                # Auto-adjust column widths
+                for column in worksheet.columns:
+                    max_length = 0
+                    column_letter = column[0].column_letter
+                    for cell in column:
+                        try:
+                            if len(str(cell.value)) > max_length:
+                                max_length = len(cell.value)
+                        except:
+                            pass
+                    adjusted_width = min(max_length + 2, 50)
+                    worksheet.column_dimensions[column_letter].width = adjusted_width
+                
+                # Style header row
+                from openpyxl.styles import Font, PatternFill, Alignment
+                header_fill = PatternFill(start_color="10b981", end_color="10b981", fill_type="solid")
+                header_font = Font(bold=True, color="FFFFFF")
+                
+                for cell in worksheet[1]:
+                    cell.fill = header_fill
+                    cell.font = header_font
+                    cell.alignment = Alignment(horizontal='center', vertical='center')
+            
+            QMessageBox.information(
+                self,
+                "Başarılı",
+                f"✅ Sınav programı Excel'e aktarıldı!\n\n{len(data)} sınav kaydedildi.\n\nDosya: {file_path}"
+            )
+            
+        except Exception as e:
+            logger.error(f"Error exporting to Excel: {e}")
+            QMessageBox.critical(self, "Hata", f"Excel'e aktarırken hata oluştu:\n{str(e)}")

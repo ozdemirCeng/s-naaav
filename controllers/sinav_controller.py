@@ -5,7 +5,8 @@ Business logic for exam schedule management
 
 import logging
 from typing import Dict, List
-from datetime import datetime
+from datetime import datetime, timedelta
+
 
 logger = logging.getLogger(__name__)
 
@@ -45,10 +46,18 @@ class SinavController:
                 return {'success': False, 'message': "Boş program kaydedilemez!"}
             
             # First, create a program
+            # Find earliest and latest dates in schedule
+            all_dates = [exam.get('tarih_saat') for exam in schedule]
+            all_dates = [d if isinstance(d, datetime) else datetime.fromisoformat(d) for d in all_dates]
+            baslangic_tarihi = min(all_dates).date()
+            bitis_tarihi = max(all_dates).date()
+            
             program_data = {
                 'bolum_id': schedule[0].get('bolum_id'),
                 'program_adi': f"Sınav Programı - {datetime.now().strftime('%d.%m.%Y')}",
                 'sinav_tipi': schedule[0].get('sinav_tipi', 'Final'),
+                'baslangic_tarihi': baslangic_tarihi,
+                'bitis_tarihi': bitis_tarihi,
                 'aktif': True
             }
             
@@ -59,24 +68,42 @@ class SinavController:
             
             program_id = program_result['program_id']
             
-            # Insert each exam
+            # Group exams by (ders_id, tarih_saat) - same course at same time uses multiple classrooms
+            from collections import defaultdict
+            exam_groups = defaultdict(list)
+            
+            for exam in schedule:
+                key = (exam.get('ders_id'), exam.get('tarih_saat'))
+                exam_groups[key].append(exam)
+            
+            # Insert each unique exam (one record per course per time slot)
             success_count = 0
             error_count = 0
             
-            for exam in schedule:
+            for (ders_id, tarih_saat), exams in exam_groups.items():
                 try:
+                    sure = exams[0].get('sure', 120)
+                    
+                    # Calculate end time
+                    if isinstance(tarih_saat, str):
+                        tarih_saat = datetime.fromisoformat(tarih_saat)
+                    
+                    bitis_saat = tarih_saat + timedelta(minutes=sure)
+                    
                     exam_data = {
                         'program_id': program_id,
-                        'ders_id': exam.get('ders_id'),
-                        'tarih_saat': exam.get('tarih_saat'),
-                        'sure': exam.get('sure', 120)
+                        'ders_id': ders_id,
+                        'tarih': tarih_saat.date(),
+                        'baslangic_saati': tarih_saat.time(),
+                        'bitis_saati': bitis_saat.time()
                     }
                     
                     sinav_id = self.sinav_model.insert_sinav(exam_data)
                     
-                    # Add classroom assignment
-                    if exam.get('derslik_id'):
-                        self.sinav_model.assign_derslik(sinav_id, exam['derslik_id'])
+                    # Add all classroom assignments for this exam
+                    for exam in exams:
+                        if exam.get('derslik_id'):
+                            self.sinav_model.assign_derslik(sinav_id, exam['derslik_id'])
                     
                     success_count += 1
                     

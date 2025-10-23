@@ -91,8 +91,13 @@ class DersModel:
         return True
     
     def delete_ders(self, ders_id: int) -> bool:
-        """Delete course (soft delete)"""
-        query = "UPDATE dersler SET aktif = FALSE WHERE ders_id = %s"
-        self.db.execute_query(query, (ders_id,), fetch=False)
-        logger.info(f"✅ Course deleted: {ders_id}")
+        """Delete course (hard delete)"""
+        # First delete course registrations
+        query1 = "DELETE FROM ders_kayitlari WHERE ders_id = %s"
+        self.db.execute_query(query1, (ders_id,), fetch=False)
+        
+        # Then delete course
+        query2 = "DELETE FROM dersler WHERE ders_id = %s"
+        self.db.execute_query(query2, (ders_id,), fetch=False)
+        logger.info(f"Course deleted: {ders_id}")
         return True

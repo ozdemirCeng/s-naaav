@@ -47,6 +47,17 @@ class OgrenciModel:
         """
         return self.db.execute_query(query, (ders_id,))
     
+    def get_dersler_by_ogrenci(self, ogrenci_no: str) -> List[Dict]:
+        """Get all courses taken by a student"""
+        query = """
+            SELECT d.*, dk.kayit_id
+            FROM dersler d
+            JOIN ders_kayitlari dk ON d.ders_id = dk.ders_id
+            WHERE dk.ogrenci_no = %s AND d.aktif = TRUE
+            ORDER BY d.ders_kodu
+        """
+        return self.db.execute_query(query, (ogrenci_no,))
+    
     def insert_ogrenci(self, ogrenci_data: Dict) -> str:
         """Insert new student"""
         query = """
@@ -85,8 +96,13 @@ class OgrenciModel:
         return True
     
     def delete_ogrenci(self, ogrenci_no: str) -> bool:
-        """Delete student (soft delete)"""
-        query = "UPDATE ogrenciler SET aktif = FALSE WHERE ogrenci_no = %s"
-        self.db.execute_query(query, (ogrenci_no,), fetch=False)
-        logger.info(f"✅ Student deleted: {ogrenci_no}")
+        """Delete student (hard delete)"""
+        # First delete course registrations
+        query1 = "DELETE FROM ders_kayitlari WHERE ogrenci_no = %s"
+        self.db.execute_query(query1, (ogrenci_no,), fetch=False)
+        
+        # Then delete student
+        query2 = "DELETE FROM ogrenciler WHERE ogrenci_no = %s"
+        self.db.execute_query(query2, (ogrenci_no,), fetch=False)
+        logger.info(f"Student deleted: {ogrenci_no}")
         return True
