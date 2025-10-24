@@ -57,16 +57,22 @@ class DerslikController:
                 return {'success': False, 'message': message}
             
             # Update classroom
-            self.derslik_model.update_derslik(derslik_id, derslik_data)
+            success = self.derslik_model.update_derslik(derslik_id, derslik_data)
             
-            return {
-                'success': True,
-                'message': f"Derslik başarıyla güncellendi!"
-            }
+            if success:
+                return {
+                    'success': True,
+                    'message': f"✅ Derslik başarıyla güncellendi! ({derslik_data['derslik_kodu']})"
+                }
+            else:
+                return {
+                    'success': False,
+                    'message': f"❌ Derslik güncellenemedi. ID bulunamadı: {derslik_id}"
+                }
             
         except Exception as e:
-            logger.error(f"Error updating classroom: {e}")
-            return {'success': False, 'message': str(e)}
+            logger.error(f"Error updating classroom: {e}", exc_info=True)
+            return {'success': False, 'message': f"Hata: {str(e)}"}
     
     def delete_derslik(self, derslik_id: int) -> Dict:
         """Delete classroom (soft delete)"""
@@ -77,20 +83,26 @@ class DerslikController:
             if usage['sinav_sayisi'] > 0:
                 return {
                     'success': False,
-                    'message': f"Bu derslik {usage['sinav_sayisi']} sınavda kullanılıyor. Önce sınavları silin."
+                    'message': f"⚠️ Bu derslik {usage['sinav_sayisi']} sınavda kullanılıyor. Önce sınavları silin."
                 }
             
             # Delete classroom
-            self.derslik_model.delete_derslik(derslik_id)
+            success = self.derslik_model.delete_derslik(derslik_id)
             
-            return {
-                'success': True,
-                'message': f"Derslik başarıyla silindi!"
-            }
+            if success:
+                return {
+                    'success': True,
+                    'message': f"✅ Derslik başarıyla silindi!"
+                }
+            else:
+                return {
+                    'success': False,
+                    'message': f"❌ Derslik silinemedi. ID bulunamadı: {derslik_id}"
+                }
             
         except Exception as e:
-            logger.error(f"Error deleting classroom: {e}")
-            return {'success': False, 'message': str(e)}
+            logger.error(f"Error deleting classroom: {e}", exc_info=True)
+            return {'success': False, 'message': f"Hata: {str(e)}"}
     
     def get_derslik_statistics(self, bolum_id: int) -> Dict:
         """Get classroom statistics"""

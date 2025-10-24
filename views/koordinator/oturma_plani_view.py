@@ -7,7 +7,8 @@ import logging
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QFrame, QComboBox, QMessageBox, QGroupBox, QTableWidget,
-    QTableWidgetItem, QHeaderView, QProgressBar
+    QTableWidgetItem, QHeaderView, QProgressBar, QGridLayout,
+    QScrollArea, QTabWidget
 )
 from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtGui import QFont
@@ -56,10 +57,24 @@ class OturmaPaniView(QWidget):
         self.load_sinavlar()
     
     def setup_ui(self):
-        """Setup UI"""
-        layout = QVBoxLayout(self)
+        """Setup UI with scroll"""
+        # Main scroll area
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.NoFrame)
+        
+        scroll_content = QWidget()
+        layout = QVBoxLayout(scroll_content)
         layout.setContentsMargins(24, 24, 24, 24)
         layout.setSpacing(20)
+        
+        # Set scroll widget at the end
+        scroll.setWidget(scroll_content)
+        
+        # Add scroll to main layout
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addWidget(scroll)
         
         # Header
         header = QFrame()
@@ -209,14 +224,34 @@ class OturmaPaniView(QWidget):
         if index >= 0 and index < len(self.sinavlar):
             sinav = self.sinavlar[index]
             
-            self.exam_info_label.setText(
-                f"📚 Ders: {sinav['ders_kodu']} - {sinav['ders_adi']}\n"
-                f"📅 Tarih: {sinav['tarih_saat']}\n"
-                f"👥 Öğrenci Sayısı: {sinav.get('ogrenci_sayisi', 'Bilinmiyor')}\n"
-                f"🏛 Derslik: {sinav.get('derslik_kodu', 'Bilinmiyor')}"
-            )
-            self.exam_info_label.setVisible(True)
-            self.generate_btn.setEnabled(True)
+            try:
+                # Get detailed classroom info
+                derslikler = self.sinav_model.get_sinav_derslikleri(sinav['sinav_id'])
+                derslik_info = []
+                total_capacity = 0
+                
+                for dr in derslikler:
+                    derslik_info.append(f"{dr['derslik_adi']} ({dr['kapasite']} kişi, {dr['satir_sayisi']}x{dr['sutun_sayisi']})")
+                    total_capacity += dr['kapasite']
+                
+                derslik_text = '\n   '.join(derslik_info) if derslik_info else 'Derslik bilgisi yok'
+                ogrenci_sayisi = sinav.get('ogrenci_sayisi', 0)
+                
+                logger.info(f"📊 Sınav seçildi: {sinav['ders_kodu']}, {len(derslikler)} derslik")
+                
+                self.exam_info_label.setText(
+                    f"📚 Ders: {sinav['ders_kodu']} - {sinav['ders_adi']}\n"
+                    f"📅 Tarih: {sinav['tarih_saat']}\n"
+                    f"👥 Öğrenci Sayısı: {ogrenci_sayisi}\n"
+                    f"🏛 Derslik(ler) ({len(derslikler)} adet - Toplam {total_capacity} kişi):\n   {derslik_text}"
+                )
+                self.exam_info_label.setVisible(True)
+                self.generate_btn.setEnabled(True)
+            except Exception as e:
+                logger.error(f"Error loading classroom info: {e}", exc_info=True)
+                self.exam_info_label.setText(f"❌ Derslik bilgisi yüklenemedi: {str(e)}")
+                self.exam_info_label.setVisible(True)
+                self.generate_btn.setEnabled(False)
         else:
             self.exam_info_label.setVisible(False)
             self.generate_btn.setEnabled(False)
@@ -276,16 +311,83 @@ class OturmaPaniView(QWidget):
         QMessageBox.critical(self, "Hata", f"Plan oluşturulurken hata oluştu:\n{error_msg}")
     
     def display_plan(self, plan):
-        """Display generated seating plan"""
+        """Display generated seating plan with visual classroom layouts"""
         self.results_group.setVisible(True)
+        
+        # Clear existing content
         self.results_table.setRowCount(0)
         
-        for row, oturma in enumerate(plan):
+        # Get classroom info from the current plan
+        if not hasattr(self, 'sinavlar') or self.sinav_combo.currentIndex() < 0:
+            return
+        
+        sinav = self.sinavlar[self.sinav_combo.currentIndex()]
+        derslikler = self.sinav_model.get_sinav_derslikleri(sinav['sinav_id'])
+        
+        # Create tab widget for visual layouts if not exists
+        if not hasattr(self, 'visual_tabs'):
+            self.visual_tabs = QTabWidget()
+            self.results_group.layout().insertWidget(0, self.visual_tabs)
+        else:
+            # Clear existing tabs
+            self.visual_tabs.clear()
+        
+        # Tab 1: Visual Layout
+        visual_tab = QWidget()
+        visual_layout = QVBoxLayout(visual_tab)
+        visual_layout.setSpacing(20)
+        
+        # Group plan by classroom
+        from collections import defaultdict
+        classroom_plans = defaultdict(list)
+        for seat in plan:
+            classroom_plans[seat['derslik_id']].append(seat)
+        
+        # Create visual layout for each classroom
+        for derslik in derslikler:
+            derslik_id = derslik['derslik_id']
+            if derslik_id not in classroom_plans:
+                continue
+            
+            # Classroom header
+            header = QLabel(f"🏛 {derslik['derslik_adi']} - {derslik['satir_sayisi']} Sıra × {derslik['sutun_sayisi']} Sütun")
+            header.setStyleSheet("font-size: 14px; font-weight: bold; color: #2563eb; padding: 8px;")
+            visual_layout.addWidget(header)
+            
+            # Create grid visualization
+            grid_widget = self.create_classroom_grid(
+                derslik['satir_sayisi'],
+                derslik['sutun_sayisi'],
+                classroom_plans[derslik_id]
+            )
+            visual_layout.addWidget(grid_widget)
+        
+        visual_layout.addStretch()
+        
+        # Wrap in scroll area
+        scroll = QScrollArea()
+        scroll.setWidget(visual_tab)
+        scroll.setWidgetResizable(True)
+        self.visual_tabs.addTab(scroll, "🖼️ Görsel Düzen")
+        
+        # Tab 2: List View (existing table)
+        list_tab = QWidget()
+        list_layout = QVBoxLayout(list_tab)
+        
+        # Move table to list tab
+        self.results_table.setParent(None)
+        list_layout.addWidget(self.results_table)
+        self.visual_tabs.addTab(list_tab, "📋 Liste Görünümü")
+        
+        # Sort by classroom, then row, then column
+        sorted_plan = sorted(plan, key=lambda x: (x.get('derslik_adi', ''), x.get('satir', 0), x.get('sutun', 0)))
+        
+        for row, oturma in enumerate(sorted_plan):
             self.results_table.insertRow(row)
             
             self.results_table.setItem(row, 0, QTableWidgetItem(str(oturma.get('ogrenci_no', ''))))
             self.results_table.setItem(row, 1, QTableWidgetItem(str(oturma.get('ad_soyad', ''))))
-            self.results_table.setItem(row, 2, QTableWidgetItem(str(oturma.get('derslik_kodu', ''))))
+            self.results_table.setItem(row, 2, QTableWidgetItem(str(oturma.get('derslik_adi', oturma.get('derslik_kodu', '')))))
             
             satir_item = QTableWidgetItem(str(oturma.get('satir', '')))
             satir_item.setTextAlignment(Qt.AlignCenter)
@@ -294,6 +396,129 @@ class OturmaPaniView(QWidget):
             sutun_item = QTableWidgetItem(str(oturma.get('sutun', '')))
             sutun_item.setTextAlignment(Qt.AlignCenter)
             self.results_table.setItem(row, 4, sutun_item)
+    
+    def create_classroom_grid(self, rows: int, cols: int, seating_plan: list) -> QWidget:
+        """Create visual grid representation of classroom seating"""
+        container = QFrame()
+        container.setStyleSheet("""
+            QFrame {
+                background: white;
+                border: 2px solid #e5e7eb;
+                border-radius: 8px;
+                padding: 16px;
+            }
+        """)
+        
+        layout = QVBoxLayout(container)
+        layout.setSpacing(12)
+        
+        # Legend
+        legend_layout = QHBoxLayout()
+        legend_layout.addWidget(QLabel("Gösterge:"))
+        
+        occupied_label = QLabel("■ Dolu")
+        occupied_label.setStyleSheet("color: #10b981; font-weight: bold;")
+        legend_layout.addWidget(occupied_label)
+        
+        empty_label = QLabel("□ Boş")
+        empty_label.setStyleSheet("color: #9ca3af; font-weight: bold;")
+        legend_layout.addWidget(empty_label)
+        
+        legend_layout.addStretch()
+        layout.addLayout(legend_layout)
+        
+        # Create seating map
+        seat_map = {}
+        for seat in seating_plan:
+            key = (seat['satir'], seat['sutun'])
+            seat_map[key] = seat
+        
+        # Grid
+        grid = QGridLayout()
+        grid.setSpacing(4)
+        grid.setContentsMargins(8, 8, 8, 8)
+        
+        # Add board/front indicator
+        board_label = QLabel("📋 TAHTA / ÖN")
+        board_label.setAlignment(Qt.AlignCenter)
+        board_label.setStyleSheet("""
+            background: #3b82f6;
+            color: white;
+            font-weight: bold;
+            padding: 8px;
+            border-radius: 4px;
+        """)
+        grid.addWidget(board_label, 0, 0, 1, cols)
+        
+        # Create seats
+        for row in range(1, rows + 1):
+            for col in range(1, cols + 1):
+                seat_widget = QFrame()
+                seat_widget.setFixedSize(80, 60)
+                
+                seat_layout = QVBoxLayout(seat_widget)
+                seat_layout.setContentsMargins(4, 4, 4, 4)
+                seat_layout.setSpacing(2)
+                
+                key = (row, col)
+                if key in seat_map:
+                    # Occupied seat
+                    student = seat_map[key]
+                    seat_widget.setStyleSheet("""
+                        QFrame {
+                            background: #d1fae5;
+                            border: 2px solid #10b981;
+                            border-radius: 6px;
+                        }
+                    """)
+                    
+                    # Student info
+                    no_label = QLabel(f"🎓 {student['ogrenci_no']}")
+                    no_label.setStyleSheet("font-size: 9px; font-weight: bold; color: #065f46;")
+                    no_label.setAlignment(Qt.AlignCenter)
+                    
+                    # Truncate name if too long
+                    name = student['ad_soyad']
+                    if len(name) > 12:
+                        name = name[:10] + "..."
+                    name_label = QLabel(name)
+                    name_label.setStyleSheet("font-size: 8px; color: #047857;")
+                    name_label.setAlignment(Qt.AlignCenter)
+                    name_label.setWordWrap(True)
+                    
+                    seat_layout.addWidget(no_label)
+                    seat_layout.addWidget(name_label)
+                else:
+                    # Empty seat
+                    seat_widget.setStyleSheet("""
+                        QFrame {
+                            background: #f3f4f6;
+                            border: 1px dashed #d1d5db;
+                            border-radius: 6px;
+                        }
+                    """)
+                    
+                    empty_label = QLabel("Boş")
+                    empty_label.setStyleSheet("font-size: 9px; color: #9ca3af;")
+                    empty_label.setAlignment(Qt.AlignCenter)
+                    seat_layout.addWidget(empty_label)
+                
+                # Add row and column numbers
+                position_label = QLabel(f"S{row}:Sü{col}")
+                position_label.setStyleSheet("font-size: 7px; color: #6b7280;")
+                position_label.setAlignment(Qt.AlignCenter)
+                seat_layout.addWidget(position_label)
+                
+                grid.addWidget(seat_widget, row, col - 1)  # row offset by 1 for board
+        
+        layout.addLayout(grid)
+        
+        # Statistics
+        stats_label = QLabel(f"📊 Toplam: {len(seating_plan)} öğrenci / {rows * cols} koltuk (Doluluk: %{int(len(seating_plan) / (rows * cols) * 100)})")
+        stats_label.setStyleSheet("color: #6b7280; font-size: 11px; padding: 8px;")
+        layout.addWidget(stats_label)
+        
+        return container
     
     def save_plan(self):
         """Save seating plan to database"""

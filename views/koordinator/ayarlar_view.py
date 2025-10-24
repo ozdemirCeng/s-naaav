@@ -7,7 +7,7 @@ import logging
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QFrame, QLineEdit, QSpinBox, QCheckBox, QMessageBox,
-    QGroupBox, QFormLayout, QComboBox
+    QGroupBox, QFormLayout, QComboBox, QScrollArea
 )
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
@@ -28,10 +28,24 @@ class AyarlarView(QWidget):
         self.load_settings()
     
     def setup_ui(self):
-        """Setup UI"""
-        layout = QVBoxLayout(self)
+        """Setup UI with scroll"""
+        # Main scroll area
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.NoFrame)
+        
+        scroll_content = QWidget()
+        layout = QVBoxLayout(scroll_content)
         layout.setContentsMargins(24, 24, 24, 24)
         layout.setSpacing(20)
+        
+        # Set scroll widget
+        scroll.setWidget(scroll_content)
+        
+        # Add scroll to main layout
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addWidget(scroll)
         
         # Header
         header = QFrame()

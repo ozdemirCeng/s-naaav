@@ -82,36 +82,58 @@ class DerslikModel:
 
     def update_derslik(self, derslik_id: int, derslik_data: Dict) -> bool:
         """Derslik güncelle"""
-        query = """
-                UPDATE derslikler
-                SET derslik_kodu = %s,
-                    derslik_adi  = %s,
-                    kapasite     = %s,
-                    satir_sayisi = %s,
-                    sutun_sayisi = %s,
-                    sira_yapisi  = %s
-                WHERE derslik_id = %s \
-                """
-        params = (
-            derslik_data['derslik_kodu'],
-            derslik_data['derslik_adi'],
-            derslik_data['kapasite'],
-            derslik_data['satir_sayisi'],
-            derslik_data['sutun_sayisi'],
-            derslik_data['sira_yapisi'],
-            derslik_id
-        )
+        try:
+            query = """
+                    UPDATE derslikler
+                    SET derslik_kodu = %s,
+                        derslik_adi  = %s,
+                        kapasite     = %s,
+                        satir_sayisi = %s,
+                        sutun_sayisi = %s,
+                        sira_yapisi  = %s
+                    WHERE derslik_id = %s
+                    RETURNING derslik_id
+                    """
+            params = (
+                derslik_data['derslik_kodu'],
+                derslik_data['derslik_adi'],
+                derslik_data['kapasite'],
+                derslik_data['satir_sayisi'],
+                derslik_data['sutun_sayisi'],
+                derslik_data['sira_yapisi'],
+                derslik_id
+            )
 
-        self.db.execute_query(query, params, fetch=False)
-        logger.info(f"✅ Derslik güncellendi: {derslik_id}")
-        return True
+            result = self.db.execute_query(query, params)
+            if result and len(result) > 0:
+                logger.info(f"✅ Derslik güncellendi: {derslik_id} - {derslik_data['derslik_kodu']}")
+                return True
+            else:
+                logger.warning(f"⚠️ Derslik güncellenemedi, ID bulunamadı: {derslik_id}")
+                return False
+        except Exception as e:
+            logger.error(f"❌ Derslik güncelleme hatası: {e}", exc_info=True)
+            raise
 
     def delete_derslik(self, derslik_id: int) -> bool:
         """Derslik sil (soft delete)"""
-        query = "UPDATE derslikler SET aktif = FALSE WHERE derslik_id = %s"
-        self.db.execute_query(query, (derslik_id,), fetch=False)
-        logger.info(f"✅ Derslik silindi: {derslik_id}")
-        return True
+        try:
+            query = """
+                UPDATE derslikler 
+                SET aktif = FALSE 
+                WHERE derslik_id = %s 
+                RETURNING derslik_id, derslik_kodu
+            """
+            result = self.db.execute_query(query, (derslik_id,))
+            if result and len(result) > 0:
+                logger.info(f"✅ Derslik silindi: {derslik_id} - {result[0].get('derslik_kodu', '')}")
+                return True
+            else:
+                logger.warning(f"⚠️ Derslik silinemedi, ID bulunamadı: {derslik_id}")
+                return False
+        except Exception as e:
+            logger.error(f"❌ Derslik silme hatası: {e}", exc_info=True)
+            raise
 
     def check_derslik_kullanimi(self, derslik_id: int) -> Dict:
         """Dersliğin sınav programında kullanım durumunu kontrol et"""

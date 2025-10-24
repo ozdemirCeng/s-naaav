@@ -45,6 +45,23 @@ class SinavController:
             if not schedule:
                 return {'success': False, 'message': "Boş program kaydedilemez!"}
             
+            # DEBUG: Check for duplicate courses in schedule
+            from collections import Counter
+            ders_ids = [exam.get('ders_id') for exam in schedule]
+            ders_counts = Counter(ders_ids)
+            duplicates = {ders_id: count for ders_id, count in ders_counts.items() if count > 1}
+            
+            if duplicates:
+                logger.warning(f"⚠️ Found duplicate ders_id in schedule: {duplicates}")
+                # Group by time to see if they're at the same time (OK) or different times (ERROR)
+                for ders_id, count in duplicates.items():
+                    times = [str(exam.get('tarih_saat')) for exam in schedule if exam.get('ders_id') == ders_id]
+                    unique_times = set(times)
+                    if len(unique_times) > 1:
+                        logger.error(f"❌ CRITICAL: ders_id {ders_id} scheduled at {len(unique_times)} different times: {unique_times}")
+                    else:
+                        logger.info(f"✅ OK: ders_id {ders_id} appears {count} times but all at same time (multi-classroom)")
+            
             # First, create a program
             # Find earliest and latest dates in schedule
             all_dates = [exam.get('tarih_saat') for exam in schedule]
@@ -54,7 +71,7 @@ class SinavController:
             
             program_data = {
                 'bolum_id': schedule[0].get('bolum_id'),
-                'program_adi': f"Sınav Programı - {datetime.now().strftime('%d.%m.%Y')}",
+                'program_adi': f"Sınav Programı - {datetime.now().strftime('%d.%m.%Y %H:%M:%S')}",
                 'sinav_tipi': schedule[0].get('sinav_tipi', 'Final'),
                 'baslangic_tarihi': baslangic_tarihi,
                 'bitis_tarihi': bitis_tarihi,
@@ -76,6 +93,8 @@ class SinavController:
                 key = (exam.get('ders_id'), exam.get('tarih_saat'))
                 exam_groups[key].append(exam)
             
+            logger.info(f"📊 Schedule stats: {len(schedule)} total exams → {len(exam_groups)} unique course-time combinations")
+            
             # Insert each unique exam (one record per course per time slot)
             success_count = 0
             error_count = 0
@@ -90,6 +109,12 @@ class SinavController:
                     
                     bitis_saat = tarih_saat + timedelta(minutes=sure)
                     
+                    # Validate required fields
+                    if not ders_id or not isinstance(ders_id, int):
+                        logger.error(f"Invalid ders_id: {ders_id}")
+                        error_count += 1
+                        continue
+                    
                     exam_data = {
                         'program_id': program_id,
                         'ders_id': ders_id,
@@ -102,13 +127,19 @@ class SinavController:
                     
                     # Add all classroom assignments for this exam
                     for exam in exams:
-                        if exam.get('derslik_id'):
-                            self.sinav_model.assign_derslik(sinav_id, exam['derslik_id'])
+                        derslik_id = exam.get('derslik_id')
+                        if derslik_id and isinstance(derslik_id, int):
+                            try:
+                                self.sinav_model.assign_derslik(sinav_id, derslik_id)
+                            except Exception as e:
+                                logger.error(f"Error assigning classroom {derslik_id} to exam {sinav_id}: {e}")
+                        else:
+                            logger.warning(f"Invalid derslik_id for exam: {derslik_id}")
                     
                     success_count += 1
                     
                 except Exception as e:
-                    logger.error(f"Error saving exam: {e}")
+                    logger.error(f"Error saving exam for ders_id {ders_id}: {e}", exc_info=True)
                     error_count += 1
             
             return {

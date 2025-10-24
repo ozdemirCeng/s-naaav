@@ -32,7 +32,8 @@ class SinavModel:
             SELECT s.sinav_id, s.program_id, s.ders_id, s.tarih, 
                    s.baslangic_saati, s.bitis_saati, s.ogrenci_sayisi,
                    d.ders_kodu, d.ders_adi,
-                   STRING_AGG(dr.derslik_kodu, ', ') as derslik_kodu
+                   STRING_AGG(dr.derslik_kodu, ', ') as derslik_kodu,
+                   (s.tarih || ' ' || s.baslangic_saati) as tarih_saat
             FROM sinavlar s
             JOIN dersler d ON s.ders_id = d.ders_id
             LEFT JOIN sinav_derslikleri sd ON s.sinav_id = sd.sinav_id
@@ -100,3 +101,29 @@ class SinavModel:
         self.db.execute_query(query, (program_id,), fetch=False)
         logger.info(f"✅ Exam program deleted: {program_id}")
         return True
+    
+    def get_sinav_by_id(self, sinav_id: int) -> Optional[Dict]:
+        """Get exam details by ID"""
+        query = """
+            SELECT s.sinav_id, s.program_id, s.ders_id, s.tarih, 
+                   s.baslangic_saati, s.bitis_saati, s.ogrenci_sayisi,
+                   d.ders_kodu, d.ders_adi, d.sinif,
+                   (s.tarih || ' ' || s.baslangic_saati) as tarih_saat
+            FROM sinavlar s
+            JOIN dersler d ON s.ders_id = d.ders_id
+            WHERE s.sinav_id = %s
+        """
+        result = self.db.execute_query(query, (sinav_id,))
+        return result[0] if result else None
+    
+    def get_sinav_derslikleri(self, sinav_id: int) -> List[Dict]:
+        """Get all classrooms assigned to an exam"""
+        query = """
+            SELECT dr.derslik_id, dr.derslik_kodu, dr.derslik_adi,
+                   dr.kapasite, dr.satir_sayisi, dr.sutun_sayisi, dr.sira_yapisi
+            FROM sinav_derslikleri sd
+            JOIN derslikler dr ON sd.derslik_id = dr.derslik_id
+            WHERE sd.sinav_id = %s
+            ORDER BY dr.derslik_kodu
+        """
+        return self.db.execute_query(query, (sinav_id,))

@@ -8,7 +8,8 @@ from pathlib import Path
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QTableWidget, QTableWidgetItem, QHeaderView, QFrame,
-    QFileDialog, QMessageBox, QProgressBar, QGroupBox, QSplitter
+    QFileDialog, QMessageBox, QProgressBar, QGroupBox, QSplitter,
+    QScrollArea, QComboBox
 )
 from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtGui import QFont
@@ -59,27 +60,27 @@ class DersYukleView(QWidget):
         self.load_existing_dersler()
     
     def setup_ui(self):
-        """Setup UI"""
+        """Setup UI - table first, info last"""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(24, 24, 24, 24)
-        layout.setSpacing(20)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(12)
         
-        # Header
+        # Compact Header
         header = QFrame()
         header_layout = QHBoxLayout(header)
         header_layout.setContentsMargins(0, 0, 0, 0)
         
-        title = QLabel("Ders Listesi Yönetimi 📚")
-        title.setFont(QFont("Segoe UI", 20, QFont.Bold))
+        title = QLabel("📚 Ders Listesi")
+        title.setFont(QFont("Segoe UI", 18, QFont.Bold))
         
         upload_btn = QPushButton("📤 Excel Yükle")
         upload_btn.setObjectName("primaryBtn")
-        upload_btn.setFixedHeight(40)
+        upload_btn.setFixedHeight(36)
         upload_btn.setCursor(Qt.PointingHandCursor)
         upload_btn.clicked.connect(self.upload_excel)
         
         export_btn = QPushButton("📊 Excel'e Aktar")
-        export_btn.setFixedHeight(40)
+        export_btn.setFixedHeight(36)
         export_btn.setCursor(Qt.PointingHandCursor)
         export_btn.clicked.connect(self.export_to_excel)
         
@@ -90,24 +91,32 @@ class DersYukleView(QWidget):
         
         layout.addWidget(header)
         
-        # Info card
-        info_card = QGroupBox("ℹ️ Excel Formatı")
-        info_layout = QVBoxLayout(info_card)
-        info_layout.setSpacing(8)
+        # Filter section - sınıf seçimi
+        filter_frame = QFrame()
+        filter_layout = QHBoxLayout(filter_frame)
+        filter_layout.setContentsMargins(0, 8, 0, 8)
         
-        info_text = QLabel(
-            "Excel dosyası şu sütunları içermelidir:\n"
-            "• Ders Kodu (örn: BMU101)\n"
-            "• Ders Adı (örn: Programlamaya Giriş)\n"
-            "• Kredi (örn: 3)\n"
-            "• Yarıyıl (örn: 1)\n"
-            "• Ders Yapısı (Zorunlu/Seçmeli)"
-        )
-        info_text.setStyleSheet("color: #6b7280; font-size: 12px;")
-        info_text.setWordWrap(True)
-        info_layout.addWidget(info_text)
+        filter_label = QLabel("🎓 Sınıf:")
+        filter_label.setStyleSheet("font-weight: bold; font-size: 13px;")
         
-        layout.addWidget(info_card)
+        self.class_filter = QComboBox()
+        self.class_filter.addItems([
+            "Tüm Dersler",
+            "1. Sınıf",
+            "2. Sınıf", 
+            "3. Sınıf",
+            "4. Sınıf",
+            "Seçmeli Dersler"
+        ])
+        self.class_filter.setFixedHeight(32)
+        self.class_filter.setMinimumWidth(200)
+        self.class_filter.currentTextChanged.connect(self.filter_by_class)
+        
+        filter_layout.addWidget(filter_label)
+        filter_layout.addWidget(self.class_filter)
+        filter_layout.addStretch()
+        
+        layout.addWidget(filter_frame)
         
         # Splitter for courses and students
         splitter = QSplitter(Qt.Horizontal)
@@ -118,9 +127,9 @@ class DersYukleView(QWidget):
         left_layout.setContentsMargins(0, 0, 0, 0)
         
         self.table = QTableWidget()
-        self.table.setColumnCount(6)
+        self.table.setColumnCount(4)
         self.table.setHorizontalHeaderLabels([
-            "Ders Kodu", "Ders Adı", "Kredi", "Yarıyıl", "Ders Yapısı", "Durum"
+            "DERS KODU", "DERSİN ADI", "DERSİ VEREN ÖĞR. ELEMANI", "SINIF"
         ])
         
         self.table.setAlternatingRowColors(True)
@@ -131,18 +140,13 @@ class DersYukleView(QWidget):
         self.table.itemSelectionChanged.connect(self.show_course_students)
         
         header = self.table.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.Fixed)
-        header.setSectionResizeMode(1, QHeaderView.Stretch)
-        header.setSectionResizeMode(2, QHeaderView.Fixed)
-        header.setSectionResizeMode(3, QHeaderView.Fixed)
-        header.setSectionResizeMode(4, QHeaderView.Fixed)
-        header.setSectionResizeMode(5, QHeaderView.Fixed)
+        header.setSectionResizeMode(0, QHeaderView.Fixed)     # DERS KODU
+        header.setSectionResizeMode(1, QHeaderView.Stretch)   # DERSİN ADI
+        header.setSectionResizeMode(2, QHeaderView.Stretch)   # ÖĞR. ELEMANI
+        header.setSectionResizeMode(3, QHeaderView.Fixed)     # SINIF
         
-        self.table.setColumnWidth(0, 120)
-        self.table.setColumnWidth(2, 80)
-        self.table.setColumnWidth(3, 80)
-        self.table.setColumnWidth(4, 120)
-        self.table.setColumnWidth(5, 100)
+        self.table.setColumnWidth(0, 100)  # DERS KODU
+        self.table.setColumnWidth(3, 60)   # SINIF
         
         left_layout.addWidget(self.table)
         
@@ -216,13 +220,53 @@ class DersYukleView(QWidget):
         splitter.setStretchFactor(0, 6)
         splitter.setStretchFactor(1, 4)
         
-        layout.addWidget(splitter)
+        layout.addWidget(splitter, stretch=1)  # Give most space to table
         
         # Stats
         self.stats_label = QLabel()
         self.stats_label.setFont(QFont("Segoe UI", 10))
-        self.stats_label.setStyleSheet("color: #6b7280; padding: 8px;")
+        self.stats_label.setStyleSheet("color: #6b7280; padding: 6px;")
         layout.addWidget(self.stats_label)
+        
+        # Info card at bottom - compact
+        info_card = QGroupBox("💡 Excel Format Bilgisi")
+        info_card.setMaximumHeight(100)
+        info_layout = QVBoxLayout(info_card)
+        info_layout.setContentsMargins(12, 8, 12, 8)
+        
+        info_text = QLabel(
+            "Excel: DERS KODU • DERSİN ADI • DERSİ VEREN ÖĞR. ELEMANI + Sınıf başlıkları (1. Sınıf, 2. Sınıf, vb.)"
+        )
+        info_text.setStyleSheet("color: #6b7280; font-size: 11px;")
+        info_text.setWordWrap(True)
+        info_layout.addWidget(info_text)
+        
+        layout.addWidget(info_card)
+        
+        # Store all courses
+        self.all_courses = []
+    
+    def filter_by_class(self, filter_text):
+        """Filter courses by class - Excel başlıklarından alınan sınıf bilgisi ile"""
+        if not self.all_courses:
+            return
+        
+        filtered_courses = []
+        
+        if filter_text == "Tüm Dersler":
+            filtered_courses = self.all_courses
+        elif filter_text == "1. Sınıf":
+            filtered_courses = [d for d in self.all_courses if d.get('sinif', 0) == 1]
+        elif filter_text == "2. Sınıf":
+            filtered_courses = [d for d in self.all_courses if d.get('sinif', 0) == 2]
+        elif filter_text == "3. Sınıf":
+            filtered_courses = [d for d in self.all_courses if d.get('sinif', 0) == 3]
+        elif filter_text == "4. Sınıf":
+            filtered_courses = [d for d in self.all_courses if d.get('sinif', 0) == 4]
+        elif filter_text == "Seçmeli Dersler":
+            filtered_courses = [d for d in self.all_courses if d.get('ders_yapisi', '') == 'Seçmeli']
+        
+        self.populate_table(filtered_courses, existing=True)
     
     def load_existing_dersler(self):
         """Load existing courses"""
@@ -238,28 +282,32 @@ class DersYukleView(QWidget):
         """Populate table with course data"""
         self.table.setRowCount(0)
         
+        # Store for filtering
+        if not hasattr(self, 'all_courses') or not existing:
+            self.all_courses = dersler
+        
         for row, ders in enumerate(dersler):
             self.table.insertRow(row)
             
-            self.table.setItem(row, 0, QTableWidgetItem(str(ders.get('ders_kodu', ''))))
-            self.table.setItem(row, 1, QTableWidgetItem(str(ders.get('ders_adi', ''))))
+            # DERS KODU
+            kod_item = QTableWidgetItem(str(ders.get('ders_kodu', '')))
+            self.table.setItem(row, 0, kod_item)
             
-            kredi_item = QTableWidgetItem(str(ders.get('kredi', '')))
-            kredi_item.setTextAlignment(Qt.AlignCenter)
-            self.table.setItem(row, 2, kredi_item)
+            # DERSİN ADI
+            adi_item = QTableWidgetItem(str(ders.get('ders_adi', '')))
+            self.table.setItem(row, 1, adi_item)
             
-            yariyil_item = QTableWidgetItem(str(ders.get('yariyil', '')))
-            yariyil_item.setTextAlignment(Qt.AlignCenter)
-            self.table.setItem(row, 3, yariyil_item)
+            # DERSİ VEREN ÖĞR. ELEMANI
+            ogretim_elemani = str(ders.get('ogretim_elemani', '-'))
+            elem_item = QTableWidgetItem(ogretim_elemani)
+            self.table.setItem(row, 2, elem_item)
             
-            yapisi_item = QTableWidgetItem(str(ders.get('ders_yapisi', '')))
-            yapisi_item.setTextAlignment(Qt.AlignCenter)
-            self.table.setItem(row, 4, yapisi_item)
-            
-            durum = "✅ Kayıtlı" if existing else "⏳ Beklemede"
-            durum_item = QTableWidgetItem(durum)
-            durum_item.setTextAlignment(Qt.AlignCenter)
-            self.table.setItem(row, 5, durum_item)
+            # SINIF
+            sinif = ders.get('sinif', 0)
+            sinif_text = f"{sinif}. Sınıf" if sinif > 0 else "-"
+            sinif_item = QTableWidgetItem(sinif_text)
+            sinif_item.setTextAlignment(Qt.AlignCenter)
+            self.table.setItem(row, 3, sinif_item)
     
     def upload_excel(self):
         """Upload Excel file"""
@@ -484,21 +532,17 @@ class DersYukleView(QWidget):
             QMessageBox.warning(self, "Uyarı", "Lütfen silmek için en az bir ders seçin!")
             return
         
-        # Check if any are pending
-        pending_found = False
+        # Get course list from selected rows
         course_list = []
         for index in selected_rows:
             row = index.row()
-            durum = self.table.item(row, 5).text()
-            if durum == "Beklemede":
-                pending_found = True
-                break
-            ders_kodu = self.table.item(row, 0).text()
-            ders_adi = self.table.item(row, 1).text()
-            course_list.append((ders_kodu, ders_adi))
+            ders_kodu = self.table.item(row, 0).text() if self.table.item(row, 0) else None
+            ders_adi = self.table.item(row, 1).text() if self.table.item(row, 1) else "İsimsiz"
+            if ders_kodu:
+                course_list.append((ders_kodu, ders_adi))
         
-        if pending_found:
-            QMessageBox.warning(self, "Uyarı", "Beklemedeki dersler silinemez! İptal için sayfayı yenileyin.")
+        if not course_list:
+            QMessageBox.warning(self, "Uyarı", "Silinecek ders bulunamadı!")
             return
         
         reply = QMessageBox.question(
@@ -541,14 +585,12 @@ class DersYukleView(QWidget):
             return
         
         row = selected_rows[0].row()
-        durum = self.table.item(row, 5).text()
+        ders_kodu = self.table.item(row, 0).text() if self.table.item(row, 0) else None
+        ders_adi = self.table.item(row, 1).text() if self.table.item(row, 1) else "İsimsiz"
         
-        if durum == "Beklemede":
-            QMessageBox.warning(self, "Uyarı", "Beklemedeki dersler silinemez! İptal için sayfayı yenileyin.")
+        if not ders_kodu:
+            QMessageBox.warning(self, "Uyarı", "Ders kodu bulunamadı!")
             return
-        
-        ders_kodu = self.table.item(row, 0).text()
-        ders_adi = self.table.item(row, 1).text()
         
         ders = self.ders_model.get_ders_by_kod(self.bolum_id, ders_kodu)
         if not ders:

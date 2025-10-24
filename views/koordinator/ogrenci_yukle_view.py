@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QTableWidget, QTableWidgetItem, QHeaderView, QFrame,
     QFileDialog, QMessageBox, QGroupBox, QLineEdit, QSplitter,
-    QSpinBox, QFormLayout, QDialog, QDialogButtonBox
+    QSpinBox, QFormLayout, QDialog, QDialogButtonBox, QScrollArea
 )
 from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtGui import QFont
@@ -56,27 +56,27 @@ class OgrenciYukleView(QWidget):
         self.load_existing_ogrenciler()
     
     def setup_ui(self):
-        """Setup UI"""
+        """Setup UI - table first, info last"""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(24, 24, 24, 24)
-        layout.setSpacing(20)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(12)
         
-        # Header
+        # Compact Header
         header = QFrame()
         header_layout = QHBoxLayout(header)
         header_layout.setContentsMargins(0, 0, 0, 0)
         
-        title = QLabel("Öğrenci Listesi Yönetimi 👥")
-        title.setFont(QFont("Segoe UI", 20, QFont.Bold))
+        title = QLabel("👥 Öğrenci Listesi")
+        title.setFont(QFont("Segoe UI", 18, QFont.Bold))
         
         upload_btn = QPushButton("📤 Excel Yükle")
         upload_btn.setObjectName("primaryBtn")
-        upload_btn.setFixedHeight(40)
+        upload_btn.setFixedHeight(36)
         upload_btn.setCursor(Qt.PointingHandCursor)
         upload_btn.clicked.connect(self.upload_excel)
         
         export_btn = QPushButton("📊 Excel'e Aktar")
-        export_btn.setFixedHeight(40)
+        export_btn.setFixedHeight(36)
         export_btn.setCursor(Qt.PointingHandCursor)
         export_btn.clicked.connect(self.export_to_excel)
         
@@ -87,32 +87,16 @@ class OgrenciYukleView(QWidget):
         
         layout.addWidget(header)
         
-        # Info card
-        info_card = QGroupBox("ℹ️ Excel Formatı")
-        info_layout = QVBoxLayout(info_card)
-        
-        info_text = QLabel(
-            "Excel dosyası şu sütunları içermelidir:\n"
-            "• Öğrenci No (örn: 210101001)\n"
-            "• Ad Soyad (örn: Ahmet Yılmaz)\n"
-            "• Sınıf (örn: 2)\n"
-            "• E-posta (opsiyonel)"
-        )
-        info_text.setStyleSheet("color: #6b7280; font-size: 12px;")
-        info_text.setWordWrap(True)
-        info_layout.addWidget(info_text)
-        
-        layout.addWidget(info_card)
-        
-        # Search
+        # Search - compact
         search_container = QFrame()
         search_layout = QHBoxLayout(search_container)
-        search_layout.setContentsMargins(16, 12, 16, 12)
+        search_layout.setContentsMargins(0, 8, 0, 8)
         
-        search_label = QLabel("🔍 Ara:")
+        search_label = QLabel("🔍")
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Öğrenci no veya ad ile ara...")
         self.search_input.textChanged.connect(self.filter_table)
+        self.search_input.setFixedHeight(32)
         
         search_layout.addWidget(search_label)
         search_layout.addWidget(self.search_input)
@@ -223,13 +207,28 @@ class OgrenciYukleView(QWidget):
         splitter.setStretchFactor(0, 6)
         splitter.setStretchFactor(1, 4)
         
-        layout.addWidget(splitter)
+        layout.addWidget(splitter, stretch=1)  # Give most space to table
         
         # Stats
         self.stats_label = QLabel()
         self.stats_label.setFont(QFont("Segoe UI", 10))
-        self.stats_label.setStyleSheet("color: #6b7280; padding: 8px;")
+        self.stats_label.setStyleSheet("color: #6b7280; padding: 6px;")
         layout.addWidget(self.stats_label)
+        
+        # Info card at bottom - compact
+        info_card = QGroupBox("💡 Excel Format Bilgisi")
+        info_card.setMaximumHeight(100)
+        info_layout = QVBoxLayout(info_card)
+        info_layout.setContentsMargins(12, 8, 12, 8)
+        
+        info_text = QLabel(
+            "Excel: Öğrenci No • Ad Soyad • Sınıf • E-posta (opsiyonel)"
+        )
+        info_text.setStyleSheet("color: #6b7280; font-size: 11px;")
+        info_text.setWordWrap(True)
+        info_layout.addWidget(info_text)
+        
+        layout.addWidget(info_card)
     
     def load_existing_ogrenciler(self):
         """Load existing students"""

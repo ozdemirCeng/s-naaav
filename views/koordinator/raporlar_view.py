@@ -8,7 +8,7 @@ from datetime import datetime
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QFrame, QComboBox, QMessageBox, QGroupBox, QFileDialog,
-    QCheckBox, QListWidget
+    QCheckBox, QListWidget, QScrollArea
 )
 from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtGui import QFont
@@ -64,10 +64,24 @@ class RaporlarView(QWidget):
         self.setup_ui()
     
     def setup_ui(self):
-        """Setup UI"""
-        layout = QVBoxLayout(self)
+        """Setup UI with scroll"""
+        # Main scroll area
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.NoFrame)
+        
+        scroll_content = QWidget()
+        layout = QVBoxLayout(scroll_content)
         layout.setContentsMargins(24, 24, 24, 24)
         layout.setSpacing(20)
+        
+        # Set scroll widget
+        scroll.setWidget(scroll_content)
+        
+        # Add scroll to main layout
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addWidget(scroll)
         
         # Header
         header = QFrame()

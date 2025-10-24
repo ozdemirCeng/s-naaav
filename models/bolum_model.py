@@ -84,3 +84,4 @@ class BolumModel:
         logger.info(f"Department deleted: {bolum_id}")
         return True
 
+

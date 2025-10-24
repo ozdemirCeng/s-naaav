@@ -28,7 +28,7 @@ class OturmaPlanlama:
         progress_callback: Optional[Callable[[int, str], None]] = None
     ) -> Dict:
         """
-        Generate seating plan for an exam
+        Generate seating plan for an exam across multiple classrooms
         
         Args:
             sinav_id: Exam ID
@@ -42,164 +42,141 @@ class OturmaPlanlama:
                 progress_callback(10, "Sınav bilgileri yükleniyor...")
             
             # Get exam details
-            # Note: You'll need to implement get_sinav_by_id in SinavModel
-            # For now, we'll work with what we have
+            sinav = self.sinav_model.get_sinav_by_id(sinav_id)
+            if not sinav:
+                raise Exception(f"Sınav bulunamadı: {sinav_id}")
             
             if progress_callback:
                 progress_callback(20, "Öğrenciler yükleniyor...")
             
-            # Get students for this course
-            # Note: This requires ders_kayitlari table or similar
-            # For demo, we'll get all students from the department
-            # In production, filter by course enrollment
+            # Get students enrolled in this course
+            ogrenciler = self.ogrenci_model.get_ogrenciler_by_ders(sinav['ders_id'])
+            if not ogrenciler:
+                raise Exception(f"Bu derse kayıtlı öğrenci bulunamadı: {sinav['ders_kodu']}")
+            
+            # Shuffle students for randomized seating
+            random.shuffle(ogrenciler)
             
             if progress_callback:
                 progress_callback(30, "Derslik bilgileri yükleniyor...")
             
             # Get classroom assignments for this exam
-            # Note: Need to implement this based on your database schema
+            derslikler = self.sinav_model.get_sinav_derslikleri(sinav_id)
+            if not derslikler:
+                raise Exception(f"Bu sınav için derslik ataması bulunamadı!")
+            
+            logger.info(f"📊 Sınav: {sinav['ders_kodu']}, {len(ogrenciler)} öğrenci, {len(derslikler)} derslik")
             
             if progress_callback:
                 progress_callback(50, "Oturma planı oluşturuluyor...")
             
-            # Generate seating plan
-            # This is a simplified version - expand with your business logic
-            seating_plan = self._generate_simple_plan(sinav_id)
+            # Generate seating plan across all classrooms
+            seating_plan = self._generate_multi_classroom_plan(
+                ogrenciler, 
+                derslikler,
+                progress_callback
+            )
             
             if progress_callback:
                 progress_callback(100, "Tamamlandı!")
             
-            logger.info(f"✅ Seating plan generated for exam {sinav_id}")
+            logger.info(f"✅ Seating plan generated: {len(seating_plan)} öğrenci yerleştirildi")
+            
+            # Calculate statistics
+            placed_count = len(seating_plan)
+            unplaced_count = len(ogrenciler) - placed_count
+            
+            message = f"✅ {placed_count} öğrenci yerleştirildi"
+            if unplaced_count > 0:
+                message += f" (⚠️ {unplaced_count} öğrenci yerleştirilemedi - kapasite yetersiz)"
             
             return {
                 'success': True,
-                'message': f"{len(seating_plan)} öğrenci yerleştirildi",
-                'plan': seating_plan
+                'message': message,
+                'plan': seating_plan,
+                'sinav': sinav,
+                'derslikler': derslikler,
+                'placed_count': placed_count,
+                'unplaced_count': unplaced_count
             }
             
         except Exception as e:
-            logger.error(f"Seating plan generation error: {e}")
+            logger.error(f"Error generating seating plan: {e}", exc_info=True)
             return {
                 'success': False,
-                'message': f"Plan oluşturma hatası: {str(e)}"
+                'message': f"Hata: {str(e)}",
+                'plan': []
             }
     
-    def _generate_simple_plan(self, sinav_id: int) -> List[Dict]:
-        """
-        Generate a simple seating plan
-        
-        This is a placeholder implementation.
-        In production, implement:
-        - Spacing rules (skip seats, alternating rows)
-        - Multiple classroom assignments
-        - Student grouping by class/department
-        - Randomization to prevent cheating
-        """
-        # TODO: Implement actual seating algorithm
-        # For now, return empty list as placeholder
-        
-        return []
-    
-    def distribute_students_in_classroom(
-        self,
-        students: List[Dict],
-        derslik: Dict,
-        spacing: int = 2
-    ) -> List[Dict]:
-        """
-        Distribute students in a classroom with spacing
-        
-        Args:
-            students: List of students to seat
-            derslik: Classroom information
-            spacing: Seats to skip between students
-            
-        Returns:
-            List of seating assignments
-        """
-        seating = []
-        satir_sayisi = derslik['satir_sayisi']
-        sutun_sayisi = derslik['sutun_sayisi']
-        
-        # Create seating grid
-        available_seats = []
-        for satir in range(1, satir_sayisi + 1):
-            for sutun in range(1, sutun_sayisi + 1):
-                # Apply spacing rule (e.g., skip every other seat)
-                if spacing == 1 or (satir + sutun) % spacing == 0:
-                    available_seats.append((satir, sutun))
-        
-        # Shuffle for randomization
-        random.shuffle(available_seats)
-        
-        # Assign students to seats
-        for i, student in enumerate(students):
-            if i >= len(available_seats):
-                logger.warning(f"Not enough seats for all students in {derslik['derslik_kodu']}")
-                break
-            
-            satir, sutun = available_seats[i]
-            
-            seating.append({
-                'ogrenci_no': student['ogrenci_no'],
-                'ad_soyad': student['ad_soyad'],
-                'derslik_id': derslik['derslik_id'],
-                'derslik_kodu': derslik['derslik_kodu'],
-                'satir': satir,
-                'sutun': sutun
-            })
-        
-        return seating
-    
-    def optimize_multi_classroom_seating(
+    def _generate_multi_classroom_plan(
         self,
         students: List[Dict],
         derslikler: List[Dict],
-        spacing: int = 2
+        progress_callback: Optional[Callable[[int, str], None]] = None
     ) -> List[Dict]:
         """
-        Optimize seating across multiple classrooms
+        Generate seating plan across multiple classrooms with spacing
         
         Args:
-            students: List of students
-            derslikler: List of available classrooms
-            spacing: Spacing rule
+            students: List of students to seat
+            derslikler: List of classrooms
+            progress_callback: Progress callback
             
         Returns:
-            Complete seating plan across all classrooms
+            Complete seating plan
         """
-        # Sort classrooms by capacity (descending)
-        sorted_derslikler = sorted(derslikler, key=lambda x: x['kapasite'], reverse=True)
-        
-        # Shuffle students for randomization
-        shuffled_students = students.copy()
-        random.shuffle(shuffled_students)
-        
         complete_plan = []
         student_index = 0
+        total_students = len(students)
         
-        for derslik in sorted_derslikler:
-            # Calculate capacity with spacing
-            effective_capacity = derslik['kapasite'] // spacing
-            
-            # Get students for this classroom
-            classroom_students = shuffled_students[student_index:student_index + effective_capacity]
-            
-            if not classroom_students:
+        # Sort classrooms by capacity (use largest first)
+        sorted_derslikler = sorted(derslikler, key=lambda x: x['kapasite'], reverse=True)
+        
+        for idx, derslik in enumerate(sorted_derslikler):
+            if student_index >= total_students:
                 break
             
-            # Generate seating for this classroom
-            classroom_seating = self.distribute_students_in_classroom(
-                classroom_students,
-                derslik,
-                spacing
-            )
+            if progress_callback:
+                percent = 50 + int((idx / len(derslikler)) * 40)
+                progress_callback(percent, f"Yerleştiriliyor: {derslik['derslik_adi']}")
             
-            complete_plan.extend(classroom_seating)
-            student_index += len(classroom_students)
+            # Calculate how many students can fit with spacing (checkerboard pattern)
+            satir_sayisi = derslik['satir_sayisi']
+            sutun_sayisi = derslik['sutun_sayisi']
             
-            if student_index >= len(shuffled_students):
-                break
+            # Checkerboard seating (skip adjacent seats)
+            available_seats = []
+            for satir in range(1, satir_sayisi + 1):
+                for sutun in range(1, sutun_sayisi + 1):
+                    # Checkerboard: (row + col) must be even
+                    if (satir + sutun) % 2 == 0:
+                        available_seats.append((satir, sutun))
+            
+            # Shuffle seats for randomization
+            random.shuffle(available_seats)
+            
+            # Calculate how many students to place in this classroom
+            remaining_students = total_students - student_index
+            students_for_this_classroom = min(len(available_seats), remaining_students)
+            
+            logger.info(f"  📍 {derslik['derslik_adi']}: {students_for_this_classroom} öğrenci / {len(available_seats)} koltuk")
+            
+            # Assign students to seats
+            for i in range(students_for_this_classroom):
+                student = students[student_index]
+                satir, sutun = available_seats[i]
+                
+                complete_plan.append({
+                    'ogrenci_no': student['ogrenci_no'],
+                    'ad_soyad': student['ad_soyad'],
+                    'derslik_id': derslik['derslik_id'],
+                    'derslik_kodu': derslik['derslik_kodu'],
+                    'derslik_adi': derslik['derslik_adi'],
+                    'satir': satir,
+                    'sutun': sutun
+                })
+                
+                student_index += 1
         
         return complete_plan
     
@@ -217,7 +194,7 @@ class OturmaPlanlama:
                     'type': 'duplicate_seat',
                     'student1': seat_map[key],
                     'student2': assignment['ogrenci_no'],
-                    'message': 'Aynı koltuk iki öğrenciye atanmış'
+                    'message': f"Aynı koltuk ({assignment['derslik_adi']} - Sıra:{assignment['satir']}, Sütun:{assignment['sutun']}) iki öğrenciye atanmış"
                 })
             else:
                 seat_map[key] = assignment['ogrenci_no']
