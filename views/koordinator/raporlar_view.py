@@ -299,10 +299,26 @@ class RaporlarView(QWidget):
             program_sinavlar = self.sinav_model.get_sinavlar_by_program(program['program_id'])
             sinavlar.extend(program_sinavlar)
         
+        # Convert raw exam rows to the same structure as 'Sınav Oluştur' Excel export
+        records = []
+        for s in sinavlar:
+            tarih = s.get('tarih')
+            saat = s.get('baslangic_saati')
+            ders_adi = s.get('ders_adi', '')
+            ogretim_elemani = s.get('ogretim_elemani', '')
+            derslik = s.get('derslik_kodu', '')
+            records.append({
+                'Tarih': tarih.strftime('%d.%m.%Y') if hasattr(tarih, 'strftime') else str(tarih),
+                'Sınav Saati': saat.strftime('%H.%M') if hasattr(saat, 'strftime') else str(saat),
+                'Ders Adı': ders_adi,
+                'Öğretim Elemanı': ogretim_elemani,
+                'Derslik': derslik,
+            })
+        
         return {
             'type': 'sinav_takvimi',
             'title': 'Sınav Takvimi',
-            'data': sinavlar,
+            'data': records,
             'bolum_id': self.bolum_id
         }
     

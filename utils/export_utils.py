@@ -11,7 +11,9 @@ import pandas as pd
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.units import cm
 
 logger = logging.getLogger(__name__)
@@ -105,6 +107,16 @@ class ExportUtils:
                 logger.warning("No data to export")
                 return False
             
+            # Register a Unicode font for Turkish characters
+            try:
+                pdfmetrics.registerFont(TTFont('DejaVu', 'DejaVuSans.ttf'))
+                pdfmetrics.registerFont(TTFont('DejaVu-Bold', 'DejaVuSans-Bold.ttf'))
+                base_font = 'DejaVu'
+                bold_font = 'DejaVu-Bold'
+            except Exception:
+                base_font = 'Helvetica'
+                bold_font = 'Helvetica-Bold'
+
             # Create PDF
             doc = SimpleDocTemplate(
                 file_path,
@@ -118,6 +130,8 @@ class ExportUtils:
             # Container for elements
             elements = []
             styles = getSampleStyleSheet()
+            styles.add(ParagraphStyle(name='TitleTR', fontName=bold_font, fontSize=18, alignment=1, leading=22))
+            styles.add(ParagraphStyle(name='NormalTR', fontName=base_font, fontSize=10, leading=14))
             
             # Title
             if options.get('include_logos', True):
@@ -125,14 +139,14 @@ class ExportUtils:
             else:
                 title_text = title
             
-            title_para = Paragraph(title_text, styles['Title'])
+            title_para = Paragraph(title_text, styles['TitleTR'])
             elements.append(title_para)
             elements.append(Spacer(1, 0.5*cm))
             
             # Date
             date_para = Paragraph(
                 f"Oluşturulma Tarihi: {datetime.now().strftime('%d.%m.%Y %H:%M')}",
-                styles['Normal']
+                styles['NormalTR']
             )
             elements.append(date_para)
             elements.append(Spacer(1, 0.5*cm))
@@ -143,25 +157,31 @@ class ExportUtils:
             # Prepare table data
             table_data = [df.columns.tolist()] + df.values.tolist()
             
-            # Create table
-            table = Table(table_data)
+            # Create table with column widths similar to Excel export when matching known headers
+            col_count = len(df.columns)
+            if col_count == 5 and set(['Tarih','Sınav Saati','Ders Adı','Öğretim Elemanı','Derslik']).issubset(set(df.columns)):
+                col_widths = [4*cm, 3.5*cm, 11*cm, 7*cm, 5*cm]
+            else:
+                col_widths = None
+            table = Table(table_data, colWidths=col_widths)
             table.setStyle(TableStyle([
                 # Header
                 ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#00A651')),
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTNAME', (0, 0), (-1, 0), bold_font),
                 ('FONTSIZE', (0, 0), (-1, 0), 10),
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
                 
                 # Body
-                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
                 ('GRID', (0, 0), (-1, -1), 1, colors.black),
-                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-                ('FONTSIZE', (0, 1), (-1, -1), 8),
-                
-                # Alternating rows
-                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey])
+                ('FONTNAME', (0, 1), (-1, -1), base_font),
+                ('FONTSIZE', (0, 1), (-1, -1), 9),
+                ('ALIGN', (0, 1), (0, -1), 'CENTER'),
+                ('ALIGN', (1, 1), (1, -1), 'CENTER'),
+                ('ALIGN', (4, 1), (4, -1), 'CENTER'),
+                ('ALIGN', (2, 1), (3, -1), 'LEFT'),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F7F7F7')])
             ]))
             
             elements.append(table)
@@ -171,7 +191,7 @@ class ExportUtils:
                 elements.append(Spacer(1, 1*cm))
                 sig_para = Paragraph(
                     "____________________<br/>İmza",
-                    styles['Normal']
+                    styles['NormalTR']
                 )
                 elements.append(sig_para)
             

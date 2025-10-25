@@ -186,15 +186,15 @@ class BolumSecimView(QWidget):
     def load_bolumler(self):
         """Load departments with assigned coordinators only"""
         try:
-            # Get departments with their coordinators
+            # Get departments with assigned coordinators only
             query = """
                 SELECT b.bolum_id, b.bolum_kodu, b.bolum_adi,
                        u.user_id, u.ad_soyad, u.email
                 FROM bolumler b
                 INNER JOIN users u ON b.bolum_id = u.bolum_id
-                WHERE b.aktif = TRUE 
                   AND u.aktif = TRUE 
                   AND u.role = 'Bölüm Koordinatörü'
+                WHERE b.aktif = TRUE 
                 ORDER BY b.bolum_adi
             """
             results = db.execute_query(query)
