@@ -222,6 +222,9 @@ class SinavOlusturView(QWidget):
         self.sinav_suresi.setValue(75)
         self.sinav_suresi.setSuffix(" dk")
         self.sinav_suresi.setFixedHeight(36)
+        # Track and propagate changes to course-specific durations
+        self._last_global_duration = self.sinav_suresi.value()
+        self.sinav_suresi.valueChanged.connect(self.on_global_duration_changed)
         right_col.addRow("⏱️ Sınav Süresi:", self.sinav_suresi)
         
         self.ara_suresi = QSpinBox()
@@ -231,6 +234,31 @@ class SinavOlusturView(QWidget):
         self.ara_suresi.setSuffix(" dk")
         self.ara_suresi.setFixedHeight(36)
         right_col.addRow("⏸️ Ara Süresi:", self.ara_suresi)
+
+        # Per-class per-day exam limit (0 = limitsiz)
+        self.class_per_day_limit = QSpinBox()
+        self.class_per_day_limit.setMinimum(0)
+        self.class_per_day_limit.setMaximum(10)
+        self.class_per_day_limit.setValue(0)
+        self.class_per_day_limit.setSuffix(" /gün")
+        self.class_per_day_limit.setFixedHeight(36)
+        right_col.addRow("🏷️ Sınıf/Gün Sınırı:", self.class_per_day_limit)
+
+        # (Removed) Minimum rest minutes control – ara süresi yeterli
+
+        # Minimum shared students to consider conflict
+        self.min_conflict_overlap = QSpinBox()
+        self.min_conflict_overlap.setMinimum(1)
+        self.min_conflict_overlap.setMaximum(50)
+        self.min_conflict_overlap.setValue(1)
+        self.min_conflict_overlap.setFixedHeight(36)
+        right_col.addRow("👥 Çakışma Eşiği:", self.min_conflict_overlap)
+
+        # No parallel exams option
+        from PySide6.QtWidgets import QCheckBox
+        self.no_parallel_checkbox = QCheckBox("Sınavlar aynı anda olmasın")
+        self.no_parallel_checkbox.setChecked(False)
+        right_col.addRow("", self.no_parallel_checkbox)
         
         params_layout.addLayout(right_col, 1)
         
@@ -718,7 +746,8 @@ class SinavOlusturView(QWidget):
             duration_spinbox = QSpinBox()
             duration_spinbox.setMinimum(30)
             duration_spinbox.setMaximum(240)
-            duration_spinbox.setValue(75)  # Default 75 minutes
+            # Initialize from current global duration
+            duration_spinbox.setValue(self.sinav_suresi.value())
             duration_spinbox.setSuffix(" dk")
             duration_spinbox.setFixedWidth(90)
             
@@ -786,7 +815,10 @@ class SinavOlusturView(QWidget):
         ders_sinavlari_suresi = {}
         for ders_id in selected_ders_ids:
             if ders_id in self.ders_duration_spinboxes:
-                ders_sinavlari_suresi[ders_id] = self.ders_duration_spinboxes[ders_id].value()
+                course_duration = self.ders_duration_spinboxes[ders_id].value()
+                # Only include custom duration if it differs from global, so global applies by default
+                if course_duration != self.sinav_suresi.value():
+                    ders_sinavlari_suresi[ders_id] = course_duration
         
         # Format time strings
         ilk_sinav = f"{self.ilk_sinav_saat.value():02d}:{self.ilk_sinav_dakika.value():02d}"
@@ -807,7 +839,10 @@ class SinavOlusturView(QWidget):
             'gunluk_ilk_sinav': ilk_sinav,
             'gunluk_son_sinav': son_sinav,
             'ogle_arasi_baslangic': ogle_baslangic,
-            'ogle_arasi_bitis': ogle_bitis
+            'ogle_arasi_bitis': ogle_bitis,
+            'class_per_day_limit': self.class_per_day_limit.value(),
+            'min_conflict_overlap': self.min_conflict_overlap.value(),
+            'no_parallel_exams': self.no_parallel_checkbox.isChecked(),
         }
         
         # Show progress
@@ -823,6 +858,21 @@ class SinavOlusturView(QWidget):
         self.planning_thread.finished.connect(self.on_planning_finished)
         self.planning_thread.error.connect(self.on_planning_error)
         self.planning_thread.start()
+
+    def on_global_duration_changed(self, new_value: int):
+        """When the global exam duration changes, update per-course durations that
+        were previously equal to the old global value (preserve explicit overrides)."""
+        try:
+            # If course widgets not yet built, nothing to update
+            if not hasattr(self, 'ders_duration_spinboxes'):
+                self._last_global_duration = new_value
+                return
+            for ders_id, sb in self.ders_duration_spinboxes.items():
+                if sb.value() == self._last_global_duration:
+                    sb.setValue(new_value)
+            self._last_global_duration = new_value
+        except Exception as e:
+            logger.error(f"Error syncing global duration: {e}")
     
     def on_planning_progress(self, percent, message):
         """Update planning progress"""
@@ -842,12 +892,20 @@ class SinavOlusturView(QWidget):
             self.current_schedule = schedule
             self.display_schedule(schedule)
         
+        # Count unique exams (ders + datetime) to avoid overcounting per-classroom rows
+        unique_exam_keys = set()
+        for s in schedule:
+            ts = s['tarih_saat']
+            key_dt = ts if not isinstance(ts, str) else datetime.fromisoformat(ts)
+            unique_exam_keys.add((s.get('ders_id'), key_dt))
+        unique_exam_count = len(unique_exam_keys)
+
         if result.get('success'):
             QMessageBox.information(
                 self,
                 "Başarılı",
                 f"✅ Sınav programı başarıyla oluşturuldu!\n\n"
-                f"Toplam {len(schedule)} sınav planlandı."
+                f"Toplam {unique_exam_count} sınav planlandı."
             )
         else:
             # Show warning with details and partial schedule
@@ -855,7 +913,7 @@ class SinavOlusturView(QWidget):
             message = result.get('message', 'Program oluşturulamadı!')
             
             if schedule:
-                message += f"\n\n✅ {len(schedule)} sınav yerleştirildi."
+                message += f"\n\n✅ {unique_exam_count} sınav yerleştirildi."
                 message += f"\n❌ {len(unassigned)} ders yerleştirilemedi."
             
             QMessageBox.warning(self, "Kısmi Program Oluşturuldu", message)

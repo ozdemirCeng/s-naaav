@@ -94,6 +94,61 @@ class SinavModel:
         self.db.execute_query(query, (sinav_id, derslik_id), fetch=False)
         logger.info(f"✅ Classroom assigned to exam: {sinav_id}")
         return True
+
+    def insert_exam_with_classrooms(self, sinav_data: Dict, derslik_ids: List[int]) -> int:
+        """Insert exam and assign classrooms atomically in a single transaction.
+
+        Rolls back if any assignment violates constraints (e.g., classroom conflicts).
+        Returns created sinav_id on success.
+        """
+        # Ensure unique and valid classroom IDs
+        unique_derslik_ids = [did for did in dict.fromkeys(derslik_ids) if isinstance(did, int)]
+        if not unique_derslik_ids:
+            # Still allow creating the exam without classrooms
+            unique_derslik_ids = []
+
+        insert_exam_sql = """
+            INSERT INTO sinavlar (program_id, ders_id, tarih, baslangic_saati, bitis_saati)
+            VALUES (%s, %s, %s, %s, %s)
+            RETURNING sinav_id
+        """
+        insert_assign_sql = """
+            INSERT INTO sinav_derslikleri (sinav_id, derslik_id)
+            VALUES (%s, %s)
+            ON CONFLICT (sinav_id, derslik_id) DO NOTHING
+        """
+
+        with self.db.get_connection() as conn:
+            cursor = conn.cursor()
+            try:
+                cursor.execute(
+                    insert_exam_sql,
+                    (
+                        sinav_data['program_id'],
+                        sinav_data['ders_id'],
+                        sinav_data['tarih'],
+                        sinav_data['baslangic_saati'],
+                        sinav_data['bitis_saati'],
+                    ),
+                )
+                row = cursor.fetchone()
+                sinav_id = row['sinav_id'] if isinstance(row, dict) else row[0]
+
+                # Assign classrooms
+                for derslik_id in unique_derslik_ids:
+                    cursor.execute(insert_assign_sql, (sinav_id, derslik_id))
+
+                conn.commit()
+                logger.info(
+                    f"✅ Exam created with classrooms: sinav_id={sinav_id}, derslik_ids={unique_derslik_ids}"
+                )
+                return sinav_id
+            except Exception as e:
+                conn.rollback()
+                logger.error(
+                    f"❌ Transaction failed for ders_id={sinav_data.get('ders_id')} with classrooms {unique_derslik_ids}: {e}"
+                )
+                raise
     
     def delete_program(self, program_id: int) -> bool:
         """Delete exam program"""

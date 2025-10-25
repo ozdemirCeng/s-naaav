@@ -98,6 +98,7 @@ class DerslikView(QWidget):
         self.table.setSelectionMode(QTableWidget.SingleSelection)
         self.table.setAlternatingRowColors(True)
         self.table.verticalHeader().setVisible(False)
+        self.table.verticalHeader().setDefaultSectionSize(44)
         
         # Column widths
         header = self.table.horizontalHeader()
@@ -107,14 +108,14 @@ class DerslikView(QWidget):
         header.setSectionResizeMode(3, QHeaderView.Fixed)
         header.setSectionResizeMode(4, QHeaderView.Fixed)
         header.setSectionResizeMode(5, QHeaderView.Fixed)
-        header.setSectionResizeMode(6, QHeaderView.Fixed)
+        header.setSectionResizeMode(6, QHeaderView.ResizeToContents)
         
         self.table.setColumnWidth(0, 80)
         self.table.setColumnWidth(2, 80)
         self.table.setColumnWidth(3, 60)
         self.table.setColumnWidth(4, 60)
         self.table.setColumnWidth(5, 100)
-        self.table.setColumnWidth(6, 180)
+        # Actions column will size to contents; keep a sensible minimum via cell widget
         
         layout.addWidget(self.table)
         
@@ -395,25 +396,27 @@ class DerslikView(QWidget):
             # Action buttons
             action_widget = QWidget()
             action_layout = QHBoxLayout(action_widget)
-            action_layout.setContentsMargins(4, 4, 4, 4)
-            action_layout.setSpacing(6)
+            action_layout.setContentsMargins(8, 4, 8, 4)
+            action_layout.setSpacing(10)
             
             view_btn = QPushButton("🖼️ Görsel")
-            view_btn.setFixedHeight(32)
-            view_btn.setFixedWidth(80)
+            view_btn.setFixedHeight(36)
+            view_btn.setMinimumWidth(90)
             view_btn.setCursor(Qt.PointingHandCursor)
             view_btn.setStyleSheet("background-color: #3b82f6; color: white;")
             view_btn.clicked.connect(lambda checked=False, d=dict(derslik): self.visualize_derslik(d))
             
             edit_btn = QPushButton("✏️ Düzenle")
-            edit_btn.setFixedHeight(32)
+            edit_btn.setFixedHeight(36)
+            edit_btn.setMinimumWidth(90)
             edit_btn.setCursor(Qt.PointingHandCursor)
             edit_btn.setProperty('derslik_id', derslik['derslik_id'])
             edit_btn.clicked.connect(lambda checked=False, d=dict(derslik): self.edit_derslik(d))
             
             delete_btn = QPushButton("🗑️ Sil")
             delete_btn.setObjectName("dangerBtn")
-            delete_btn.setFixedHeight(32)
+            delete_btn.setFixedHeight(36)
+            delete_btn.setMinimumWidth(80)
             delete_btn.setCursor(Qt.PointingHandCursor)
             delete_btn.setProperty('derslik_id', derslik['derslik_id'])
             delete_btn.clicked.connect(lambda checked=False, d=dict(derslik): self.delete_derslik(d))
@@ -422,6 +425,8 @@ class DerslikView(QWidget):
             action_layout.addWidget(edit_btn)
             action_layout.addWidget(delete_btn)
             
+            # Ensure actions column has enough intrinsic width
+            action_widget.setMinimumWidth(290)
             self.table.setCellWidget(row, 6, action_widget)
     
     def filter_table(self):

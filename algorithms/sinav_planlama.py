@@ -79,6 +79,9 @@ class SinavPlanlama:
             
             # Get available classrooms
             derslikler = self.derslik_model.get_derslikler_by_bolum(params['bolum_id'])
+            logger.info(
+                f"🏫 Derslik sayısı: {len(derslikler)} → {[d.get('derslik_kodu') for d in derslikler]}"
+            )
             
             if not derslikler:
                 return {
@@ -118,7 +121,7 @@ class SinavPlanlama:
                 progress_callback(25, "Ders çakışma grafiği oluşturuluyor...")
             
             # Build conflict graph (adjacency list)
-            conflicts = self._build_conflict_graph(course_students)
+            conflicts = self._build_conflict_graph(course_students, params)
             
             logger.info(f"📊 Conflict graph: {len(conflicts)} courses with conflicts")
             
@@ -154,6 +157,8 @@ class SinavPlanlama:
             
             # Estimate total available slots (colors for graph coloring)
             total_slots_estimate = len(days) * approx_slots_per_day
+            # Ensure we have enough colors to avoid premature failure; coloring is only for rough ordering
+            total_slots_estimate = max(total_slots_estimate, len(course_info))
             
             logger.info(f"📅 {len(days)} days available")
             logger.info(f"⏰ ~{approx_slots_per_day} slots per day, ~{total_slots_estimate} total")
@@ -171,23 +176,54 @@ class SinavPlanlama:
             )
             
             if not course_slot_assignment:
-                return {
-                    'success': False,
-                    'message': f"Dersler {total_slots_estimate} slot'a sığdırılamadı! Daha fazla gün ekleyin veya ders sayısını azaltın."
-                }
+                logger.warning(
+                    f"Coloring failed at {total_slots_estimate} colors; falling back to sequential ordering."
+                )
+                # Fallback: assign unique colors per course (ensures ordering only)
+                course_slot_assignment = {cid: idx for idx, cid in enumerate(course_info.keys())}
             
             if progress_callback:
                 progress_callback(70, "Dinamik zaman slotları ve derslikler atanıyor...")
             
-            # Dynamically assign time slots and classrooms
-            schedule = self._assign_times_and_classrooms(
-                course_slot_assignment,
-                days,
-                derslikler,
-                course_info,
-                params,
-                progress_callback
+            # Log key options for debugging
+            logger.info(
+                f"Options → no_parallel={bool(params.get('no_parallel_exams', False))}, "
+                f"class/day limit={int(params.get('class_per_day_limit', 0))}, "
+                f"conflict_threshold={int(params.get('min_conflict_overlap', 1))}"
             )
+            
+            # Attempt multiple ordering strategies to achieve zero conflict
+            max_attempts = int(params.get('max_attempts', 3))
+            strategies = ['small_first', 'large_first', 'random']
+            best_schedule = []
+            best_unscheduled = float('inf')
+            any_days_exhausted = False
+            for attempt in range(max_attempts):
+                strategy = strategies[attempt % len(strategies)]
+                logger.info(f"🔁 Attempt {attempt+1}/{max_attempts} with strategy={strategy}")
+                self._days_exhausted = False
+                schedule_try = self._assign_times_and_classrooms(
+                    course_slot_assignment,
+                    days,
+                    derslikler,
+                    course_info,
+                    course_students,
+                    params,
+                    progress_callback,
+                    order_strategy=strategy
+                )
+                scheduled_pairs = set((s['ders_id'], s['tarih_saat']) for s in schedule_try)
+                scheduled_course_ids = {cid for (cid, _) in scheduled_pairs}
+                all_course_ids = set(course_info.keys())
+                unscheduled = len(all_course_ids - scheduled_course_ids)
+                any_days_exhausted = any_days_exhausted or getattr(self, '_days_exhausted', False)
+                logger.info(f"📈 Attempt {attempt+1}: scheduled={len(scheduled_course_ids)}, unscheduled={unscheduled}")
+                if unscheduled < best_unscheduled:
+                    best_unscheduled = unscheduled
+                    best_schedule = schedule_try
+                if unscheduled == 0:
+                    break
+            schedule = best_schedule
             
             if not schedule:
                 return {
@@ -195,10 +231,24 @@ class SinavPlanlama:
                     'message': "Zaman slotları ve derslikler atanamadı!"
                 }
             
+            # If days exhausted, return partial schedule with failure
+            if getattr(self, '_days_exhausted', False):
+                scheduled_courses = set((s['ders_id'], s['tarih_saat']) for s in schedule)
+                unique_scheduled_course_ids = {cid for (cid, _) in scheduled_courses}
+                all_course_ids = set(course_info.keys())
+                unscheduled_ids = list(all_course_ids - unique_scheduled_course_ids)
+                return {
+                    'success': False,
+                    'message': f"Günler tükendi! {len(unscheduled_ids)} ders yerleştirilemedi.",
+                    'schedule': schedule,
+                    'unassigned_courses': unscheduled_ids
+                }
+            
             if progress_callback:
                 progress_callback(90, "Program doğrulanıyor...")
             
-            # Validate schedule
+            # Validate schedule (without min rest; ara_suresi used already)
+            self._last_params = {k: v for k, v in params.items() if k != 'min_rest_minutes'}
             validation = self._validate_schedule(schedule, course_students)
             
             if not validation['success']:
@@ -208,6 +258,8 @@ class SinavPlanlama:
                 progress_callback(100, "Tamamlandı!")
             
             logger.info(f"✅ Exam schedule created: {len(schedule)} exam entries")
+            used_rooms = sorted({s['derslik_kodu'] for s in schedule})
+            logger.info(f"🏫 Kullanılan derslikler: {len(used_rooms)} → {used_rooms}")
             
             # Count unique exams (grouped by course + time)
             unique_exams = set((s['ders_id'], s['tarih_saat']) for s in schedule)
@@ -253,23 +305,41 @@ class SinavPlanlama:
         
         return days
     
-    def _build_conflict_graph(self, course_students: Dict[int, Set[str]]) -> Dict[int, Set[int]]:
+    def _build_conflict_graph(self, course_students: Dict[int, Set[str]], params: Dict) -> Dict[int, Set[int]]:
         """
         Build conflict graph where edges represent student conflicts
         Returns adjacency list
         """
         conflicts = defaultdict(set)
         course_ids = list(course_students.keys())
+        threshold = int(params.get('min_conflict_overlap', 1))
+        total_edges = 0
+        max_overlap = 0
+        sample_overlaps = []
         
         for i, ders_id1 in enumerate(course_ids):
             for ders_id2 in course_ids[i+1:]:
                 # Check if courses share any students
                 shared_students = course_students[ders_id1] & course_students[ders_id2]
-                
-                if shared_students:
+                overlap_count = len(shared_students)
+                max_overlap = max(max_overlap, overlap_count)
+                if overlap_count >= threshold:
                     conflicts[ders_id1].add(ders_id2)
                     conflicts[ders_id2].add(ders_id1)
+                    total_edges += 1
+                    if len(sample_overlaps) < 10:
+                        sample_overlaps.append((ders_id1, ders_id2, overlap_count))
         
+        # Log graph density info for diagnostics
+        try:
+            num_nodes = len(course_ids)
+            avg_degree = (2 * total_edges / num_nodes) if num_nodes else 0
+            logger.info(f"🧮 Graph: nodes={num_nodes}, edges={total_edges}, avg_degree={avg_degree:.2f}, max_overlap={max_overlap}, threshold={threshold}")
+            if sample_overlaps:
+                logger.info(f"🧪 Overlap samples (ders_id1, ders_id2, count): {sample_overlaps}")
+        except Exception:
+            pass
+
         return conflicts
     
     def _graph_coloring(
@@ -305,9 +375,6 @@ class SinavPlanlama:
         # Color assignment
         coloring = {}
         
-        # Track which courses are in each slot (for same-class spreading)
-        slot_classes = defaultdict(set)
-        
         for idx, ders_id in enumerate(sorted_courses):
             if progress_callback and idx % 5 == 0:
                 percent = 45 + int((idx / len(courses)) * 25)
@@ -321,30 +388,18 @@ class SinavPlanlama:
                 if neighbor_id in coloring:
                     used_colors.add(coloring[neighbor_id])
             
-            # Try to find a color that doesn't conflict and preferably doesn't have same class
-            sinif = course_info[ders_id]['sinif']
-            
-            # First try: Find slot without conflicts and without same class
+            # Pick the earliest slot (color) that doesn't conflict to maximize parallelism
             best_slot = None
             for color in range(max_colors):
                 if color not in used_colors:
-                    if sinif not in slot_classes[color]:
-                        best_slot = color
-                        break
-            
-            # Second try: Any slot without conflicts
-            if best_slot is None:
-                for color in range(max_colors):
-                    if color not in used_colors:
-                        best_slot = color
-                        break
+                    best_slot = color
+                    break
             
             if best_slot is None:
                 logger.warning(f"❌ Cannot color {course_info[ders_id]['ders_kodu']} - not enough slots!")
                 return None
             
             coloring[ders_id] = best_slot
-            slot_classes[best_slot].add(sinif)
         
         logger.info(f"✅ Coloring successful! Used {len(set(coloring.values()))} slots")
         
@@ -356,8 +411,10 @@ class SinavPlanlama:
         days: List[datetime],
         derslikler: List[Dict], 
         course_info: Dict[int, Dict],
+        course_students: Dict[int, Set[str]],
         params: Dict,
-        progress_callback: Optional[Callable[[int, str], None]] = None
+        progress_callback: Optional[Callable[[int, str], None]] = None,
+        order_strategy: str = 'small_first'
     ) -> List[Dict]:
         """
         Dynamically assign time slots and classrooms
@@ -365,11 +422,9 @@ class SinavPlanlama:
         """
         schedule = []
         
-        # Group courses by slot index
-        slot_courses = defaultdict(list)
-        for ders_id, slot_idx in course_slot_assignment.items():
-            slot_courses[slot_idx].append(ders_id)
-        
+        # Order courses by coloring slot index to spread conflicts roughly, but batching will ignore slots
+        ordered_courses = [cid for cid, _ in sorted(course_slot_assignment.items(), key=lambda kv: kv[1])]
+
         # Sort derslikler by capacity
         sorted_derslikler = sorted(derslikler, key=lambda x: x['kapasite'])
         
@@ -380,154 +435,179 @@ class SinavPlanlama:
         gunluk_ilk = self._parse_time(params.get('gunluk_ilk_sinav', '10:00'))
         gunluk_son = self._parse_time(params.get('gunluk_son_sinav', '19:15'))
         
-        # Assign slots to actual times dynamically
-        sorted_slot_indices = sorted(slot_courses.keys())
-        
         current_day_idx = 0
         current_time = None
         
         processed = 0
         total = len(course_slot_assignment)
         
-        for slot_idx in sorted_slot_indices:
-            course_ids = slot_courses[slot_idx]
+        # Remaining courses to place across batches
+        remaining_courses = list(ordered_courses)
+        
+        # Track how many exams per class per day have been scheduled
+        class_limit = params.get('class_per_day_limit', 0) or 0
+        no_parallel = bool(params.get('no_parallel_exams', False))
+        conflict_threshold = int(params.get('min_conflict_overlap', 1))
+        # Track classroom usage to balance room distribution
+        room_usage_count: Dict[int, int] = defaultdict(int)
+        
+        while remaining_courses:
             
-            # Determine time for this slot
-            if current_time is None:
-                # Start of first day
-                if current_day_idx >= len(days):
-                    logger.error("❌ Ran out of days!")
-                    break
+            while remaining_courses:
+                # Determine time for this batch
+                if current_time is None:
+                    if current_day_idx >= len(days):
+                        if not getattr(self, '_days_exhausted', False):
+                            logger.error("❌ Ran out of days!")
+                        self._days_exhausted = True
+                        break
+                    current_day = days[current_day_idx]
+                    current_time = datetime.combine(current_day.date(), gunluk_ilk)
                 
-                current_day = days[current_day_idx]
-                current_time = datetime.combine(current_day.date(), gunluk_ilk)
-            
-            # Check if we need to move to next day
-            # Calculate longest exam in this slot
-            max_duration = max(course_info[cid]['sinav_suresi'] for cid in course_ids)
-            exam_end_time = current_time + timedelta(minutes=max_duration)
-            
-            # Check if exam would end after last allowed time
-            max_allowed_end = datetime.combine(current_time.date(), gunluk_son) + timedelta(minutes=max_duration)
-            
-            if exam_end_time > max_allowed_end:
-                # Move to next day
-                current_day_idx += 1
-                if current_day_idx >= len(days):
-                    logger.error("❌ Ran out of days!")
-                    break
+                # Respect lunch break
+                current_time_only = current_time.time()
+                if ogle_baslangic <= current_time_only < ogle_bitis:
+                    current_time = datetime.combine(current_time.date(), ogle_bitis)
                 
-                current_day = days[current_day_idx]
-                current_time = datetime.combine(current_day.date(), gunluk_ilk)
-            
-            # Check if we're in lunch break
-            current_time_only = current_time.time()
-            if ogle_baslangic <= current_time_only < ogle_bitis:
-                # Skip to after lunch
-                current_time = datetime.combine(current_time.date(), ogle_bitis)
-            
-            # Assign classrooms for courses in this slot
-            slot_time = current_time
-            available_derslikler = list(sorted_derslikler)  # Copy
-            
-            # Sort courses by student count (SMALLER first for better packing)
-            course_ids_sorted = sorted(
-                course_ids,
-                key=lambda x: course_info[x]['ogrenci_sayisi']
-            )
-            
-            for ders_id in course_ids_sorted:
-                processed += 1
+                # Available classrooms reset for each batch at this start time
+                slot_time = current_time
+                all_rooms = list(sorted_derslikler)
+                batch_used_students: Set[str] = set()
+                batch_used_classes: Dict[int, int] = defaultdict(int)
                 
-                if progress_callback and processed % 3 == 0:
-                    percent = 70 + int((processed / total) * 20)
-                    progress_callback(percent, f"Atanıyor: {course_info[ders_id]['ders_kodu']}")
+                # Build zero-conflict set (greedy MIS) for this batch
+                if order_strategy == 'large_first':
+                    candidate = sorted(remaining_courses, key=lambda x: course_info[x]['ogrenci_sayisi'], reverse=True)
+                elif order_strategy == 'random':
+                    import random as _rnd
+                    candidate = list(remaining_courses)
+                    _rnd.shuffle(candidate)
+                else:
+                    candidate = sorted(remaining_courses, key=lambda x: course_info[x]['ogrenci_sayisi'])
+                selected: List[int] = []
+                for cid in candidate:
+                    if no_parallel and selected:
+                        continue
+                    # conflict check vs currently selected
+                    if course_students.get(cid):
+                        if len(course_students[cid] & batch_used_students) >= conflict_threshold:
+                            continue
+                    if class_limit > 0:
+                        csinif = course_info[cid].get('sinif', 0)
+                        if batch_used_classes[csinif] >= class_limit:
+                            continue
+                    selected.append(cid)
+                    batch_used_students.update(course_students.get(cid, set()))
+                    if class_limit > 0:
+                        batch_used_classes[course_info[cid].get('sinif', 0)] += 1
                 
-                ogrenci_sayisi = course_info[ders_id]['ogrenci_sayisi']
-                sinav_suresi = course_info[ders_id]['sinav_suresi']
-                
-                # BEST FIT classroom selection strategy
-                classrooms_used = []
-                remaining_students = ogrenci_sayisi
-                
-                # Try single classroom first - use BEST FIT (smallest that works)
-                best_fit_derslik = None
-                min_waste = float('inf')
-                
-                for derslik in available_derslikler:
-                    if derslik['kapasite'] >= ogrenci_sayisi:
-                        waste = derslik['kapasite'] - ogrenci_sayisi
-                        if waste < min_waste:
-                            min_waste = waste
-                            best_fit_derslik = derslik
-                
-                if best_fit_derslik:
-                    classrooms_used = [best_fit_derslik]
-                    remaining_students = 0
-                    available_derslikler.remove(best_fit_derslik)
-                    logger.debug(f"Best fit: {course_info[ders_id]['ders_kodu']} → {best_fit_derslik['derslik_kodu']} (waste: {min_waste})")
-                
-                # If no single classroom fits, use multiple SMALLEST first
-                if remaining_students > 0:
-                    classrooms_used = []
-                    # Use SMALLEST classrooms first - saves big ones for large single exams
-                    available_sorted = sorted(available_derslikler, key=lambda x: x['kapasite'])
-                    
-                    for derslik in available_sorted:
-                        if remaining_students <= 0:
+                # If nothing selected, advance time
+                if not selected:
+                    max_duration_in_batch = 0
+                    placed_this_batch = []
+                else:
+                    # Fair room assignment: 1 round give 1 room per course, then fill leftovers
+                    remaining_need = {cid: course_info[cid]['ogrenci_sayisi'] for cid in selected}
+                    duration_map = {cid: course_info[cid]['sinav_suresi'] for cid in selected}
+                    entries: List[Dict] = []
+                    available = list(all_rooms)
+                    # one-round assignment
+                    for cid in selected:
+                        if not available:
                             break
-                        
-                        classrooms_used.append(derslik)
-                        remaining_students -= derslik['kapasite']
-                        available_derslikler.remove(derslik)
+                        # pick least-used, then smallest sufficient; else smallest room
+                        best = None
+                        best_metric = (float('inf'), float('inf'), float('inf'))  # usage, waste, capacity
+                        for r in available:
+                            usage = room_usage_count[r['derslik_id']]
+                            waste = (r['kapasite'] - remaining_need[cid]) if r['kapasite'] >= remaining_need[cid] else float('inf')
+                            metric = (usage, waste, r['kapasite'])
+                            if metric < best_metric:
+                                best_metric = metric
+                                best = r
+                        if best is None:
+                            # take smallest room
+                            best = min(available, key=lambda r: (room_usage_count[r['derslik_id']], r['kapasite']))
+                        take = min(best['kapasite'], remaining_need[cid])
+                        entries.append({
+                            'ders_id': cid,
+                            'ders_kodu': course_info[cid]['ders_kodu'],
+                            'ders_adi': course_info[cid]['ders_adi'],
+                            'ogretim_elemani': course_info[cid]['ogretim_elemani'],
+                            'tarih_saat': slot_time,
+                            'sure': duration_map[cid],
+                            'derslik_id': best['derslik_id'],
+                            'derslik_kodu': best['derslik_kodu'],
+                            'derslik_adi': best['derslik_adi'],
+                            'ogrenci_sayisi': take,
+                            'sinav_tipi': params['sinav_tipi'],
+                            'bolum_id': params['bolum_id']
+                        })
+                        room_usage_count[best['derslik_id']] += 1
+                        remaining_need[cid] -= take
+                        available.remove(best)
+                    # fill remaining capacity
+                    for r in sorted(available, key=lambda x: (room_usage_count[x['derslik_id']], x['kapasite'])):
+                        # pick course with max remaining need (still in selected)
+                        cid = max((c for c in selected if remaining_need[c] > 0), default=None, key=lambda c: remaining_need[c])
+                        if cid is None:
+                            break
+                        take = min(r['kapasite'], remaining_need[cid])
+                        if take <= 0:
+                            continue
+                        entries.append({
+                            'ders_id': cid,
+                            'ders_kodu': course_info[cid]['ders_kodu'],
+                            'ders_adi': course_info[cid]['ders_adi'],
+                            'ogretim_elemani': course_info[cid]['ogretim_elemani'],
+                            'tarih_saat': slot_time,
+                            'sure': duration_map[cid],
+                            'derslik_id': r['derslik_id'],
+                            'derslik_kodu': r['derslik_kodu'],
+                            'derslik_adi': r['derslik_adi'],
+                            'ogrenci_sayisi': take,
+                            'sinav_tipi': params['sinav_tipi'],
+                            'bolum_id': params['bolum_id']
+                        })
+                        room_usage_count[r['derslik_id']] += 1
+                        remaining_need[cid] -= take
+                    # finalize
+                    placed_this_batch = selected
+                    max_duration_in_batch = max(duration_map[c] for c in selected) if selected else 0
+                    for e in entries:
+                        schedule.append(e)
                 
-                if remaining_students > 0:
-                    logger.error(f"❌ Not enough classroom capacity for {course_info[ders_id]['ders_kodu']}")
-                    continue
+                # Remove placed courses from remaining
+                remaining_courses = [cid for cid in remaining_courses if cid not in placed_this_batch]
                 
-                # Create exam entries
-                for derslik in classrooms_used:
-                    students_in_room = min(derslik['kapasite'], ogrenci_sayisi)
-                    
-                    exam = {
-                        'ders_id': ders_id,
-                        'ders_kodu': course_info[ders_id]['ders_kodu'],
-                        'ders_adi': course_info[ders_id]['ders_adi'],
-                        'ogretim_elemani': course_info[ders_id]['ogretim_elemani'],
-                        'tarih_saat': slot_time,
-                        'sure': sinav_suresi,  # Each course's own duration
-                        'derslik_id': derslik['derslik_id'],
-                        'derslik_kodu': derslik['derslik_kodu'],
-                        'derslik_adi': derslik['derslik_adi'],
-                        'ogrenci_sayisi': students_in_room,
-                        'sinav_tipi': params['sinav_tipi'],
-                        'bolum_id': params['bolum_id']
-                    }
-                    
-                    schedule.append(exam)
-                    ogrenci_sayisi -= students_in_room
+                if not placed_this_batch:
+                    # No course could be placed with remaining capacity; move to next time
+                    max_duration_in_batch = 0
                 
-                if len(classrooms_used) > 1:
-                    logger.info(f"📍 {course_info[ders_id]['ders_kodu']}: {len(classrooms_used)} derslik")
-            
-            # Move current_time forward for next slot
-            # Use the longest exam duration in this slot + break
-            max_duration = max(course_info[cid]['sinav_suresi'] for cid in course_ids)
-            next_time = current_time + timedelta(minutes=max_duration + ara_suresi)
-            
-            # Check if next time falls in lunch break
-            next_time_only = next_time.time()
-            if ogle_baslangic <= next_time_only < ogle_bitis:
-                # Skip to after lunch
-                next_time = datetime.combine(next_time.date(), ogle_bitis)
-            
-            # Check if next time exceeds daily limit
-            if next_time.time() > gunluk_son:
-                # Move to next day
-                current_day_idx += 1
-                current_time = None
-            else:
-                current_time = next_time
+                # Advance time to next batch
+                advance_minutes = (max_duration_in_batch + ara_suresi) if max_duration_in_batch > 0 else ara_suresi
+                next_time = current_time + timedelta(minutes=advance_minutes)
+                # Respect lunch break after advancing
+                next_time_only = next_time.time()
+                if ogle_baslangic <= next_time_only < ogle_bitis:
+                    next_time = datetime.combine(next_time.date(), ogle_bitis)
+                
+                # Check day limit
+                if next_time.time() > gunluk_son:
+                    current_day_idx += 1
+                    current_time = None
+                    # If we ran out of days, abort
+                    if current_day_idx >= len(days):
+                        if not getattr(self, '_days_exhausted', False):
+                            logger.error("❌ Ran out of days!")
+                        self._days_exhausted = True
+                        break
+                else:
+                    current_time = next_time
+
+            # If days are exhausted, stop outer loop as well to avoid spinning
+            if getattr(self, '_days_exhausted', False):
+                break
         
         return schedule
     
@@ -561,6 +641,8 @@ class SinavPlanlama:
                 
                 students_in_slot.update(students)
         
+        # Skip per-student min rest validation; ara_suresi policy applies globally
+
         if errors:
             return {
                 'success': False,
@@ -570,5 +652,12 @@ class SinavPlanlama:
         
         return {
             'success': True,
-            'message': "Schedule is valid"
+            'message': "Schedule is valid",
+            'warnings': warnings[:20] if warnings else []
         }
+
+    def _safe_int(self, d: Dict, key: str, default: int) -> int:
+        try:
+            return int(d.get(key, default))
+        except Exception:
+            return default

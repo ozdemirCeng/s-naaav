@@ -123,18 +123,17 @@ class SinavController:
                         'bitis_saati': bitis_saat.time()
                     }
                     
-                    sinav_id = self.sinav_model.insert_sinav(exam_data)
-                    
-                    # Add all classroom assignments for this exam
+                    # Collect classrooms for this time slot
+                    derslik_ids = []
                     for exam in exams:
                         derslik_id = exam.get('derslik_id')
                         if derslik_id and isinstance(derslik_id, int):
-                            try:
-                                self.sinav_model.assign_derslik(sinav_id, derslik_id)
-                            except Exception as e:
-                                logger.error(f"Error assigning classroom {derslik_id} to exam {sinav_id}: {e}")
+                            derslik_ids.append(derslik_id)
                         else:
                             logger.warning(f"Invalid derslik_id for exam: {derslik_id}")
+
+                    # Insert exam and classrooms atomically
+                    sinav_id = self.sinav_model.insert_exam_with_classrooms(exam_data, derslik_ids)
                     
                     success_count += 1
                     
@@ -142,12 +141,18 @@ class SinavController:
                     logger.error(f"Error saving exam for ders_id {ders_id}: {e}", exc_info=True)
                     error_count += 1
             
+            success = error_count == 0 and success_count > 0
+            message = (
+                f"✅ {success_count} sınav kaydedildi!"
+                if success
+                else f"⚠️ Kısmen kaydedildi: {success_count} başarılı, {error_count} hatalı"
+            )
             return {
-                'success': True,
-                'message': f"✅ {success_count} sınav kaydedildi! (Hata: {error_count})",
+                'success': success,
+                'message': message,
                 'program_id': program_id,
                 'success_count': success_count,
-                'error_count': error_count
+                'error_count': error_count,
             }
             
         except Exception as e:
