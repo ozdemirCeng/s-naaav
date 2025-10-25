@@ -292,35 +292,64 @@ class RaporlarView(QWidget):
     
     def get_sinav_takvimi_data(self):
         """Get exam schedule data"""
-        programlar = self.sinav_model.get_programs_by_bolum(self.bolum_id)
-        sinavlar = []
-        
-        for program in programlar:
-            program_sinavlar = self.sinav_model.get_sinavlar_by_program(program['program_id'])
-            sinavlar.extend(program_sinavlar)
-        
-        # Convert raw exam rows to the same structure as 'Sınav Oluştur' Excel export
-        records = []
-        for s in sinavlar:
-            tarih = s.get('tarih')
-            saat = s.get('baslangic_saati')
-            ders_adi = s.get('ders_adi', '')
-            ogretim_elemani = s.get('ogretim_elemani', '')
-            derslik = s.get('derslik_kodu', '')
-            records.append({
-                'Tarih': tarih.strftime('%d.%m.%Y') if hasattr(tarih, 'strftime') else str(tarih),
-                'Sınav Saati': saat.strftime('%H.%M') if hasattr(saat, 'strftime') else str(saat),
-                'Ders Adı': ders_adi,
-                'Öğretim Elemanı': ogretim_elemani,
-                'Derslik': derslik,
-            })
-        
-        return {
-            'type': 'sinav_takvimi',
-            'title': 'Sınav Takvimi',
-            'data': records,
-            'bolum_id': self.bolum_id
-        }
+        try:
+            # First get department and exam type info
+            info_query = """
+                SELECT DISTINCT 
+                    b.bolum_adi,
+                    sp.sinav_tipi
+                FROM sinav_programi sp
+                JOIN bolumler b ON sp.bolum_id = b.bolum_id
+                WHERE sp.bolum_id = %s
+                LIMIT 1
+            """
+            info_result = db.execute_query(info_query, (self.bolum_id,))
+            
+            if not info_result:
+                return None
+            
+            bolum_adi = info_result[0].get('bolum_adi', 'Bölüm')
+            sinav_tipi = info_result[0].get('sinav_tipi', 'Sınav')
+            
+            # Get all exams for this department via program
+            query = """
+                SELECT 
+                    s.sinav_id,
+                    (s.tarih || ' ' || s.baslangic_saati)::timestamp as tarih_saat,
+                    sp.sinav_tipi,
+                    d.ders_kodu,
+                    d.ders_adi,
+                    d.ogretim_elemani,
+                    STRING_AGG(DISTINCT dr.derslik_adi, '-' ORDER BY dr.derslik_adi) as derslikler,
+                    s.ogrenci_sayisi
+                FROM sinavlar s
+                JOIN sinav_programi sp ON s.program_id = sp.program_id
+                JOIN dersler d ON s.ders_id = d.ders_id
+                LEFT JOIN sinav_derslikleri sd ON s.sinav_id = sd.sinav_id
+                LEFT JOIN derslikler dr ON sd.derslik_id = dr.derslik_id
+                WHERE sp.bolum_id = %s
+                GROUP BY s.sinav_id, s.tarih, s.baslangic_saati, sp.sinav_tipi, 
+                         d.ders_kodu, d.ders_adi, d.ogretim_elemani, s.ogrenci_sayisi
+                ORDER BY s.tarih, s.baslangic_saati
+            """
+            
+            results = db.execute_query(query, (self.bolum_id,))
+            
+            if not results:
+                return None
+            
+            return {
+                'type': 'sinav_takvimi',
+                'title': 'Sınav Programı',
+                'bolum_adi': bolum_adi,
+                'sinav_tipi': sinav_tipi,
+                'data': results,
+                'bolum_id': self.bolum_id
+            }
+            
+        except Exception as e:
+            logger.error(f"Error getting exam schedule data: {e}")
+            return None
     
     def get_derslik_kullanimi_data(self):
         """Get classroom usage data"""

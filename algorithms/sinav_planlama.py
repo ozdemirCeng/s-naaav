@@ -511,6 +511,8 @@ class SinavPlanlama:
                     duration_map = {cid: course_info[cid]['sinav_suresi'] for cid in selected}
                     entries: List[Dict] = []
                     available = list(all_rooms)
+                    used_in_slot = set()  # Track rooms used in this slot to prevent conflicts
+                    
                     # one-round assignment
                     for cid in selected:
                         if not available:
@@ -545,9 +547,12 @@ class SinavPlanlama:
                         })
                         room_usage_count[best['derslik_id']] += 1
                         remaining_need[cid] -= take
+                        used_in_slot.add(best['derslik_id'])
                         available.remove(best)
-                    # fill remaining capacity
-                    for r in sorted(available, key=lambda x: (room_usage_count[x['derslik_id']], x['kapasite'])):
+                    
+                    # fill remaining capacity - only use rooms not yet used in this slot
+                    available_for_fill = [r for r in available if r['derslik_id'] not in used_in_slot]
+                    for r in sorted(available_for_fill, key=lambda x: (room_usage_count[x['derslik_id']], x['kapasite'])):
                         # pick course with max remaining need (still in selected)
                         cid = max((c for c in selected if remaining_need[c] > 0), default=None, key=lambda c: remaining_need[c])
                         if cid is None:
@@ -571,6 +576,8 @@ class SinavPlanlama:
                         })
                         room_usage_count[r['derslik_id']] += 1
                         remaining_need[cid] -= take
+                        used_in_slot.add(r['derslik_id'])
+                    
                     # finalize
                     placed_this_batch = selected
                     max_duration_in_batch = max(duration_map[c] for c in selected) if selected else 0
