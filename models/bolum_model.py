@@ -15,7 +15,7 @@ class BolumModel:
     def __init__(self, db: DatabaseManager):
         self.db = db
     
-    def get_all_bolumler(self) -> List[Dict]:
+    def get_all(self) -> List[Dict]:
         """Get all departments"""
         query = """
             SELECT bolum_id, bolum_kodu, bolum_adi, aktif
@@ -24,6 +24,10 @@ class BolumModel:
             ORDER BY bolum_adi
         """
         return self.db.execute_query(query)
+    
+    def get_all_bolumler(self) -> List[Dict]:
+        """Get all departments (alias for compatibility)"""
+        return self.get_all()
     
     def get_bolum_by_id(self, bolum_id: int) -> Optional[Dict]:
         """Get department by ID"""

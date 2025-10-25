@@ -57,8 +57,24 @@ class BolumCard(QFrame):
         ad.setStyleSheet("color: #64748b;")
         layout.addWidget(ad)
         
+        # Coordinator info
+        koordinatorler = self.bolum_data.get('koordinatorler', [])
+        if koordinatorler:
+            koor_label = QLabel(f"👤 {koordinatorler[0]['ad_soyad']}")
+            koor_label.setFont(QFont("Segoe UI", 9))
+            koor_label.setAlignment(Qt.AlignCenter)
+            koor_label.setStyleSheet("color: #94a3b8; padding: 4px;")
+            layout.addWidget(koor_label)
+            
+            if len(koordinatorler) > 1:
+                extra = QLabel(f"+{len(koordinatorler)-1} daha")
+                extra.setFont(QFont("Segoe UI", 8))
+                extra.setAlignment(Qt.AlignCenter)
+                extra.setStyleSheet("color: #cbd5e1;")
+                layout.addWidget(extra)
+        
         # Select button
-        btn = QPushButton("Sec")
+        btn = QPushButton("Seç")
         btn.setObjectName("primaryBtn")
         btn.setFixedHeight(36)
         btn.setCursor(Qt.PointingHandCursor)
@@ -168,13 +184,43 @@ class BolumSecimView(QWidget):
         layout.addWidget(content, 1)
     
     def load_bolumler(self):
-        """Load departments"""
+        """Load departments with assigned coordinators only"""
         try:
-            bolumler = self.bolum_model.get_all_bolumler()
+            # Get departments with their coordinators
+            query = """
+                SELECT b.bolum_id, b.bolum_kodu, b.bolum_adi,
+                       u.user_id, u.ad_soyad, u.email
+                FROM bolumler b
+                INNER JOIN users u ON b.bolum_id = u.bolum_id
+                WHERE b.aktif = TRUE 
+                  AND u.aktif = TRUE 
+                  AND u.role = 'Bölüm Koordinatörü'
+                ORDER BY b.bolum_adi
+            """
+            results = db.execute_query(query)
             
-            if not bolumler:
+            if not results:
                 self.show_no_departments()
                 return
+            
+            # Group by department (in case multiple coordinators per department)
+            bolumler_dict = {}
+            for row in results:
+                bolum_id = row['bolum_id']
+                if bolum_id not in bolumler_dict:
+                    bolumler_dict[bolum_id] = {
+                        'bolum_id': row['bolum_id'],
+                        'bolum_kodu': row['bolum_kodu'],
+                        'bolum_adi': row['bolum_adi'],
+                        'koordinatorler': []
+                    }
+                bolumler_dict[bolum_id]['koordinatorler'].append({
+                    'user_id': row['user_id'],
+                    'ad_soyad': row['ad_soyad'],
+                    'email': row['email']
+                })
+            
+            bolumler = list(bolumler_dict.values())
             
             # Clear existing
             while self.bolum_layout.count():
@@ -188,11 +234,11 @@ class BolumSecimView(QWidget):
                 card = BolumCard(bolum)
                 card.clicked.connect(self.on_bolum_selected)
                 card.setFixedWidth(280)
-                card.setFixedHeight(300)
+                card.setFixedHeight(320)
                 self.bolum_layout.addWidget(card)
             self.bolum_layout.addStretch()
             
-            logger.info(f"Loaded {len(bolumler)} departments")
+            logger.info(f"Loaded {len(bolumler)} departments with coordinators")
             
         except Exception as e:
             logger.error(f"Error loading departments: {e}")
@@ -206,23 +252,53 @@ class BolumSecimView(QWidget):
         """Show message when no departments available"""
         self.bolum_layout.addStretch()
         
-        msg = QLabel("Henuz tanimli bolum bulunmuyor")
-        msg.setFont(QFont("Segoe UI", 16))
+        container = QWidget()
+        container_layout = QVBoxLayout(container)
+        container_layout.setSpacing(16)
+        
+        icon = QLabel("⚠️")
+        icon.setFont(QFont("Segoe UI Emoji", 48))
+        icon.setAlignment(Qt.AlignCenter)
+        container_layout.addWidget(icon)
+        
+        msg = QLabel("Koordinatörü Atanmış Bölüm Bulunamadı")
+        msg.setFont(QFont("Segoe UI", 16, QFont.Bold))
         msg.setStyleSheet("color: #6b7280;")
         msg.setAlignment(Qt.AlignCenter)
+        container_layout.addWidget(msg)
         
-        self.bolum_layout.addWidget(msg)
+        info = QLabel(
+            "Bölüm seçebilmek için önce Kullanıcı Yönetimi'nden\n"
+            "bir koordinatör oluşturup bölüm ataması yapmalısınız."
+        )
+        info.setFont(QFont("Segoe UI", 12))
+        info.setStyleSheet("color: #9ca3af;")
+        info.setAlignment(Qt.AlignCenter)
+        info.setWordWrap(True)
+        container_layout.addWidget(info)
+        
+        self.bolum_layout.addWidget(container)
         self.bolum_layout.addStretch()
     
     def on_bolum_selected(self, bolum_data):
         """Handle department selection"""
         logger.info(f"Department selected: {bolum_data['bolum_adi']}")
         
+        # Get coordinator info
+        koordinatorler = bolum_data.get('koordinatorler', [])
+        koor_info = ""
+        if koordinatorler:
+            if len(koordinatorler) == 1:
+                koor_info = f"\n\nKoordinatör: {koordinatorler[0]['ad_soyad']}"
+            else:
+                koor_names = ", ".join([k['ad_soyad'] for k in koordinatorler])
+                koor_info = f"\n\nKoordinatörler: {koor_names}"
+        
         # Show confirmation
         reply = QMessageBox.question(
             self,
-            "Bolum Secimi",
-            f"'{bolum_data['bolum_adi']}' bolumu icin islemlere devam etmek istiyor musunuz?",
+            "Bölüm Seçimi",
+            f"'{bolum_data['bolum_adi']}' bölümü için işlemlere devam etmek istiyor musunuz?{koor_info}",
             QMessageBox.Yes | QMessageBox.No,
             QMessageBox.Yes
         )

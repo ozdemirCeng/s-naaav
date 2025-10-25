@@ -25,6 +25,9 @@ from views.koordinator.sinav_olustur_view import SinavOlusturView
 from views.koordinator.oturma_plani_view import OturmaPaniView
 from views.koordinator.raporlar_view import RaporlarView
 from views.koordinator.ayarlar_view import AyarlarView
+from views.admin.kullanici_yonetimi_view import KullaniciYonetimiView
+from views.admin.bolum_yonetimi_view import BolumYonetimiView
+from views.admin.sistem_ayarlar_view import SistemAyarlarView
 from styles.theme import KocaeliTheme
 
 logger = logging.getLogger(__name__)
@@ -297,6 +300,9 @@ class MainWindow(QMainWindow):
         self.sidebar_collapsed = False
         self.active_menu = 'dashboard'
         self.pages = {}  # Page cache
+        self.is_impersonating = False
+        self._original_user_data = None
+        self.impersonated_user_data = None
         
         # Admin için bölüm kontrolü
         self.is_admin = user_data.get('role') == 'Admin'
@@ -315,12 +321,13 @@ class MainWindow(QMainWindow):
         central = QWidget()
         self.setCentralWidget(central)
 
-        main_layout = QVBoxLayout(central)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setSpacing(0)
+        self.main_layout = QVBoxLayout(central)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.setSpacing(0)
 
         # Top bar
-        main_layout.addWidget(self.create_top_bar())
+        self.top_bar = self.create_top_bar()
+        self.main_layout.addWidget(self.top_bar)
 
         # Content area
         content = QWidget()
@@ -335,22 +342,18 @@ class MainWindow(QMainWindow):
         # Main content - QStackedWidget for page transitions
         self.content_stack = QStackedWidget()
 
-        # Dashboard page veya Bölüm Seçim
-        if self.needs_bolum_selection:
-            # Admin için bölüm seçim sayfası
-            self.bolum_secim_page = BolumSecimView(self.user_data)
-            self.bolum_secim_page.bolum_selected.connect(self.on_bolum_selected)
-            self.content_stack.addWidget(self.bolum_secim_page)
-            self.pages['bolum_secim'] = self.bolum_secim_page
-        else:
-            # Normal kullanıcılar için dashboard
-            self.dashboard_page = self.create_dashboard_page()
-            self.content_stack.addWidget(self.dashboard_page)
-            self.pages['dashboard'] = self.dashboard_page
+        # Her zaman dashboard ile başla
+        self.dashboard_page = self.create_dashboard_page()
+        self.content_stack.addWidget(self.dashboard_page)
+        self.pages['dashboard'] = self.dashboard_page
 
         content_layout.addWidget(self.content_stack, 1)
 
-        main_layout.addWidget(content)
+        self.main_layout.addWidget(content)
+
+    def get_effective_user_data(self):
+        """Return impersonated user data if in impersonation mode, else real user."""
+        return self.impersonated_user_data if self.is_impersonating and self.impersonated_user_data else self.user_data
 
     def create_top_bar(self):
         """Top bar"""
@@ -423,17 +426,24 @@ class MainWindow(QMainWindow):
         user_info_layout.setSpacing(0)
         user_info_layout.setContentsMargins(0, 0, 0, 0)
 
-        name = QLabel(self.user_data.get('ad_soyad', 'Kullanıcı'))
-        name.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        eff_user = self.get_effective_user_data()
+        self.topbar_name_label = QLabel(eff_user.get('ad_soyad', 'Kullanıcı'))
+        self.topbar_name_label.setFont(QFont("Segoe UI", 10, QFont.Bold))
 
-        role = QLabel(self.user_data.get('role', 'Admin'))
-        role.setFont(QFont("Segoe UI", 8))
+        self.topbar_role_label = QLabel(eff_user.get('role', 'Admin'))
+        self.topbar_role_label.setFont(QFont("Segoe UI", 8))
 
-        user_info_layout.addWidget(name)
-        user_info_layout.addWidget(role)
+        user_info_layout.addWidget(self.topbar_name_label)
+        user_info_layout.addWidget(self.topbar_role_label)
 
         user_layout.addWidget(avatar)
         user_layout.addWidget(user_info)
+
+        # Impersonation badge (no exit button in top bar - use sidebar)
+        if getattr(self, 'is_impersonating', False):
+            imp_badge = QLabel("🟢 Bölüm Modu")
+            imp_badge.setStyleSheet("color: #10b981; font-weight: bold; padding: 6px 10px; border: 1px solid #10b981; border-radius: 8px;")
+            layout.addWidget(imp_badge)
 
         # Logout button
         logout_btn = QPushButton("↪")
@@ -470,25 +480,32 @@ class MainWindow(QMainWindow):
 
         # Menu items based on role and bolum selection
         user_role = self.user_data.get('role', 'Bölüm Koordinatörü')
+        is_impersonating = getattr(self, 'is_impersonating', False)
         
-        if self.needs_bolum_selection:
-            # Admin bölüm seçmemiş - sadece bölüm seçim sayfası
-            menu_items = [
-                ('🎓', 'Bölüm Seçimi', 'bolum_secim')
-            ]
-        elif user_role == 'Admin':
-            # Admin bölüm seçmiş - TAM YETKİ
+        if user_role == 'Admin' and not is_impersonating and self.needs_bolum_selection:
+            # Admin bölüm seçmemiş - Yönetim paneli
             menu_items = [
                 ('🏠', 'Ana Sayfa', 'dashboard'),
-                ('🎓', 'Bölüm Değiştir', 'bolum_secim'),
                 ('👥', 'Kullanıcı Yönetimi', 'users'),
+                ('🏢', 'Bölüm Yönetimi', 'bolumler'),
+                ('⚙️', 'Sistem Ayarları', 'admin_ayarlar'),
+                ('👤', 'Profil Ayarları', 'ayarlar'),
+                ('', '───────────', 'divider'),
+                ('🎓', 'Bölüm Seçimi', 'bolum_secim')
+            ]
+        elif user_role == 'Admin' and is_impersonating:
+            # Admin impersonation modunda - Koordinatör menüsü + Geri Dön
+            menu_items = [
+                ('🏠', 'Ana Sayfa', 'dashboard'),
+                ('⬅️', 'Geri Dön (Admin)', 'exit_imp'),
+                ('', '───────────', 'divider'),
                 ('🏛', 'Derslikler', 'derslikler'),
                 ('📚', 'Ders Listesi', 'dersler'),
-                ('👨‍🎓', 'Öğrenci Listesi', 'ogrenciler'),
+                ('👥', 'Öğrenci Listesi', 'ogrenciler'),
                 ('📅', 'Sınav Programı', 'sinavlar'),
                 ('📝', 'Oturma Planı', 'oturma'),
                 ('📊', 'Raporlar', 'raporlar'),
-                ('⚙', 'Sistem Ayarları', 'ayarlar')
+                ('⚙', 'Ayarlar', 'ayarlar')
             ]
         else:
             # Bölüm Koordinatörü: Operasyonel işlemler
@@ -505,11 +522,22 @@ class MainWindow(QMainWindow):
 
         self.menu_buttons = []
         for icon, text, menu_id in menu_items:
-            btn = MenuButton(text, icon, self.theme)
-            # Fix lambda capture issue
-            btn.clicked.connect(lambda checked=False, mid=menu_id: self.switch_menu(mid))
-            layout.addWidget(btn)
-            self.menu_buttons.append((btn, menu_id))
+            if menu_id == 'divider':
+                # Add divider
+                divider = QLabel(text)
+                divider.setAlignment(Qt.AlignCenter)
+                divider.setStyleSheet(f"color: {self.theme.text_muted}; font-size: 10px; padding: 8px 0;")
+                layout.addWidget(divider)
+            else:
+                btn = MenuButton(text, icon, self.theme)
+                # Special action: exit impersonation
+                if menu_id == 'exit_imp':
+                    btn.clicked.connect(lambda checked=False: self.exit_impersonation())
+                else:
+                    # Fix lambda capture issue
+                    btn.clicked.connect(lambda checked=False, mid=menu_id: self.switch_menu(mid))
+                layout.addWidget(btn)
+                self.menu_buttons.append((btn, menu_id))
 
         # Collapse button
         layout.addStretch()
@@ -563,68 +591,23 @@ class MainWindow(QMainWindow):
         layout.setContentsMargins(24, 24, 24, 24)
         layout.setSpacing(24)
 
-        # Stats grid
-        stats_container = QWidget()
-        stats_layout = QHBoxLayout(stats_container)
-        stats_layout.setSpacing(16)
-
-        # Get real statistics from database
-        try:
-            from models.database import db
-            from models.sinav_model import SinavModel
-            from models.ders_model import DersModel
-            from models.derslik_model import DerslikModel
-            from models.ogrenci_model import OgrenciModel
-
-            bolum_id = self.user_data.get('bolum_id', 1)
-
-            sinav_model = SinavModel(db)
-            ders_model = DersModel(db)
-            derslik_model = DerslikModel(db)
-            ogrenci_model = OgrenciModel(db)
-
-            # Get counts
-            programlar = sinav_model.get_programs_by_bolum(bolum_id)
-            aktif_sinav_count = sum(len(sinav_model.get_sinavlar_by_program(p['program_id'])) for p in programlar if p.get('aktif', True))
-
-            dersler = ders_model.get_dersler_by_bolum(bolum_id)
-            ders_count = len(dersler)
-
-            derslikler = derslik_model.get_derslikler_by_bolum(bolum_id)
-            derslik_count = len(derslikler)
-
-            ogrenciler = ogrenci_model.get_ogrenciler_by_bolum(bolum_id)
-            ogrenci_count = len(ogrenciler)
-
-            stats = [
-                ("Aktif Sınavlar", aktif_sinav_count, max(aktif_sinav_count + 10, 30)),
-                ("Toplam Dersler", ders_count, max(ders_count + 10, 60)),
-                ("Derslikler", derslik_count, max(derslik_count + 5, 15)),
-                ("Öğrenciler", ogrenci_count, max(ogrenci_count + 100, 1000))
-            ]
-        except Exception as e:
-            logger.error(f"Dashboard stats error: {e}")
-            # Fallback to default values
-            stats = [
-                ("Aktif Sınavlar", 0, 30),
-                ("Toplam Dersler", 0, 60),
-                ("Derslikler", 0, 15),
-                ("Öğrenciler", 0, 1000)
-            ]
-
-        for label, value, total in stats:
-            card = StatCard(label, value, total, self.theme)
-            stats_layout.addWidget(card)
-
-        layout.addWidget(stats_container)
-
-        # Welcome card
+        # Welcome card with quick actions
         welcome_card = self.create_welcome_card()
         layout.addWidget(welcome_card)
 
-        # System status
-        status_card = self.create_status_card()
-        layout.addWidget(status_card)
+        # Statistics and recent activity cards
+        bottom_row = QHBoxLayout()
+        bottom_row.setSpacing(16)
+        
+        # Stats card (real data, no demo)
+        stats_card = self.create_stats_card()
+        bottom_row.addWidget(stats_card, 1)
+        
+        # Recent activity or upcoming exams
+        activity_card = self.create_activity_card()
+        bottom_row.addWidget(activity_card, 1)
+        
+        layout.addLayout(bottom_row)
 
         return content
 
@@ -662,12 +645,25 @@ class MainWindow(QMainWindow):
         actions_layout = QHBoxLayout(actions_container)
         actions_layout.setSpacing(16)
 
-        actions = [
-            ("Derslik Ekle", "Yeni derslik tanımla", "🏛", "emerald", "derslikler"),
-            ("Excel Yükle", "Ders/Öğrenci listesi", "📄", "blue", "dersler"),
-            ("Program Oluştur", "Sınav takvimi yap", "📅", "indigo", "sinavlar"),
-            ("Rapor Al", "PDF/Excel çıktı", "📊", "orange", "raporlar")
-        ]
+        # Admin: management-oriented quick actions; Coordinator: operational actions
+        is_impersonating = getattr(self, 'is_impersonating', False)
+        
+        if self.is_admin and not is_impersonating:
+            # Pure admin mode - management actions
+            actions = [
+                ("Kullanıcı Ekle", "Yeni yönetici/koordinatör", "👥", "emerald", "users"),
+                ("Bölüm Ekle", "Yeni bölüm tanımla", "🏢", "blue", "bolumler"),
+                ("Sistem Ayarları", "Global ayarları yapılandır", "⚙️", "orange", "admin_ayarlar"),
+                ("Bölüm Seç", "Operasyonel ekrana geç", "🎓", "indigo", "bolum_secim")
+            ]
+        else:
+            # Coordinator mode (or admin in impersonation) - operational actions
+            actions = [
+                ("Derslik Ekle", "Yeni derslik tanımla", "🏛", "emerald", "derslikler"),
+                ("Excel Yükle", "Ders/Öğrenci listesi", "📄", "blue", "dersler"),
+                ("Program Oluştur", "Sınav takvimi yap", "📅", "indigo", "sinavlar"),
+                ("Rapor Al", "PDF/Excel çıktı", "📊", "orange", "raporlar")
+            ]
 
         for label, desc, icon, color, page_id in actions:
             action_card = QuickActionCard(label, desc, icon, color, self.theme)
@@ -678,49 +674,157 @@ class MainWindow(QMainWindow):
 
         return card
 
-    def create_status_card(self):
-        """System status card"""
+    def create_stats_card(self):
+        """Statistics card with real data"""
         card = QFrame()
-
         layout = QVBoxLayout(card)
-        layout.setContentsMargins(32, 32, 32, 32)
+        layout.setContentsMargins(24, 24, 24, 24)
         layout.setSpacing(16)
 
-        title = QLabel("Sistem Durumu")
+        title = QLabel("📊 İstatistikler")
         title.setFont(QFont("Segoe UI", 14, QFont.Bold))
-
         layout.addWidget(title)
 
-        # Status items
-        status_container = QWidget()
-        status_layout = QHBoxLayout(status_container)
-        status_layout.setSpacing(24)
+        # Get real statistics
+        stats_list = QWidget()
+        stats_layout = QVBoxLayout(stats_list)
+        stats_layout.setSpacing(12)
 
-        statuses = [
-            ("0", "Bekleyen Sınav", "emerald"),
-            ("0", "Aktif Program", "blue"),
-            ("15", "Gün Kaldı", "orange")
-        ]
+        try:
+            from models.database import db
+            is_impersonating = getattr(self, 'is_impersonating', False)
+            eff_user = self.get_effective_user_data()
+            
+            if self.is_admin and not is_impersonating:
+                # Admin stats
+                users_count = db.execute_query("SELECT COUNT(*) AS c FROM users WHERE aktif = TRUE")[0]['c']
+                bolum_count = db.execute_query("SELECT COUNT(*) AS c FROM bolumler WHERE aktif = TRUE")[0]['c']
+                koor_count = db.execute_query("SELECT COUNT(*) AS c FROM users WHERE aktif = TRUE AND role = 'Bölüm Koordinatörü'")[0]['c']
+                
+                stats_data = [
+                    ("👥 Aktif Kullanıcılar", users_count),
+                    ("🏢 Bölümler", bolum_count),
+                    ("👨‍🏫 Koordinatörler", koor_count),
+                ]
+            else:
+                # Department stats
+                from models.sinav_model import SinavModel
+                from models.ders_model import DersModel
+                from models.derslik_model import DerslikModel
+                from models.ogrenci_model import OgrenciModel
+                
+                bolum_id = eff_user.get('bolum_id')
+                sinav_model = SinavModel(db)
+                ders_model = DersModel(db)
+                derslik_model = DerslikModel(db)
+                ogrenci_model = OgrenciModel(db)
+                
+                programlar = sinav_model.get_programs_by_bolum(bolum_id)
+                program_count = len([p for p in programlar if p.get('aktif', True)])
+                ders_count = len(ders_model.get_dersler_by_bolum(bolum_id))
+                derslik_count = len(derslik_model.get_derslikler_by_bolum(bolum_id))
+                ogrenci_count = len(ogrenci_model.get_ogrenciler_by_bolum(bolum_id))
+                
+                stats_data = [
+                    ("📅 Sınav Programları", program_count),
+                    ("📚 Dersler", ders_count),
+                    ("🏛 Derslikler", derslik_count),
+                    ("👨‍🎓 Öğrenciler", ogrenci_count),
+                ]
+        except Exception as e:
+            logger.error(f"Stats error: {e}")
+            stats_data = [("⚠️ Veri yüklenemedi", 0)]
 
-        for value, label, color in statuses:
+        for label, value in stats_data:
             item = QWidget()
-            item_layout = QVBoxLayout(item)
-            item_layout.setAlignment(Qt.AlignCenter)
-
-            val = QLabel(value)
-            val.setFont(QFont("Segoe UI", 32, QFont.Bold))
-            val.setAlignment(Qt.AlignCenter)
+            item_layout = QHBoxLayout(item)
+            item_layout.setContentsMargins(0, 0, 0, 0)
+            item_layout.setSpacing(12)
 
             lbl = QLabel(label)
-            lbl.setFont(QFont("Segoe UI", 10))
-            lbl.setAlignment(Qt.AlignCenter)
-
-            item_layout.addWidget(val)
+            lbl.setFont(QFont("Segoe UI", 11))
             item_layout.addWidget(lbl)
+            
+            item_layout.addStretch()
 
-            status_layout.addWidget(item)
+            val = QLabel(str(value))
+            val.setFont(QFont("Segoe UI", 14, QFont.Bold))
+            val.setStyleSheet("color: #10b981;")
+            item_layout.addWidget(val)
 
-        layout.addWidget(status_container)
+            stats_layout.addWidget(item)
+
+        layout.addWidget(stats_list)
+        layout.addStretch()
+
+        return card
+    
+    def create_activity_card(self):
+        """Recent activity or upcoming events card"""
+        card = QFrame()
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(24, 24, 24, 24)
+        layout.setSpacing(16)
+
+        title = QLabel("📌 Son Aktiviteler")
+        title.setFont(QFont("Segoe UI", 14, QFont.Bold))
+        layout.addWidget(title)
+
+        # Activity list
+        activity_list = QWidget()
+        activity_layout = QVBoxLayout(activity_list)
+        activity_layout.setSpacing(12)
+
+        try:
+            from models.database import db
+            is_impersonating = getattr(self, 'is_impersonating', False)
+            eff_user = self.get_effective_user_data()
+            
+            if self.is_admin and not is_impersonating:
+                # Admin: show recent system activities
+                recent_users = db.execute_query("""
+                    SELECT ad_soyad, son_giris 
+                    FROM users 
+                    WHERE aktif = TRUE AND son_giris IS NOT NULL
+                    ORDER BY son_giris DESC 
+                    LIMIT 5
+                """)
+                
+                if recent_users:
+                    for user in recent_users:
+                        activity_item = QLabel(f"• {user['ad_soyad']} - Son giriş")
+                        activity_item.setFont(QFont("Segoe UI", 10))
+                        activity_layout.addWidget(activity_item)
+                else:
+                    no_data = QLabel("Henüz aktivite yok")
+                    no_data.setFont(QFont("Segoe UI", 10))
+                    no_data.setStyleSheet("color: #9ca3af;")
+                    activity_layout.addWidget(no_data)
+            else:
+                # Department: show recent exam programs
+                from models.sinav_model import SinavModel
+                bolum_id = eff_user.get('bolum_id')
+                sinav_model = SinavModel(db)
+                programlar = sinav_model.get_programs_by_bolum(bolum_id)
+                
+                if programlar:
+                    for prog in programlar[:5]:
+                        prog_item = QLabel(f"• {prog.get('program_adi', 'Program')}")
+                        prog_item.setFont(QFont("Segoe UI", 10))
+                        activity_layout.addWidget(prog_item)
+                else:
+                    no_data = QLabel("Henüz sınav programı yok")
+                    no_data.setFont(QFont("Segoe UI", 10))
+                    no_data.setStyleSheet("color: #9ca3af;")
+                    activity_layout.addWidget(no_data)
+        except Exception as e:
+            logger.error(f"Activity error: {e}")
+            error_label = QLabel("⚠️ Veri yüklenemedi")
+            error_label.setFont(QFont("Segoe UI", 10))
+            activity_layout.addWidget(error_label)
+
+        layout.addWidget(activity_list)
+        layout.addStretch()
 
         return card
 
@@ -800,6 +904,34 @@ class MainWindow(QMainWindow):
         # Update user_data with bolum_id
         self.user_data['bolum_id'] = bolum_data['bolum_id']
         
+        # Enter impersonation as coordinator for selected department
+        if not getattr(self, 'is_impersonating', False):
+            import copy
+            self._original_user_data = copy.deepcopy(self.user_data)
+        self.is_impersonating = True
+        
+        # Use real coordinator data from bolum_data
+        koordinatorler = bolum_data.get('koordinatorler', [])
+        if koordinatorler:
+            # Use first coordinator's data
+            first_koor = koordinatorler[0]
+            self.impersonated_user_data = {
+                'user_id': first_koor.get('user_id'),
+                'email': first_koor.get('email', ''),
+                'role': 'Bölüm Koordinatörü',
+                'ad_soyad': first_koor.get('ad_soyad', ''),
+                'bolum_id': bolum_data.get('bolum_id')
+            }
+        else:
+            # Fallback to synthetic data
+            self.impersonated_user_data = {
+                'user_id': None,
+                'email': '',
+                'role': 'Bölüm Koordinatörü',
+                'ad_soyad': f"{bolum_data.get('bolum_adi', 'Bölüm')} Koordinatörü",
+                'bolum_id': bolum_data.get('bolum_id')
+            }
+
         # No longer needs bolum selection
         self.needs_bolum_selection = False
         
@@ -824,6 +956,72 @@ class MainWindow(QMainWindow):
         self.switch_menu('dashboard')
         
         logger.info("✅ UI updated with department context")
+
+        # Refresh top bar to reflect impersonation
+        self.refresh_top_bar()
+
+    def exit_impersonation(self):
+        """Exit impersonation and restore admin context"""
+        if not getattr(self, 'is_impersonating', False):
+            return
+        
+        # Restore original admin data
+        if hasattr(self, '_original_user_data') and self._original_user_data:
+            self.user_data = self._original_user_data.copy()
+        
+        self.is_impersonating = False
+        self.impersonated_user_data = None
+        
+        # Clear selected bolum context
+        self.selected_bolum = None
+        
+        # Admin should return to needs_bolum_selection state if they don't have a permanent bolum_id
+        # Remove temporary bolum_id from user_data if it was added during impersonation
+        if self.user_data.get('role') == 'Admin':
+            # Admin typically doesn't have a bolum_id, so remove it
+            if 'bolum_id' in self.user_data:
+                del self.user_data['bolum_id']
+            self.needs_bolum_selection = True
+
+        # Reset pages and sidebar
+        for page_id, widget in list(self.pages.items()):
+            self.content_stack.removeWidget(widget)
+            widget.deleteLater()
+        self.pages.clear()
+
+        # Recreate dashboard and sidebar
+        self.dashboard_page = self.create_dashboard_page()
+        self.content_stack.addWidget(self.dashboard_page)
+        self.pages['dashboard'] = self.dashboard_page
+        self.recreate_sidebar()
+        self.switch_menu('dashboard')
+
+        # Refresh top bar back to admin
+        self.refresh_top_bar()
+        
+        logger.info("✅ Exited impersonation, returned to admin mode")
+
+    def start_impersonation(self, target_user: dict):
+        """Start impersonation for a specific user (from Users page)."""
+        import copy
+        if not getattr(self, 'is_impersonating', False):
+            self._original_user_data = copy.deepcopy(self.user_data)
+        self.is_impersonating = True
+        self.impersonated_user_data = copy.deepcopy(target_user)
+        # Ensure coordinator role menus
+        self.selected_bolum = {'bolum_id': target_user.get('bolum_id'), 'bolum_adi': ''}
+        # Reset pages and sidebar
+        for page_id, widget in list(self.pages.items()):
+            self.content_stack.removeWidget(widget)
+            widget.deleteLater()
+        self.pages.clear()
+        self.dashboard_page = self.create_dashboard_page()
+        self.content_stack.addWidget(self.dashboard_page)
+        self.pages['dashboard'] = self.dashboard_page
+        self.recreate_sidebar()
+        self.switch_menu('dashboard')
+        # Refresh top bar
+        self.refresh_top_bar()
     
     def recreate_sidebar(self):
         """Recreate sidebar with updated menu"""
@@ -837,6 +1035,14 @@ class MainWindow(QMainWindow):
         # Create new sidebar
         self.sidebar = self.create_sidebar()
         content_layout.insertWidget(0, self.sidebar)
+
+    def refresh_top_bar(self):
+        """Recreate top bar to reflect impersonation state and user info"""
+        if hasattr(self, 'top_bar') and self.top_bar:
+            self.main_layout.removeWidget(self.top_bar)
+            self.top_bar.deleteLater()
+        self.top_bar = self.create_top_bar()
+        self.main_layout.insertWidget(0, self.top_bar)
     
     def create_page(self, page_id):
         """Create page widget based on role and page_id"""
@@ -851,52 +1057,52 @@ class MainWindow(QMainWindow):
                 self.dashboard_page = self.create_dashboard_page()
                 return self.dashboard_page
         
-        # Bölüm seçim sayfası
+        # Bölüm seçim sayfası - always recreate to get fresh data
         if page_id == 'bolum_secim':
+            # Remove old instance if exists
             if 'bolum_secim' in self.pages:
-                return self.pages['bolum_secim']
-            else:
-                bolum_secim = BolumSecimView(self.user_data)
-                bolum_secim.bolum_selected.connect(self.on_bolum_selected)
-                return bolum_secim
+                old_widget = self.pages['bolum_secim']
+                self.content_stack.removeWidget(old_widget)
+                old_widget.deleteLater()
+                del self.pages['bolum_secim']
+            
+            bolum_secim = BolumSecimView(self.user_data)
+            bolum_secim.bolum_selected.connect(self.on_bolum_selected)
+            return bolum_secim
         
         # Create page based on role
         try:
-            # Admin pages - TAM YETKİ
-            if user_role == 'Admin':
+            # Get effective user for all pages
+            eff_user = self.get_effective_user_data()
+            
+            # Admin-only pages
+            if user_role == 'Admin' and not self.is_impersonating:
                 if page_id == 'users':
-                    return self.create_users_page()
-                elif page_id == 'derslikler':
-                    return DerslikView(self.user_data)
-                elif page_id == 'dersler':
-                    return DersYukleView(self.user_data)
-                elif page_id == 'ogrenciler':
-                    return OgrenciYukleView(self.user_data)
-                elif page_id == 'sinavlar':
-                    return SinavOlusturView(self.user_data)
-                elif page_id == 'oturma':
-                    return OturmaPaniView(self.user_data)
-                elif page_id == 'raporlar':
-                    return RaporlarView(self.user_data)
+                    return KullaniciYonetimiView(self.user_data)
+                elif page_id == 'bolumler':
+                    return self.create_bolum_yonetimi_page()
+                elif page_id == 'admin_ayarlar':
+                    return SistemAyarlarView(self.user_data)
                 elif page_id == 'ayarlar':
+                    # Admin's own profile settings
                     return AyarlarView(self.user_data)
             
-            # Koordinatör pages
-            else:
-                if page_id == 'derslikler':
-                    return DerslikView(self.user_data)
-                elif page_id == 'dersler':
-                    return DersYukleView(self.user_data)
-                elif page_id == 'ogrenciler':
-                    return OgrenciYukleView(self.user_data)
-                elif page_id == 'sinavlar':
-                    return SinavOlusturView(self.user_data)
-                elif page_id == 'oturma':
-                    return OturmaPaniView(self.user_data)
-                elif page_id == 'raporlar':
-                    return RaporlarView(self.user_data)
-                elif page_id == 'ayarlar':
-                    return AyarlarView(self.user_data)
+            # Shared pages (both admin in impersonation mode and coordinator)
+            if page_id == 'derslikler':
+                return DerslikView(eff_user)
+            elif page_id == 'dersler':
+                return DersYukleView(eff_user)
+            elif page_id == 'ogrenciler':
+                return OgrenciYukleView(eff_user)
+            elif page_id == 'sinavlar':
+                return SinavOlusturView(eff_user)
+            elif page_id == 'oturma':
+                return OturmaPaniView(eff_user)
+            elif page_id == 'raporlar':
+                return RaporlarView(eff_user)
+            elif page_id == 'ayarlar':
+                # Coordinator or impersonated user settings
+                return AyarlarView(eff_user)
             
             logger.warning(f"Unknown page_id: {page_id}")
             return None
@@ -905,30 +1111,11 @@ class MainWindow(QMainWindow):
             logger.error(f"Error creating page {page_id}: {e}", exc_info=True)
             raise
     
-    def create_users_page(self):
-        """Create admin user management page"""
-        page = QWidget()
-        layout = QVBoxLayout(page)
-        layout.setContentsMargins(24, 24, 24, 24)
-        
-        # Title
-        title = QLabel("👥 Kullanıcı Yönetimi")
-        title.setFont(QFont("Segoe UI", 18, QFont.Bold))
-        layout.addWidget(title)
-        
-        desc = QLabel("Admin olarak tüm kullanıcıları yönetebilir, yeni koordinatörler ekleyebilirsiniz.")
-        desc.setStyleSheet(f"color: {self.theme.text_muted}; font-size: 13px;")
-        layout.addWidget(desc)
-        
-        layout.addSpacing(20)
-        
-        # TODO: User management UI will be implemented here
-        placeholder = QLabel("🚧 Kullanıcı yönetimi paneli hazırlanıyor...")
-        placeholder.setAlignment(Qt.AlignCenter)
-        placeholder.setStyleSheet(f"color: {self.theme.text_muted}; font-size: 14px; padding: 60px;")
-        layout.addWidget(placeholder, 1)
-        
-        return page
+    def create_bolum_yonetimi_page(self):
+        """Create department management page"""
+        return BolumYonetimiView(self.user_data)
+    
+    
 
     def animate_page_transition(self, target_widget):
         """Page transition animation"""

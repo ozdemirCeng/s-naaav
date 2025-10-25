@@ -121,6 +121,9 @@ class SinavOlusturView(QWidget):
         self.programs_table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.programs_table.setSelectionBehavior(QTableWidget.SelectRows)
         self.programs_table.setAlternatingRowColors(True)
+        header = self.programs_table.horizontalHeader()
+        header.setSectionResizeMode(5, QHeaderView.Fixed)
+        self.programs_table.setColumnWidth(5, 260)
         layout.addWidget(self.programs_table)
         
         # Load programs
@@ -618,15 +621,17 @@ class SinavOlusturView(QWidget):
                 # Action buttons
                 actions_widget = QWidget()
                 actions_layout = QHBoxLayout(actions_widget)
-                actions_layout.setContentsMargins(4, 4, 4, 4)
-                actions_layout.setSpacing(4)
+                actions_layout.setContentsMargins(8, 4, 8, 4)
+                actions_layout.setSpacing(8)
                 
                 view_btn = QPushButton("📋 Görüntüle")
-                view_btn.setFixedHeight(28)
+                view_btn.setFixedHeight(32)
+                view_btn.setMinimumWidth(110)
                 view_btn.clicked.connect(lambda checked=False, p=dict(program): self.view_program(p))
                 
                 delete_btn = QPushButton("🗑️ Sil")
-                delete_btn.setFixedHeight(28)
+                delete_btn.setFixedHeight(32)
+                delete_btn.setMinimumWidth(90)
                 delete_btn.setStyleSheet("background-color: #ef4444; color: white;")
                 delete_btn.clicked.connect(lambda checked=False, p=dict(program): self.delete_program(p))
                 
