@@ -17,6 +17,10 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from styles.theme import KocaeliTheme
 from controllers.login_controller import LoginController
+from models.database import db
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class AnimatedBackground(QWidget):
@@ -348,38 +352,15 @@ class LoginView(QWidget):
         title.setFont(QFont("Segoe UI", 42, QFont.Bold))
         title.setAlignment(Qt.AlignCenter)
 
-        # Features card
+        # Announcements card
         features_card = QFrame()
         features_card.setObjectName("featuresCard")
         features_layout = QVBoxLayout(features_card)
         features_layout.setContentsMargins(32, 28, 32, 28)
         features_layout.setSpacing(18)
-
-        features = [
-            ("✨", "Otomatik Program Oluşturma"),
-            ("🏢", "Akıllı Derslik Yönetimi"),
-            ("🔒", "Çakışma Önleme Sistemi"),
-            ("📊", "Excel & PDF Export"),
-            ("⚡", "Yüksek Performans"),
-            ("🎯", "Kullanıcı Dostu Arayüz")
-        ]
-
-        for icon, text in features:
-            feature_item = QWidget()
-            feature_layout = QHBoxLayout(feature_item)
-            feature_layout.setContentsMargins(0, 0, 0, 0)
-            feature_layout.setSpacing(12)
-
-            icon_label = QLabel(icon)
-            icon_label.setFont(QFont("Segoe UI Emoji", 18))
-
-            text_label = QLabel(text)
-            text_label.setObjectName("featureText")
-            text_label.setFont(QFont("Segoe UI", 13))
-
-            feature_layout.addWidget(icon_label)
-            feature_layout.addWidget(text_label, 1)
-            features_layout.addWidget(feature_item)
+        
+        # Load announcements from database
+        self._load_announcements(features_layout)
 
         content_layout.addWidget(logo_label)
         content_layout.addWidget(uni_name)
@@ -646,6 +627,107 @@ class LoginView(QWidget):
     def hide_message(self):
         """Hide message"""
         self.message_label.hide()
+    
+    def _load_announcements(self, layout):
+        """Load active announcements from database"""
+        try:
+            # Try to load active announcements
+            query = """
+                SELECT metin 
+                FROM duyurular 
+                WHERE aktif = TRUE 
+                ORDER BY olusturulma_tarihi DESC
+                LIMIT 10
+            """
+            try:
+                results = db.execute_query(query)
+            except Exception as query_error:
+                logger.debug(f"Query failed (table might not exist): {query_error}")
+                results = None
+            
+            if results and len(results) > 0:
+                # Add title
+                title_label = QLabel("📢 Duyurular")
+                title_label.setObjectName("featureText")
+                title_label.setFont(QFont("Segoe UI", 15, QFont.Bold))
+                title_label.setAlignment(Qt.AlignLeft)
+                title_label.setStyleSheet("color: white; background: transparent;")
+                layout.addWidget(title_label)
+                
+                # Add separator
+                separator = QFrame()
+                separator.setFrameShape(QFrame.HLine)
+                separator.setStyleSheet("background: rgba(255, 255, 255, 0.3); max-height: 2px;")
+                layout.addWidget(separator)
+                
+                # Add announcements
+                for row in results:
+                    announcement_item = QWidget()
+                    announcement_item.setStyleSheet("background: transparent;")
+                    announcement_layout = QHBoxLayout(announcement_item)
+                    announcement_layout.setContentsMargins(0, 0, 0, 0)
+                    announcement_layout.setSpacing(12)
+                    
+                    icon_label = QLabel("•")
+                    icon_label.setFont(QFont("Segoe UI", 20, QFont.Bold))
+                    icon_label.setStyleSheet("color: white; background: transparent;")
+                    
+                    text_label = QLabel(row['metin'])
+                    text_label.setObjectName("featureText")
+                    text_label.setFont(QFont("Segoe UI", 13))
+                    text_label.setWordWrap(True)
+                    text_label.setStyleSheet("color: white; background: transparent;")
+                    
+                    announcement_layout.addWidget(icon_label)
+                    announcement_layout.addWidget(text_label, 1)
+                    layout.addWidget(announcement_item)
+            else:
+                # No announcements in DB, show default announcement
+                self._show_default_features(layout)
+                
+        except Exception as e:
+            logger.error(f"Error loading announcements: {e}")
+            # Show default announcement on error
+            self._show_default_features(layout)
+    
+    def _show_default_features(self, layout):
+        """Show default announcement when no custom announcements"""
+        # Add title
+        title_label = QLabel("📢 Hoş Geldiniz")
+        title_label.setObjectName("featureText")
+        title_label.setFont(QFont("Segoe UI", 15, QFont.Bold))
+        title_label.setAlignment(Qt.AlignLeft)
+        title_label.setStyleSheet("color: white; background: transparent;")
+        layout.addWidget(title_label)
+        
+        # Add separator
+        separator = QFrame()
+        separator.setFrameShape(QFrame.HLine)
+        separator.setStyleSheet("background: rgba(255, 255, 255, 0.3); max-height: 2px;")
+        layout.addWidget(separator)
+        
+        # Default announcement
+        default_text = """Kocaeli Üniversitesi Sınav Takvimi Yönetim Sistemine hoş geldiniz. 
+
+Bu sistem ile sınav programlarınızı kolayca oluşturabilir, derslik atamalarını otomatik yapabilir ve öğrenci oturma planlarını düzenleyebilirsiniz.
+
+Giriş yaptıktan sonra ilgili bölüm için tüm sınav süreçlerini yönetebileceksiniz."""
+        
+        announcement_item = QWidget()
+        announcement_item.setStyleSheet("background: transparent;")
+        announcement_layout = QVBoxLayout(announcement_item)
+        announcement_layout.setContentsMargins(0, 0, 0, 0)
+        announcement_layout.setSpacing(8)
+        
+        text_label = QLabel(default_text)
+        text_label.setObjectName("featureText")
+        text_label.setFont(QFont("Segoe UI", 13))
+        text_label.setWordWrap(True)
+        text_label.setAlignment(Qt.AlignLeft)
+        text_label.setStyleSheet("color: white; background: transparent;")
+        
+        announcement_layout.addWidget(text_label)
+        layout.addWidget(announcement_item)
 
     def resizeEvent(self, event):
         """Update background when window is resized"""

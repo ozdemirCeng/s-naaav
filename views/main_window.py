@@ -27,7 +27,7 @@ from views.koordinator.raporlar_view import RaporlarView
 from views.koordinator.ayarlar_view import AyarlarView
 from views.admin.kullanici_yonetimi_view import KullaniciYonetimiView
 from views.admin.bolum_yonetimi_view import BolumYonetimiView
-from views.admin.sistem_ayarlar_view import SistemAyarlarView
+from views.admin.duyuru_yonetimi_view import DuyuruYonetimiView
 from styles.theme import KocaeliTheme
 
 logger = logging.getLogger(__name__)
@@ -488,7 +488,7 @@ class MainWindow(QMainWindow):
                 ('🏠', 'Ana Sayfa', 'dashboard'),
                 ('👥', 'Kullanıcı Yönetimi', 'users'),
                 ('🏢', 'Bölüm Yönetimi', 'bolumler'),
-                ('⚙️', 'Sistem Ayarları', 'admin_ayarlar'),
+                ('📢', 'Duyuru Yönetimi', 'admin_ayarlar'),
                 ('👤', 'Profil Ayarları', 'ayarlar'),
                 ('', '───────────', 'divider'),
                 ('🎓', 'Bölüm Seçimi', 'bolum_secim')
@@ -653,7 +653,7 @@ class MainWindow(QMainWindow):
             actions = [
                 ("Kullanıcı Ekle", "Yeni yönetici/koordinatör", "👥", "emerald", "users"),
                 ("Bölüm Ekle", "Yeni bölüm tanımla", "🏢", "blue", "bolumler"),
-                ("Sistem Ayarları", "Global ayarları yapılandır", "⚙️", "orange", "admin_ayarlar"),
+                ("Duyuru Yönetimi", "Login ekranı duyurularını yönet", "📢", "orange", "admin_ayarlar"),
                 ("Bölüm Seç", "Operasyonel ekrana geç", "🎓", "indigo", "bolum_secim")
             ]
         else:
@@ -1082,7 +1082,7 @@ class MainWindow(QMainWindow):
                 elif page_id == 'bolumler':
                     return self.create_bolum_yonetimi_page()
                 elif page_id == 'admin_ayarlar':
-                    return SistemAyarlarView(self.user_data)
+                    return DuyuruYonetimiView(self.user_data)
                 elif page_id == 'ayarlar':
                     # Admin's own profile settings
                     return AyarlarView(self.user_data)

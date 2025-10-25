@@ -1,0 +1,20 @@
+{
+  "app": {
+    "theme": 0,
+    "log_level": 2
+  },
+  "database": {
+    "host": "localhost",
+    "port": 5432,
+    "name": "sinav_takvimi_db",
+    "user": "postgres",
+    "password": ""
+  },
+  "email": {
+    "host": "smtp.gmail.com",
+    "port": 587,
+    "user": "ozdmromer24@gmail.com",
+    "password": "1232123oo",
+    "from": "noreply@kocaeli.edu.tr"
+  }
+}
