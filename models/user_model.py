@@ -28,7 +28,7 @@ class UserModel:
     def get_user_by_id(self, user_id: int) -> Optional[Dict]:
         """Get user by ID"""
         query = """
-            SELECT user_id, email, password_hash, ad_soyad, role, bolum_id, aktif
+            SELECT user_id, email, password_hash as sifre, ad_soyad, role, bolum_id, aktif
             FROM users
             WHERE user_id = %s AND aktif = TRUE
         """
