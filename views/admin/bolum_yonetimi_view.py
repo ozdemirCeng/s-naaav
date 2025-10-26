@@ -198,6 +198,7 @@ class BolumYonetimiView(QWidget):
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(QTableWidget.SelectRows)
         self.table.setSelectionMode(QTableWidget.SingleSelection)
+        self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)  # Çift tıklama ile düzenleme kapalı
         self.table.verticalHeader().setVisible(False)
         self.table.setShowGrid(False)
         self.table.setWordWrap(False)
@@ -210,20 +211,16 @@ class BolumYonetimiView(QWidget):
         # Column widths and header alignment
         header = self.table.horizontalHeader()
         header.setStretchLastSection(False)
-        header.setDefaultAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        header.setMinimumSectionSize(60)
+        header.setMinimumSectionSize(80)
         header.setSectionsMovable(False)
         header.setSectionsClickable(False)
         header.setHighlightSections(False)
-        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)  # Bölüm Kodu
-        header.setSectionResizeMode(1, QHeaderView.Fixed)           # Bölüm Adı (managed)
-        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)  # Koordinatör Sayısı
-        header.setSectionResizeMode(3, QHeaderView.Fixed)             # İşlemler (managed)
-        header.setFixedHeight(36)
+        header.setSectionResizeMode(QHeaderView.Stretch)
+        header.setFixedHeight(40)
 
         # Row height
-        self.table.verticalHeader().setDefaultSectionSize(44)
-        
+        self.table.verticalHeader().setDefaultSectionSize(48)
+
         self.table.setStyleSheet("""
             QTableWidget {
                 background-color: white;
@@ -231,7 +228,7 @@ class BolumYonetimiView(QWidget):
                 gridline-color: #f0f0f0;
             }
             QTableWidget::item {
-                padding: 8px;
+                padding: 8px 12px;
                 border-bottom: 1px solid #f0f0f0;
             }
             QTableWidget::item:selected {
@@ -240,20 +237,18 @@ class BolumYonetimiView(QWidget):
             }
             QHeaderView::section {
                 background-color: #f8f9fa;
-                padding: 8px 6px;
+                padding: 10px 12px;
                 border: none;
                 border-bottom: 2px solid #e0e0e0;
                 font-weight: bold;
                 color: #2c3e50;
+                text-align: center;
             }
         """)
-        
+
         table_layout.addWidget(self.table)
         layout.addWidget(table_container)
-        
-        # Initial adjust
-        self.adjust_columns()
-    
+
     def load_bolumler(self):
         """Load all departments"""
         try:
@@ -270,22 +265,25 @@ class BolumYonetimiView(QWidget):
                 ORDER BY b.bolum_adi
             """
             bolumler = db.execute_query(query)
-            
+
             self.table.setRowCount(0)
-            
+
             for bolum in bolumler:
                 row = self.table.rowCount()
                 self.table.insertRow(row)
-                
+
                 # Bölüm Kodu
                 kod_item = QTableWidgetItem(bolum['bolum_kodu'])
                 kod_item.setFont(QFont("Segoe UI", 10, QFont.Bold))
                 kod_item.setForeground(Qt.blue)
+                kod_item.setTextAlignment(Qt.AlignCenter)
                 self.table.setItem(row, 0, kod_item)
-                
+
                 # Bölüm Adı
-                self.table.setItem(row, 1, QTableWidgetItem(bolum['bolum_adi']))
-                
+                adi_item = QTableWidgetItem(bolum['bolum_adi'])
+                adi_item.setTextAlignment(Qt.AlignCenter)
+                self.table.setItem(row, 1, adi_item)
+
                 # Koordinatör Sayısı
                 koordinator_item = QTableWidgetItem(str(bolum['koordinator_sayisi']))
                 koordinator_item.setTextAlignment(Qt.AlignCenter)
@@ -294,28 +292,27 @@ class BolumYonetimiView(QWidget):
                 else:
                     koordinator_item.setForeground(Qt.darkGreen)
                 self.table.setItem(row, 2, koordinator_item)
-                
+
                 # Actions
                 action_widget = QWidget()
-                action_widget.setMinimumWidth(220) # Ensure enough space for buttons
                 action_layout = QHBoxLayout(action_widget)
-                action_layout.setContentsMargins(8, 4, 8, 4)
-                action_layout.setSpacing(10)
+                action_layout.setContentsMargins(6, 4, 6, 4)
+                action_layout.setSpacing(8)
 
                 edit_btn = QPushButton("✏️ Düzenle")
-                edit_btn.setFixedHeight(36)
-                edit_btn.setMinimumWidth(90)
-                edit_btn.setStyleSheet("background-color: #3498db; color: white; border: none; border-radius: 5px; font-weight: 600;")
+                edit_btn.setFixedHeight(34)
+                edit_btn.setFixedWidth(95)
+                edit_btn.setStyleSheet("background-color: #3498db; color: white; border: none; border-radius: 5px; font-weight: 600; font-size: 11px;")
                 edit_btn.setCursor(Qt.PointingHandCursor)
                 edit_btn.clicked.connect(lambda checked=False, b=bolum: self.edit_bolum(b))
 
                 delete_btn = QPushButton("🗑️ Sil")
-                delete_btn.setFixedHeight(36)
-                delete_btn.setMinimumWidth(80)
-                delete_btn.setStyleSheet("background-color: #e74c3c; color: white; border: none; border-radius: 5px; font-weight: 600;")
+                delete_btn.setFixedHeight(34)
+                delete_btn.setFixedWidth(75)
+                delete_btn.setStyleSheet("background-color: #e74c3c; color: white; border: none; border-radius: 5px; font-weight: 600; font-size: 11px;")
                 delete_btn.setCursor(Qt.PointingHandCursor)
                 delete_btn.clicked.connect(lambda checked=False, b=bolum: self.delete_bolum(b))
-                
+
                 # Disable delete if has coordinators
                 if bolum['koordinator_sayisi'] > 0:
                     delete_btn.setEnabled(False)
@@ -324,42 +321,40 @@ class BolumYonetimiView(QWidget):
                             background-color: #95a5a6;
                             color: white;
                             border: none;
-                            border-radius: 4px;
+                            border-radius: 5px;
                             font-size: 11px;
+                            font-weight: 600;
                         }
                     """)
                     delete_btn.setToolTip("Koordinatörü olan bölüm silinemez")
-                
+
                 action_layout.addWidget(edit_btn)
                 action_layout.addWidget(delete_btn)
-                action_layout.addStretch()
-                
+
                 self.table.setCellWidget(row, 3, action_widget)
-            
-            # Adjust after load
-            self.adjust_columns()
+
             logger.info(f"Loaded {len(bolumler)} departments")
-            
+
         except Exception as e:
             logger.error(f"Error loading departments: {e}")
             QMessageBox.critical(self, "Hata", f"Bölümler yüklenirken hata oluştu:\n{str(e)}")
-    
+
     def add_bolum(self):
         """Add new department"""
         try:
             dialog = BolumDialog(parent=self)
             if dialog.exec() == QDialog.Accepted:
                 data = dialog.get_data()
-                
+
                 # Validation
                 if not data['bolum_kodu']:
                     QMessageBox.warning(self, "Uyarı", "⚠️ Bölüm kodu giriniz!")
                     return
-                
+
                 if not data['bolum_adi']:
                     QMessageBox.warning(self, "Uyarı", "⚠️ Bölüm adı giriniz!")
                     return
-                
+
                 # Check if kod already exists
                 existing = self.bolum_model.get_bolum_by_kod(data['bolum_kodu'])
                 if existing:
@@ -370,10 +365,10 @@ class BolumYonetimiView(QWidget):
                         f"Mevcut bölüm: {existing['bolum_adi']}"
                     )
                     return
-                
+
                 # Insert department
                 bolum_id = self.bolum_model.insert_bolum(data)
-                
+
                 QMessageBox.information(
                     self,
                     "Başarılı",
@@ -381,29 +376,29 @@ class BolumYonetimiView(QWidget):
                     f"Kod: {data['bolum_kodu']}\n"
                     f"Ad: {data['bolum_adi']}"
                 )
-                
+
                 self.load_bolumler()
-                
+
         except Exception as e:
             logger.error(f"Error adding department: {e}")
             QMessageBox.critical(self, "Hata", f"Bölüm eklenirken hata oluştu:\n{str(e)}")
-    
+
     def edit_bolum(self, bolum):
         """Edit department"""
         try:
             dialog = BolumDialog(bolum_data=bolum, parent=self)
             if dialog.exec() == QDialog.Accepted:
                 data = dialog.get_data()
-                
+
                 # Validation
                 if not data['bolum_kodu']:
                     QMessageBox.warning(self, "Uyarı", "⚠️ Bölüm kodu giriniz!")
                     return
-                
+
                 if not data['bolum_adi']:
                     QMessageBox.warning(self, "Uyarı", "⚠️ Bölüm adı giriniz!")
                     return
-                
+
                 # Check if kod already exists (for other departments)
                 existing = self.bolum_model.get_bolum_by_kod(data['bolum_kodu'])
                 if existing and existing['bolum_id'] != bolum['bolum_id']:
@@ -414,22 +409,22 @@ class BolumYonetimiView(QWidget):
                         f"Mevcut bölüm: {existing['bolum_adi']}"
                     )
                     return
-                
+
                 # Update department
                 self.bolum_model.update_bolum(bolum['bolum_id'], data)
-                
+
                 QMessageBox.information(
                     self,
                     "Başarılı",
                     "✅ Bölüm başarıyla güncellendi!"
                 )
-                
+
                 self.load_bolumler()
-                
+
         except Exception as e:
             logger.error(f"Error editing department: {e}")
             QMessageBox.critical(self, "Hata", f"Bölüm güncellenirken hata oluştu:\n{str(e)}")
-    
+
     def delete_bolum(self, bolum):
         """Delete department"""
         try:
@@ -442,56 +437,18 @@ class BolumYonetimiView(QWidget):
                 QMessageBox.Yes | QMessageBox.No,
                 QMessageBox.No
             )
-            
+
             if reply == QMessageBox.Yes:
                 self.bolum_model.delete_bolum(bolum['bolum_id'])
-                
+
                 QMessageBox.information(
                     self,
                     "Başarılı",
                     "✅ Bölüm başarıyla silindi!"
                 )
-                
+
                 self.load_bolumler()
-                
+
         except Exception as e:
             logger.error(f"Error deleting department: {e}")
             QMessageBox.critical(self, "Hata", f"Bölüm silinirken hata oluştu:\n{str(e)}")
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        try:
-            self.adjust_columns()
-        except Exception:
-            pass
-
-    def adjust_columns(self):
-        """Keep code/count to contents, actions to widget size, rest to name column."""
-        if not hasattr(self, 'table'):
-            return
-        viewport_w = self.table.viewport().width()
-        if viewport_w <= 0:
-            return
-        vbar = self.table.verticalScrollBar()
-        scrollbar_w = vbar.width() if vbar and vbar.isVisible() else 0
-
-        code_w = max(100, self.table.sizeHintForColumn(0))
-        count_w = max(110, self.table.sizeHintForColumn(2))
-
-        actions_w = 0
-        for row in range(self.table.rowCount()):
-            cw = self.table.cellWidget(row, 3)
-            if cw:
-                actions_w = max(actions_w, cw.sizeHint().width())
-        if actions_w == 0:
-            actions_w = 180
-        actions_w = max(160, min(actions_w, 320))
-
-        reserved = code_w + count_w + actions_w
-        name_w = max(240, viewport_w - reserved - scrollbar_w)
-
-        self.table.setColumnWidth(0, code_w)
-        self.table.setColumnWidth(1, name_w)
-        self.table.setColumnWidth(2, count_w)
-        self.table.setColumnWidth(3, actions_w)
-

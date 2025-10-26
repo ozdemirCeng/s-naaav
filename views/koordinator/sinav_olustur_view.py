@@ -1,6 +1,6 @@
 """
-Sınav Oluştur (Exam Create) View
-Professional interface for creating exam schedules
+Sınav Oluştur (Exam Create) View - REDESIGNED
+Modern, user-friendly interface for creating exam schedules
 """
 
 import logging
@@ -10,17 +10,20 @@ from PySide6.QtWidgets import (
     QFrame, QComboBox, QDateTimeEdit, QMessageBox,
     QGroupBox, QFormLayout, QSpinBox, QTableWidget,
     QTableWidgetItem, QHeaderView, QProgressBar, QCheckBox,
-    QLineEdit, QScrollArea, QFileDialog, QTabWidget
+    QLineEdit, QScrollArea, QFileDialog, QTabWidget, QDialog,
+    QDialogButtonBox
 )
 from PySide6.QtCore import Qt, QDateTime, QThread, Signal
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QColor
 
 from models.database import db
 from models.sinav_model import SinavModel
 from models.ders_model import DersModel
 from models.derslik_model import DerslikModel
+from models.ogrenci_model import OgrenciModel
 from controllers.sinav_controller import SinavController
 from algorithms.sinav_planlama import SinavPlanlama
+from utils.export_utils import ExportUtils
 
 logger = logging.getLogger(__name__)
 
@@ -44,8 +47,298 @@ class SinavPlanlamaThread(QThread):
             self.error.emit(str(e))
 
 
+class ProgramResultDialog(QDialog):
+    """Dialog to show exam schedule results"""
+    
+    def __init__(self, schedule_data, params, parent=None):
+        super().__init__(parent)
+        self.schedule_data = schedule_data
+        self.params = params
+        self.bolum_id = params.get('bolum_id')
+        self.setWindowTitle("📅 Sınav Programı Oluşturuldu")
+        self.setMinimumSize(1000, 700)
+        self._build_ui()
+    
+    def _build_ui(self):
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(24, 24, 24, 24)
+        layout.setSpacing(16)
+        
+        # Success header
+        header = QFrame()
+        header.setStyleSheet("""
+            QFrame {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #10b981, stop:1 #059669);
+                border-radius: 12px;
+                padding: 20px;
+            }
+        """)
+        header_layout = QVBoxLayout(header)
+        
+        title = QLabel("✅ Sınav Programı Başarıyla Oluşturuldu!")
+        title.setStyleSheet("color: white; font-size: 20px; font-weight: bold;")
+        title.setAlignment(Qt.AlignCenter)
+        
+        # Stats
+        unique_exams = len(set((s.get('ders_id'), s.get('tarih_saat')) for s in self.schedule_data))
+        unique_dates = len(set(
+            (datetime.fromisoformat(s['tarih_saat']) if isinstance(s['tarih_saat'], str) else s['tarih_saat']).date()
+            for s in self.schedule_data
+        ))
+        
+        stats = QLabel(f"📊 {unique_exams} Sınav  •  📅 {unique_dates} Gün  •  🏛 {len(self.schedule_data)} Derslik Ataması")
+        stats.setStyleSheet("color: white; font-size: 14px;")
+        stats.setAlignment(Qt.AlignCenter)
+        
+        header_layout.addWidget(title)
+        header_layout.addWidget(stats)
+        layout.addWidget(header)
+        
+        # Info message
+        info_label = QLabel("Aşağıdaki tablodan programı inceleyebilir, Excel/PDF olarak indirebilir veya veritabanına kaydedebilirsiniz.")
+        info_label.setStyleSheet("color: #6b7280; font-size: 13px;")
+        info_label.setWordWrap(True)
+        layout.addWidget(info_label)
+        
+        # Table
+        self.table = QTableWidget()
+        self.table.setColumnCount(6)
+        self.table.setHorizontalHeaderLabels(['Tarih/Saat', 'Ders Kodu', 'Ders Adı', 'Öğretim Elemanı', 'Derslik', 'Öğrenci'])
+        self.table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.table.setAlternatingRowColors(True)
+        self.table.verticalHeader().setVisible(False)
+        
+        # Column widths - responsive
+        header = self.table.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.Stretch)
+        header.setSectionResizeMode(3, QHeaderView.Stretch)
+        header.setSectionResizeMode(4, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(5, QHeaderView.ResizeToContents)
+        
+        # Populate table
+        for row_data in self.schedule_data:
+            row = self.table.rowCount()
+            self.table.insertRow(row)
+            
+            tarih = datetime.fromisoformat(row_data['tarih_saat']) if isinstance(row_data['tarih_saat'], str) else row_data['tarih_saat']
+            tarih_str = tarih.strftime("%d.%m.%Y %H:%M")
+            
+            self.table.setItem(row, 0, QTableWidgetItem(tarih_str))
+            self.table.setItem(row, 1, QTableWidgetItem(row_data.get('ders_kodu', '')))
+            self.table.setItem(row, 2, QTableWidgetItem(row_data.get('ders_adi', '')))
+            self.table.setItem(row, 3, QTableWidgetItem(row_data.get('ogretim_elemani', '')))
+            self.table.setItem(row, 4, QTableWidgetItem(row_data.get('derslik_adi', row_data.get('derslik_kodu', ''))))
+            
+            ogrenci_item = QTableWidgetItem(str(row_data.get('ogrenci_sayisi', 0)))
+            ogrenci_item.setTextAlignment(Qt.AlignCenter)
+            self.table.setItem(row, 5, ogrenci_item)
+        
+        layout.addWidget(self.table)
+        
+        # Action buttons
+        btn_layout = QHBoxLayout()
+        btn_layout.setSpacing(12)
+        
+        # Excel button
+        excel_btn = QPushButton("📊 Excel İndir")
+        excel_btn.setFixedHeight(44)
+        excel_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #10b981;
+                color: white;
+                font-weight: bold;
+                font-size: 14px;
+                border-radius: 8px;
+                padding: 0 24px;
+            }
+            QPushButton:hover {
+                background-color: #059669;
+            }
+        """)
+        excel_btn.clicked.connect(self.export_excel)
+        
+        # PDF button
+        pdf_btn = QPushButton("📄 PDF İndir")
+        pdf_btn.setFixedHeight(44)
+        pdf_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #3b82f6;
+                color: white;
+                font-weight: bold;
+                font-size: 14px;
+                border-radius: 8px;
+                padding: 0 24px;
+            }
+            QPushButton:hover {
+                background-color: #2563eb;
+            }
+        """)
+        pdf_btn.clicked.connect(self.export_pdf)
+        
+        # Save button
+        save_btn = QPushButton("💾 Veritabanına Kaydet")
+        save_btn.setFixedHeight(44)
+        save_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #8b5cf6;
+                color: white;
+                font-weight: bold;
+                font-size: 14px;
+                border-radius: 8px;
+                padding: 0 24px;
+            }
+            QPushButton:hover {
+                background-color: #7c3aed;
+            }
+        """)
+        save_btn.clicked.connect(self.save_to_db)
+        
+        # Close button
+        close_btn = QPushButton("❌ Kapat (İptal)")
+        close_btn.setFixedHeight(44)
+        close_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #6b7280;
+                color: white;
+                font-weight: bold;
+                font-size: 14px;
+                border-radius: 8px;
+                padding: 0 24px;
+            }
+            QPushButton:hover {
+                background-color: #4b5563;
+            }
+        """)
+        close_btn.clicked.connect(self.reject)
+        
+        btn_layout.addWidget(excel_btn)
+        btn_layout.addWidget(pdf_btn)
+        btn_layout.addWidget(save_btn)
+        btn_layout.addStretch()
+        btn_layout.addWidget(close_btn)
+        
+        layout.addLayout(btn_layout)
+    
+    def export_excel(self):
+        """Export to Excel"""
+        try:
+            default_name = f"sinav_programi_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
+            file_path, _ = QFileDialog.getSaveFileName(
+                self,
+                "Excel Dosyası Kaydet",
+                default_name,
+                "Excel Files (*.xlsx)"
+            )
+            
+            if not file_path:
+                return
+            
+            # Get department info
+            bolum_query = "SELECT bolum_adi FROM bolumler WHERE bolum_id = %s"
+            bolum_result = db.execute_query(bolum_query, (self.bolum_id,))
+            bolum_adi = bolum_result[0]['bolum_adi'] if bolum_result else "BÖLÜM"
+            
+            sinav_tipi = self.params.get('sinav_tipi', 'SINAV')
+            
+            data = {
+                'type': 'sinav_takvimi',
+                'title': 'Sınav Programı',
+                'bolum_adi': bolum_adi,
+                'sinav_tipi': sinav_tipi,
+                'data': self.schedule_data,
+                'bolum_id': self.bolum_id
+            }
+            
+            success = ExportUtils.export_to_excel(data, file_path)
+            
+            if success:
+                QMessageBox.information(self, "Başarılı", f"✅ Excel dosyası oluşturuldu!\n\n{file_path}")
+            else:
+                QMessageBox.warning(self, "Hata", "Excel dosyası oluşturulamadı!")
+                
+        except Exception as e:
+            logger.error(f"Excel export error: {e}", exc_info=True)
+            QMessageBox.critical(self, "Hata", f"Excel'e aktarırken hata:\n{str(e)}")
+    
+    def export_pdf(self):
+        """Export to PDF"""
+        try:
+            default_name = f"sinav_programi_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf"
+            file_path, _ = QFileDialog.getSaveFileName(
+                self,
+                "PDF Dosyası Kaydet",
+                default_name,
+                "PDF Files (*.pdf)"
+            )
+            
+            if not file_path:
+                return
+            
+            # Get department info
+            bolum_query = "SELECT bolum_adi FROM bolumler WHERE bolum_id = %s"
+            bolum_result = db.execute_query(bolum_query, (self.bolum_id,))
+            bolum_adi = bolum_result[0]['bolum_adi'] if bolum_result else "BÖLÜM"
+            
+            sinav_tipi = self.params.get('sinav_tipi', 'SINAV')
+            
+            data = {
+                'type': 'sinav_takvimi',
+                'title': 'Sınav Programı',
+                'bolum_adi': bolum_adi,
+                'sinav_tipi': sinav_tipi,
+                'data': self.schedule_data,
+                'bolum_id': self.bolum_id,
+                'options': {}
+            }
+            
+            success = ExportUtils.export_to_pdf(data, file_path)
+            
+            if success:
+                QMessageBox.information(self, "Başarılı", f"✅ PDF dosyası oluşturuldu!\n\n{file_path}")
+            else:
+                QMessageBox.warning(self, "Hata", "PDF dosyası oluşturulamadı!")
+                
+        except Exception as e:
+            logger.error(f"PDF export error: {e}", exc_info=True)
+            QMessageBox.critical(self, "Hata", f"PDF'e aktarırken hata:\n{str(e)}")
+    
+    def save_to_db(self):
+        """Save schedule to database"""
+        reply = QMessageBox.question(
+            self,
+            "Veritabanına Kaydet",
+            f"Sınav programını veritabanına kaydetmek istediğinizden emin misiniz?\n\n"
+            f"📊 {len(self.schedule_data)} kayıt eklenecek.",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.Yes
+        )
+        
+        if reply == QMessageBox.Yes:
+            try:
+                sinav_model = SinavModel(db)
+                ders_model = DersModel(db)
+                derslik_model = DerslikModel(db)
+                sinav_controller = SinavController(sinav_model, ders_model, derslik_model)
+                
+                result = sinav_controller.save_exam_schedule(self.schedule_data)
+                
+                if result['success']:
+                    QMessageBox.information(self, "Başarılı", "✅ " + result['message'])
+                    self.accept()  # Close dialog after successful save
+                else:
+                    QMessageBox.warning(self, "Hata", result['message'])
+                    
+            except Exception as e:
+                logger.error(f"Save error: {e}", exc_info=True)
+                QMessageBox.critical(self, "Hata", f"Kayıt sırasında hata:\n{str(e)}")
+
+
 class SinavOlusturView(QWidget):
-    """Exam schedule creation view"""
+    """Modern exam schedule creation view"""
     
     def __init__(self, user_data, parent=None):
         super().__init__(parent)
@@ -55,7 +348,7 @@ class SinavOlusturView(QWidget):
         self.sinav_model = SinavModel(db)
         self.ders_model = DersModel(db)
         self.derslik_model = DerslikModel(db)
-        self.sinav_controller = SinavController(self.sinav_model, self.ders_model, self.derslik_model)
+        self.ogrenci_model = OgrenciModel(db)
         
         self.setup_ui()
         self.load_data()
@@ -63,24 +356,26 @@ class SinavOlusturView(QWidget):
     def setup_ui(self):
         """Setup UI"""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(24, 24, 24, 24)
-        layout.setSpacing(20)
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setSpacing(10)
         
         # Header
-        header = QFrame()
-        header_layout = QHBoxLayout(header)
-        header_layout.setContentsMargins(0, 0, 0, 0)
-        
-        title = QLabel("Sınav Programı Yönetimi 📅")
-        title.setFont(QFont("Segoe UI", 20, QFont.Bold))
-        
-        header_layout.addWidget(title)
-        header_layout.addStretch()
-        
-        layout.addWidget(header)
+        title = QLabel("📅 Sınav Programı Yönetimi")
+        title.setFont(QFont("Segoe UI", 16, QFont.Bold))
+        layout.addWidget(title)
         
         # Tab widget
         self.tab_widget = QTabWidget()
+        self.tab_widget.setStyleSheet("""
+            QTabBar::tab {
+                padding: 8px 16px;
+                font-size: 13px;
+            }
+            QTabBar::tab:selected {
+                color: #3b82f6;
+                border-bottom: 2px solid #3b82f6;
+            }
+        """)
         
         # Tab 1: Existing Programs
         self.programs_tab = QWidget()
@@ -97,19 +392,35 @@ class SinavOlusturView(QWidget):
     def setup_programs_tab(self):
         """Setup existing programs tab"""
         layout = QVBoxLayout(self.programs_tab)
-        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(16)
         
-        # Info
-        info = QLabel("Oluşturulmuş sınav programlarını görüntüleyin ve yönetin:")
-        info.setStyleSheet("color: #6b7280; font-size: 13px;")
-        layout.addWidget(info)
+        # Toolbar
+        toolbar = QHBoxLayout()
         
-        # Refresh button
+        info = QLabel("Kayıtlı sınav programlarınızı görüntüleyin, indirin veya silin")
+        info.setStyleSheet("color: #6b7280; font-size: 13px;")
+        
         refresh_btn = QPushButton("🔄 Yenile")
         refresh_btn.setFixedHeight(36)
+        refresh_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #f3f4f6;
+                color: #374151;
+                font-weight: bold;
+                border-radius: 8px;
+                padding: 0 16px;
+            }
+            QPushButton:hover {
+                background-color: #e5e7eb;
+            }
+        """)
         refresh_btn.clicked.connect(self.load_existing_programs)
-        layout.addWidget(refresh_btn, alignment=Qt.AlignRight)
+        
+        toolbar.addWidget(info)
+        toolbar.addStretch()
+        toolbar.addWidget(refresh_btn)
+        layout.addLayout(toolbar)
         
         # Programs table
         self.programs_table = QTableWidget()
@@ -117,13 +428,20 @@ class SinavOlusturView(QWidget):
         self.programs_table.setHorizontalHeaderLabels([
             "Program Adı", "Sınav Tipi", "Başlangıç", "Bitiş", "Sınav Sayısı", "İşlemler"
         ])
-        self.programs_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
         self.programs_table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.programs_table.setSelectionBehavior(QTableWidget.SelectRows)
         self.programs_table.setAlternatingRowColors(True)
+        self.programs_table.verticalHeader().setVisible(False)
+        
+        # Column widths - responsive
         header = self.programs_table.horizontalHeader()
-        header.setSectionResizeMode(5, QHeaderView.Fixed)
-        self.programs_table.setColumnWidth(5, 260)
+        header.setSectionResizeMode(0, QHeaderView.Stretch)
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(4, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(5, QHeaderView.Stretch)
+        
         layout.addWidget(self.programs_table)
         
         # Load programs
@@ -131,471 +449,273 @@ class SinavOlusturView(QWidget):
     
     def setup_create_tab(self):
         """Setup create new program tab"""
-        # Main scroll area for entire form
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QFrame.NoFrame)
-        scroll.setStyleSheet("""
-            QScrollArea {
-                background: transparent;
-                border: none;
-            }
-            QScrollBar:vertical {
-                border: none;
-                background: #f3f4f6;
-                width: 12px;
-                border-radius: 6px;
-            }
-            QScrollBar::handle:vertical {
-                background: #9ca3af;
-                border-radius: 6px;
-                min-height: 30px;
-            }
-            QScrollBar::handle:vertical:hover {
-                background: #6b7280;
-            }
-        """)
+        layout = QVBoxLayout(self.create_tab)
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setSpacing(10)
         
-        scroll_content = QWidget()
-        layout = QVBoxLayout(scroll_content)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(16)
+        # Two column layout
+        main_layout = QHBoxLayout()
+        main_layout.setSpacing(15)
         
-        # Create tab layout
-        tab_layout = QVBoxLayout(self.create_tab)
-        tab_layout.setContentsMargins(0, 0, 0, 0)
-        tab_layout.addWidget(scroll)
-        
-        # Parameters - Compact 2-column layout
-        params_card = QGroupBox("⚙️ Sınav Parametreleri")
-        params_card.setStyleSheet("""
-            QGroupBox {
-                font-size: 14px;
-                font-weight: bold;
-                border: 2px solid #e5e7eb;
-                border-radius: 10px;
-                margin-top: 12px;
-                padding: 16px;
-                background: white;
-            }
-            QGroupBox::title {
-                color: #1f2937;
-                subcontrol-origin: margin;
-                left: 12px;
-                padding: 0 8px;
-            }
-        """)
-        params_layout = QHBoxLayout(params_card)
-        params_layout.setSpacing(20)
-        
-        # Left column
-        left_col = QFormLayout()
+        # LEFT COLUMN
+        left_col = QVBoxLayout()
         left_col.setSpacing(12)
-        left_col.setLabelAlignment(Qt.AlignRight)
+        
+        # Basic info
+        basic_group = QGroupBox("Temel Bilgiler")
+        basic_layout = QFormLayout(basic_group)
+        basic_layout.setSpacing(8)
         
         self.sinav_tipi_combo = QComboBox()
         self.sinav_tipi_combo.addItems(["Vize", "Final", "Bütünleme"])
-        self.sinav_tipi_combo.setFixedHeight(36)
-        left_col.addRow("📝 Sınav Tipi:", self.sinav_tipi_combo)
+        self.sinav_tipi_combo.setFixedHeight(35)
+        basic_layout.addRow("Sınav Tipi:", self.sinav_tipi_combo)
         
         self.baslangic_tarih = QDateTimeEdit()
         self.baslangic_tarih.setDateTime(QDateTime.currentDateTime().addDays(7))
         self.baslangic_tarih.setCalendarPopup(True)
         self.baslangic_tarih.setDisplayFormat("dd.MM.yyyy")
-        self.baslangic_tarih.setFixedHeight(36)
-        left_col.addRow("📅 Başlangıç:", self.baslangic_tarih)
+        self.baslangic_tarih.setFixedHeight(35)
+        basic_layout.addRow("Başlangıç Tarihi:", self.baslangic_tarih)
         
         self.bitis_tarih = QDateTimeEdit()
         self.bitis_tarih.setDateTime(QDateTime.currentDateTime().addDays(14))
         self.bitis_tarih.setCalendarPopup(True)
         self.bitis_tarih.setDisplayFormat("dd.MM.yyyy")
-        self.bitis_tarih.setFixedHeight(36)
-        left_col.addRow("📅 Bitiş:", self.bitis_tarih)
-        
-        params_layout.addLayout(left_col, 1)
-        
-        # Right column
-        right_col = QFormLayout()
-        right_col.setSpacing(12)
-        right_col.setLabelAlignment(Qt.AlignRight)
+        self.bitis_tarih.setFixedHeight(35)
+        basic_layout.addRow("Bitiş Tarihi:", self.bitis_tarih)
         
         self.sinav_suresi = QSpinBox()
-        self.sinav_suresi.setMinimum(30)
-        self.sinav_suresi.setMaximum(240)
+        self.sinav_suresi.setRange(1, 999)
         self.sinav_suresi.setValue(75)
         self.sinav_suresi.setSuffix(" dk")
-        self.sinav_suresi.setFixedHeight(36)
-        # Track and propagate changes to course-specific durations
-        self._last_global_duration = self.sinav_suresi.value()
-        self.sinav_suresi.valueChanged.connect(self.on_global_duration_changed)
-        right_col.addRow("⏱️ Sınav Süresi:", self.sinav_suresi)
+        self.sinav_suresi.setFixedHeight(35)
+        self.sinav_suresi.valueChanged.connect(self.update_all_course_durations)
+        basic_layout.addRow("Varsayılan Sınav Süresi:", self.sinav_suresi)
         
         self.ara_suresi = QSpinBox()
-        self.ara_suresi.setMinimum(0)
-        self.ara_suresi.setMaximum(120)
+        self.ara_suresi.setRange(5, 60)
         self.ara_suresi.setValue(15)
         self.ara_suresi.setSuffix(" dk")
-        self.ara_suresi.setFixedHeight(36)
-        right_col.addRow("⏸️ Ara Süresi:", self.ara_suresi)
-
-        # Per-class per-day exam limit (0 = limitsiz)
-        self.class_per_day_limit = QSpinBox()
-        self.class_per_day_limit.setMinimum(0)
-        self.class_per_day_limit.setMaximum(10)
-        self.class_per_day_limit.setValue(0)
-        self.class_per_day_limit.setSuffix(" /gün")
-        self.class_per_day_limit.setFixedHeight(36)
-        right_col.addRow("🏷️ Sınıf/Gün Sınırı:", self.class_per_day_limit)
-
-        # (Removed) Minimum rest minutes control – ara süresi yeterli
-
-        # Minimum shared students to consider conflict
-        self.min_conflict_overlap = QSpinBox()
-        self.min_conflict_overlap.setMinimum(1)
-        self.min_conflict_overlap.setMaximum(50)
-        self.min_conflict_overlap.setValue(1)
-        self.min_conflict_overlap.setFixedHeight(36)
-        right_col.addRow("👥 Çakışma Eşiği:", self.min_conflict_overlap)
-
-        # No parallel exams option
-        from PySide6.QtWidgets import QCheckBox
-        self.no_parallel_checkbox = QCheckBox("Sınavlar aynı anda olmasın")
-        self.no_parallel_checkbox.setChecked(False)
-        right_col.addRow("", self.no_parallel_checkbox)
+        self.ara_suresi.setFixedHeight(35)
+        basic_layout.addRow("Bekleme Süresi:", self.ara_suresi)
         
-        params_layout.addLayout(right_col, 1)
+        left_col.addWidget(basic_group)
         
-        layout.addWidget(params_card)
+        # Constraints group
+        constraints_group = QGroupBox("Kısıtlamalar")
+        constraints_layout = QVBoxLayout(constraints_group)
+        constraints_layout.setSpacing(10)
         
-        # Weekday selection - Compact
-        gunler_card = QGroupBox("📅 Sınav Günleri")
-        gunler_card.setStyleSheet("""
-            QGroupBox {
-                font-size: 13px;
-                font-weight: bold;
-                border: 2px solid #e5e7eb;
-                border-radius: 8px;
-                margin-top: 10px;
-                padding: 12px;
-                background: #f9fafb;
-            }
-        """)
-        gunler_layout = QHBoxLayout(gunler_card)
-        gunler_layout.setSpacing(8)
+        self.ayni_anda_sinav_checkbox = QCheckBox("Sınavlar aynı zamana denk gelmesin")
+        self.ayni_anda_sinav_checkbox.setToolTip("Bir sınav başladığında, o sınav bitene kadar başka sınav başlamaz")
+        constraints_layout.addWidget(self.ayni_anda_sinav_checkbox)
+        
+        gunluk_limit_layout = QHBoxLayout()
+        gunluk_limit_label = QLabel("Günlük sınav limiti (sınıf başına):")
+        self.gunluk_sinav_limiti = QSpinBox()
+        self.gunluk_sinav_limiti.setRange(1, 10)
+        self.gunluk_sinav_limiti.setValue(3)
+        self.gunluk_sinav_limiti.setFixedHeight(35)
+        self.gunluk_sinav_limiti.setToolTip("Bir sınıf için günde maksimum kaç sınav olabilir")
+        gunluk_limit_layout.addWidget(gunluk_limit_label)
+        gunluk_limit_layout.addWidget(self.gunluk_sinav_limiti)
+        gunluk_limit_layout.addStretch()
+        constraints_layout.addLayout(gunluk_limit_layout)
+        
+        left_col.addWidget(constraints_group)
+        
+        # Time settings
+        time_group = QGroupBox("Saat Ayarları")
+        time_layout = QFormLayout(time_group)
+        time_layout.setSpacing(8)
+        
+        # First exam
+        first_layout = QHBoxLayout()
+        self.ilk_sinav_saat = QSpinBox()
+        self.ilk_sinav_saat.setRange(0, 23)
+        self.ilk_sinav_saat.setValue(10)
+        self.ilk_sinav_saat.setFixedHeight(35)
+        self.ilk_sinav_dakika = QSpinBox()
+        self.ilk_sinav_dakika.setRange(0, 59)
+        self.ilk_sinav_dakika.setValue(0)
+        self.ilk_sinav_dakika.setFixedHeight(35)
+        first_layout.addWidget(self.ilk_sinav_saat)
+        first_layout.addWidget(QLabel(":"))
+        first_layout.addWidget(self.ilk_sinav_dakika)
+        first_layout.addStretch()
+        time_layout.addRow("İlk Sınav:", first_layout)
+        
+        # Last exam
+        last_layout = QHBoxLayout()
+        self.son_sinav_saat = QSpinBox()
+        self.son_sinav_saat.setRange(0, 23)
+        self.son_sinav_saat.setValue(19)
+        self.son_sinav_saat.setFixedHeight(35)
+        self.son_sinav_dakika = QSpinBox()
+        self.son_sinav_dakika.setRange(0, 59)
+        self.son_sinav_dakika.setValue(15)
+        self.son_sinav_dakika.setFixedHeight(35)
+        last_layout.addWidget(self.son_sinav_saat)
+        last_layout.addWidget(QLabel(":"))
+        last_layout.addWidget(self.son_sinav_dakika)
+        last_layout.addStretch()
+        time_layout.addRow("Son Sınav:", last_layout)
+        
+        # Lunch start
+        lunch_start_layout = QHBoxLayout()
+        self.ogle_baslangic_saat = QSpinBox()
+        self.ogle_baslangic_saat.setRange(0, 23)
+        self.ogle_baslangic_saat.setValue(12)
+        self.ogle_baslangic_saat.setFixedHeight(35)
+        self.ogle_baslangic_dakika = QSpinBox()
+        self.ogle_baslangic_dakika.setRange(0, 59)
+        self.ogle_baslangic_dakika.setValue(0)
+        self.ogle_baslangic_dakika.setFixedHeight(35)
+        lunch_start_layout.addWidget(self.ogle_baslangic_saat)
+        lunch_start_layout.addWidget(QLabel(":"))
+        lunch_start_layout.addWidget(self.ogle_baslangic_dakika)
+        lunch_start_layout.addStretch()
+        time_layout.addRow("Öğle Başlangıç:", lunch_start_layout)
+        
+        # Lunch end
+        lunch_end_layout = QHBoxLayout()
+        self.ogle_bitis_saat = QSpinBox()
+        self.ogle_bitis_saat.setRange(0, 23)
+        self.ogle_bitis_saat.setValue(13)
+        self.ogle_bitis_saat.setFixedHeight(35)
+        self.ogle_bitis_dakika = QSpinBox()
+        self.ogle_bitis_dakika.setRange(0, 59)
+        self.ogle_bitis_dakika.setValue(0)
+        self.ogle_bitis_dakika.setFixedHeight(35)
+        lunch_end_layout.addWidget(self.ogle_bitis_saat)
+        lunch_end_layout.addWidget(QLabel(":"))
+        lunch_end_layout.addWidget(self.ogle_bitis_dakika)
+        lunch_end_layout.addStretch()
+        time_layout.addRow("Öğle Bitiş:", lunch_end_layout)
+        
+        left_col.addWidget(time_group)
+        
+        # Days selection
+        days_group = QGroupBox("Sınav Günleri")
+        days_layout = QVBoxLayout(days_group)
+        days_layout.setSpacing(6)
         
         self.gun_checkboxes = {}
         gun_isimleri = {
-            0: "Pzt", 1: "Sal", 2: "Çar", 3: "Per", 4: "Cum", 5: "Cmt", 6: "Paz"
+            0: "Pazartesi", 1: "Salı", 2: "Çarşamba", 3: "Perşembe", 
+            4: "Cuma", 5: "Cumartesi", 6: "Pazar"
         }
         
         for day_num, day_name in gun_isimleri.items():
             checkbox = QCheckBox(day_name)
-            checkbox.setStyleSheet("""
-                QCheckBox {
-                    font-size: 12px;
-                    font-weight: bold;
-                    spacing: 5px;
-                }
-                QCheckBox::indicator {
-                    width: 18px;
-                    height: 18px;
-                }
-            """)
             if day_num < 5:
                 checkbox.setChecked(True)
             self.gun_checkboxes[day_num] = checkbox
-            gunler_layout.addWidget(checkbox)
+            days_layout.addWidget(checkbox)
         
-        gunler_layout.addStretch()
-        layout.addWidget(gunler_card)
+        left_col.addWidget(days_group)
+        left_col.addStretch()
+        main_layout.addLayout(left_col, 1)
         
-        # Time constraints - Compact 2x2 grid
-        zaman_card = QGroupBox("🕐 Sınav Saatleri")
-        zaman_card.setStyleSheet("""
-            QGroupBox {
-                font-size: 13px;
-                font-weight: bold;
-                border: 2px solid #e5e7eb;
-                border-radius: 8px;
-                margin-top: 10px;
-                padding: 12px;
-                background: white;
-            }
-        """)
-        zaman_layout = QFormLayout(zaman_card)
-        zaman_layout.setSpacing(10)
-        zaman_layout.setLabelAlignment(Qt.AlignRight)
+        # RIGHT COLUMN - Course selection
+        right_col = QVBoxLayout()
+        right_col.setSpacing(12)
         
-        # First exam time
-        ilk_sinav_layout = QHBoxLayout()
-        ilk_sinav_layout.setSpacing(4)
-        self.ilk_sinav_saat = QSpinBox()
-        self.ilk_sinav_saat.setMinimum(0)
-        self.ilk_sinav_saat.setMaximum(23)
-        self.ilk_sinav_saat.setValue(10)
-        self.ilk_sinav_saat.setFixedWidth(60)
-        self.ilk_sinav_dakika = QSpinBox()
-        self.ilk_sinav_dakika.setMinimum(0)
-        self.ilk_sinav_dakika.setMaximum(59)
-        self.ilk_sinav_dakika.setValue(0)
-        self.ilk_sinav_dakika.setFixedWidth(60)
-        ilk_sinav_layout.addWidget(self.ilk_sinav_saat)
-        ilk_sinav_layout.addWidget(QLabel(":"))
-        ilk_sinav_layout.addWidget(self.ilk_sinav_dakika)
-        ilk_sinav_layout.addStretch()
-        zaman_layout.addRow("⏰ İlk Sınav:", ilk_sinav_layout)
+        course_group = QGroupBox("Ders Seçimi")
+        course_layout = QVBoxLayout(course_group)
+        course_layout.setSpacing(8)
         
-        # Last exam time
-        son_sinav_layout = QHBoxLayout()
-        son_sinav_layout.setSpacing(4)
-        self.son_sinav_saat = QSpinBox()
-        self.son_sinav_saat.setMinimum(0)
-        self.son_sinav_saat.setMaximum(23)
-        self.son_sinav_saat.setValue(19)
-        self.son_sinav_saat.setFixedWidth(60)
-        self.son_sinav_dakika = QSpinBox()
-        self.son_sinav_dakika.setMinimum(0)
-        self.son_sinav_dakika.setMaximum(59)
-        self.son_sinav_dakika.setValue(15)
-        self.son_sinav_dakika.setFixedWidth(60)
-        son_sinav_layout.addWidget(self.son_sinav_saat)
-        son_sinav_layout.addWidget(QLabel(":"))
-        son_sinav_layout.addWidget(self.son_sinav_dakika)
-        son_sinav_layout.addStretch()
-        zaman_layout.addRow("🔚 Son Sınav:", son_sinav_layout)
+        # Info
+        info_label = QLabel("✓ Tüm dersler listelenir. Sınava dahil olmayanları işaretini kaldırın.")
+        info_label.setStyleSheet("color: #6b7280; font-size: 11px; padding: 4px;")
+        course_layout.addWidget(info_label)
         
-        # Lunch break
-        ogle_bas_layout = QHBoxLayout()
-        ogle_bas_layout.setSpacing(4)
-        self.ogle_baslangic_saat = QSpinBox()
-        self.ogle_baslangic_saat.setMinimum(0)
-        self.ogle_baslangic_saat.setMaximum(23)
-        self.ogle_baslangic_saat.setValue(12)
-        self.ogle_baslangic_saat.setFixedWidth(60)
-        self.ogle_baslangic_dakika = QSpinBox()
-        self.ogle_baslangic_dakika.setMinimum(0)
-        self.ogle_baslangic_dakika.setMaximum(59)
-        self.ogle_baslangic_dakika.setValue(0)
-        self.ogle_baslangic_dakika.setFixedWidth(60)
-        ogle_bas_layout.addWidget(self.ogle_baslangic_saat)
-        ogle_bas_layout.addWidget(QLabel(":"))
-        ogle_bas_layout.addWidget(self.ogle_baslangic_dakika)
-        ogle_bas_layout.addStretch()
-        zaman_layout.addRow("🍽️ Öğle Arası Baş:", ogle_bas_layout)
-        
-        ogle_bit_layout = QHBoxLayout()
-        ogle_bit_layout.setSpacing(4)
-        self.ogle_bitis_saat = QSpinBox()
-        self.ogle_bitis_saat.setMinimum(0)
-        self.ogle_bitis_saat.setMaximum(23)
-        self.ogle_bitis_saat.setValue(13)
-        self.ogle_bitis_saat.setFixedWidth(60)
-        self.ogle_bitis_dakika = QSpinBox()
-        self.ogle_bitis_dakika.setMinimum(0)
-        self.ogle_bitis_dakika.setMaximum(59)
-        self.ogle_bitis_dakika.setValue(30)
-        self.ogle_bitis_dakika.setFixedWidth(60)
-        ogle_bit_layout.addWidget(self.ogle_bitis_saat)
-        ogle_bit_layout.addWidget(QLabel(":"))
-        ogle_bit_layout.addWidget(self.ogle_bitis_dakika)
-        ogle_bit_layout.addStretch()
-        zaman_layout.addRow("🍽️ Öğle Arası Bit:", ogle_bit_layout)
-        
-        layout.addWidget(zaman_card)
-        
-        # Course selection
-        ders_card = QGroupBox("📚 Sınavı Yapılacak Dersler")
-        ders_card.setStyleSheet("""
-            QGroupBox {
-                font-size: 13px;
-                font-weight: bold;
-                border: 2px solid #e5e7eb;
-                border-radius: 8px;
-                margin-top: 10px;
-                padding: 12px;
-                background: white;
-            }
-        """)
-        ders_layout = QVBoxLayout(ders_card)
-        
-        # Search and select all
-        ders_toolbar = QHBoxLayout()
-        ders_toolbar.setSpacing(8)
-        
+        # Toolbar
+        toolbar = QHBoxLayout()
         self.ders_search = QLineEdit()
-        self.ders_search.setPlaceholderText("🔍 Ders ara...")
-        self.ders_search.setFixedHeight(36)
+        self.ders_search.setPlaceholderText("Ders ara...")
+        self.ders_search.setFixedHeight(35)
         self.ders_search.textChanged.connect(self.filter_courses)
+        toolbar.addWidget(self.ders_search, 1)
         
-        select_all_btn = QPushButton("☑️ Tümünü Seç/Kaldır")
-        select_all_btn.setFixedHeight(36)
-        select_all_btn.setFixedWidth(160)
-        select_all_btn.clicked.connect(self.toggle_all_courses)
+        select_all_btn = QPushButton("Tümünü Seç")
+        select_all_btn.setFixedHeight(35)
+        select_all_btn.clicked.connect(self.select_all_courses)
+        toolbar.addWidget(select_all_btn)
         
-        ders_toolbar.addWidget(self.ders_search)
-        ders_toolbar.addWidget(select_all_btn)
-        ders_layout.addLayout(ders_toolbar)
+        clear_all_btn = QPushButton("Temizle")
+        clear_all_btn.setFixedHeight(35)
+        clear_all_btn.clicked.connect(self.clear_all_courses)
+        toolbar.addWidget(clear_all_btn)
         
-        # Scrollable course list with duration controls
-        ders_scroll = QScrollArea()
-        ders_scroll.setWidgetResizable(True)
-        ders_scroll.setMinimumHeight(400)
-        ders_scroll.setStyleSheet("""
-            QScrollArea {
-                border: 1px solid #e5e7eb;
-                border-radius: 6px;
-                background: #f9fafb;
+        check_parallel_btn = QPushButton("🔍 Ortak Öğrenciler")
+        check_parallel_btn.setFixedHeight(35)
+        check_parallel_btn.setStyleSheet("""
+            QPushButton {
+                background: #3b82f6;
+                color: white;
+                border-radius: 4px;
+                padding: 0 12px;
             }
+            QPushButton:hover { background: #2563eb; }
         """)
+        check_parallel_btn.setToolTip("Hangi dersler aynı anda yapılabilir?")
+        check_parallel_btn.clicked.connect(self.show_parallel_exams)
+        toolbar.addWidget(check_parallel_btn)
+        
+        course_layout.addLayout(toolbar)
+        
+        # Course list with durations
+        course_scroll = QScrollArea()
+        course_scroll.setWidgetResizable(True)
         
         self.ders_container = QWidget()
         self.ders_container_layout = QVBoxLayout(self.ders_container)
         self.ders_container_layout.setSpacing(4)
-        self.ders_container_layout.setContentsMargins(8, 8, 8, 8)
         self.ders_checkboxes = {}
-        self.ders_duration_spinboxes = {}  # Store duration spinboxes
+        self.ders_duration_spinboxes = {}  # Store custom durations
         
-        ders_scroll.setWidget(self.ders_container)
-        ders_layout.addWidget(ders_scroll)
+        course_scroll.setWidget(self.ders_container)
+        course_layout.addWidget(course_scroll)
         
         # Stats
-        self.ders_stats_label = QLabel("📊 Yükleniyor...")
-        self.ders_stats_label.setStyleSheet("""
-            color: #6b7280;
-            font-size: 12px;
-            font-weight: bold;
-            padding: 8px;
-            background: #f9fafb;
-            border-radius: 6px;
-        """)
-        ders_layout.addWidget(self.ders_stats_label)
+        self.ders_stats_label = QLabel("Yükleniyor...")
+        self.ders_stats_label.setStyleSheet("color: #6b7280; font-size: 12px; padding: 4px;")
+        course_layout.addWidget(self.ders_stats_label)
         
-        layout.addWidget(ders_card)
+        right_col.addWidget(course_group)
+        main_layout.addLayout(right_col, 2)
+        
+        layout.addLayout(main_layout)
         
         # Progress
         self.progress_bar = QProgressBar()
         self.progress_bar.setVisible(False)
-        self.progress_bar.setTextVisible(True)
-        self.progress_bar.setFixedHeight(32)
-        self.progress_bar.setStyleSheet("""
-            QProgressBar {
-                border: 2px solid #e5e7eb;
-                border-radius: 8px;
-                text-align: center;
-                font-weight: bold;
-                background: white;
-            }
-            QProgressBar::chunk {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #3b82f6, stop:1 #2563eb);
-                border-radius: 6px;
-            }
-        """)
+        self.progress_bar.setFixedHeight(30)
         layout.addWidget(self.progress_bar)
         
         self.progress_label = QLabel()
         self.progress_label.setVisible(False)
-        self.progress_label.setStyleSheet("color: #6b7280; font-size: 13px; font-weight: bold;")
         self.progress_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.progress_label)
         
-        # Buttons
-        button_layout = QHBoxLayout()
-        
-        self.create_btn = QPushButton("🚀 Sınav Programı Oluştur")
+        # Create button
+        self.create_btn = QPushButton("🚀 Program Oluştur")
+        self.create_btn.setMinimumHeight(42)
         self.create_btn.setStyleSheet("""
             QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #3b82f6, stop:1 #2563eb);
+                background: #10b981;
                 color: white;
-                border: none;
-                border-radius: 10px;
-                font-size: 15px;
-                font-weight: bold;
-                padding: 14px 32px;
-            }
-            QPushButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #2563eb, stop:1 #1e40af);
-            }
-            QPushButton:pressed {
-                background: #1e40af;
-            }
-        """)
-        self.create_btn.setFixedHeight(50)
-        self.create_btn.setFixedWidth(260)
-        self.create_btn.setCursor(Qt.PointingHandCursor)
-        self.create_btn.clicked.connect(self.create_schedule)
-        
-        button_layout.addStretch()
-        button_layout.addWidget(self.create_btn)
-        button_layout.addStretch()
-        
-        layout.addLayout(button_layout)
-        layout.addSpacing(20)
-        
-        # Set scroll widget
-        scroll.setWidget(scroll_content)
-        
-        # Results section (not in scroll, added to main tab layout)
-        self.results_group = QGroupBox("📊 Oluşturulan Program")
-        self.results_group.setVisible(False)
-        self.results_group.setStyleSheet("""
-            QGroupBox {
+                border-radius: 6px;
                 font-size: 14px;
                 font-weight: bold;
-                border: 2px solid #10b981;
-                border-radius: 10px;
-                margin-top: 12px;
-                padding: 16px;
-                background: #f0fdf4;
             }
+            QPushButton:hover { background: #059669; }
+            QPushButton:disabled { background: #d1d5db; color: #9ca3af; }
         """)
-        results_layout = QVBoxLayout(self.results_group)
-        
-        self.results_table = QTableWidget()
-        self.results_table.setColumnCount(6)
-        self.results_table.setHorizontalHeaderLabels([
-            "Tarih/Saat", "Ders Kodu", "Ders Adı", "Öğretim Elemanı", "Derslik", "Öğrenci Sayısı"
-        ])
-        self.results_table.verticalHeader().setVisible(False)
-        self.results_table.setAlternatingRowColors(True)
-        
-        header = self.results_table.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.Fixed)
-        header.setSectionResizeMode(1, QHeaderView.Fixed)
-        header.setSectionResizeMode(2, QHeaderView.Stretch)
-        header.setSectionResizeMode(3, QHeaderView.Fixed)
-        header.setSectionResizeMode(4, QHeaderView.Fixed)
-        header.setSectionResizeMode(5, QHeaderView.Fixed)
-        
-        self.results_table.setColumnWidth(0, 150)
-        self.results_table.setColumnWidth(1, 100)
-        self.results_table.setColumnWidth(3, 200)
-        self.results_table.setColumnWidth(4, 100)
-        self.results_table.setColumnWidth(5, 120)
-        
-        results_layout.addWidget(self.results_table)
-        
-        btn_layout = QHBoxLayout()
-        
-        save_btn = QPushButton("💾 Programı Kaydet")
-        save_btn.setObjectName("primaryBtn")
-        save_btn.setFixedHeight(40)
-        save_btn.clicked.connect(self.save_schedule)
-        
-        export_btn = QPushButton("📊 Excel'e Aktar")
-        export_btn.setObjectName("secondaryBtn")
-        export_btn.setFixedHeight(40)
-        export_btn.clicked.connect(self.export_to_excel)
-        
-        btn_layout.addWidget(save_btn)
-        btn_layout.addWidget(export_btn)
-        
-        results_layout.addLayout(btn_layout)
-        
-        # Add results to main tab (not inside scroll)
-        tab_layout.addWidget(self.results_group)
+        self.create_btn.clicked.connect(self.create_schedule)
+        layout.addWidget(self.create_btn)
     
     def load_existing_programs(self):
         """Load and display existing programs"""
@@ -607,8 +727,8 @@ class SinavOlusturView(QWidget):
             for program in programs:
                 row = self.programs_table.rowCount()
                 self.programs_table.insertRow(row)
+                self.programs_table.setRowHeight(row, 50)
                 
-                # Get exam count
                 sinavlar = self.sinav_model.get_sinavlar_by_program(program['program_id'])
                 exam_count = len(sinavlar)
                 
@@ -616,7 +736,10 @@ class SinavOlusturView(QWidget):
                 self.programs_table.setItem(row, 1, QTableWidgetItem(program.get('sinav_tipi', 'Final')))
                 self.programs_table.setItem(row, 2, QTableWidgetItem(str(program.get('baslangic_tarihi', ''))))
                 self.programs_table.setItem(row, 3, QTableWidgetItem(str(program.get('bitis_tarihi', ''))))
-                self.programs_table.setItem(row, 4, QTableWidgetItem(str(exam_count)))
+                
+                count_item = QTableWidgetItem(str(exam_count))
+                count_item.setTextAlignment(Qt.AlignCenter)
+                self.programs_table.setItem(row, 4, count_item)
                 
                 # Action buttons
                 actions_widget = QWidget()
@@ -625,17 +748,95 @@ class SinavOlusturView(QWidget):
                 actions_layout.setSpacing(8)
                 
                 view_btn = QPushButton("📋 Görüntüle")
-                view_btn.setFixedHeight(32)
-                view_btn.setMinimumWidth(110)
+                view_btn.setFixedHeight(36)
+                view_btn.setMinimumWidth(95)
+                view_btn.setStyleSheet("""
+                    QPushButton {
+                        background-color: #6366f1;
+                        color: white;
+                        font-weight: bold;
+                        border-radius: 6px;
+                        padding: 4px 12px;
+                    }
+                    QPushButton:hover {
+                        background-color: #4f46e5;
+                    }
+                """)
                 view_btn.clicked.connect(lambda checked=False, p=dict(program): self.view_program(p))
                 
+                excel_btn = QPushButton("📊 Excel")
+                excel_btn.setFixedHeight(36)
+                excel_btn.setMinimumWidth(85)
+                excel_btn.setStyleSheet("""
+                    QPushButton {
+                        background-color: #10b981;
+                        color: white;
+                        font-weight: bold;
+                        border-radius: 6px;
+                        padding: 4px 12px;
+                    }
+                    QPushButton:hover {
+                        background-color: #059669;
+                    }
+                """)
+                excel_btn.clicked.connect(lambda checked=False, p=dict(program): self.export_program_excel(p))
+                
+                pdf_btn = QPushButton("📄 PDF")
+                pdf_btn.setFixedHeight(36)
+                pdf_btn.setMinimumWidth(75)
+                pdf_btn.setStyleSheet("""
+                    QPushButton {
+                        background-color: #3b82f6;
+                        color: white;
+                        font-weight: bold;
+                        border-radius: 6px;
+                        padding: 4px 12px;
+                    }
+                    QPushButton:hover {
+                        background-color: #2563eb;
+                    }
+                """)
+                pdf_btn.clicked.connect(lambda checked=False, p=dict(program): self.export_program_pdf(p))
+                
                 delete_btn = QPushButton("🗑️ Sil")
-                delete_btn.setFixedHeight(32)
-                delete_btn.setMinimumWidth(90)
-                delete_btn.setStyleSheet("background-color: #ef4444; color: white;")
+                delete_btn.setFixedHeight(36)
+                delete_btn.setMinimumWidth(70)
+                delete_btn.setStyleSheet("""
+                    QPushButton {
+                        background-color: #ef4444;
+                        color: white;
+                        font-weight: bold;
+                        border-radius: 6px;
+                        padding: 4px 12px;
+                    }
+                    QPushButton:hover {
+                        background-color: #dc2626;
+                    }
+                """)
                 delete_btn.clicked.connect(lambda checked=False, p=dict(program): self.delete_program(p))
                 
+                # Class-based report button
+                class_report_btn = QPushButton("🎓 Sınıf Bazlı")
+                class_report_btn.setFixedHeight(36)
+                class_report_btn.setMinimumWidth(105)
+                class_report_btn.setStyleSheet("""
+                    QPushButton {
+                        background-color: #8b5cf6;
+                        color: white;
+                        font-weight: bold;
+                        border-radius: 6px;
+                        padding: 4px 12px;
+                    }
+                    QPushButton:hover {
+                        background-color: #7c3aed;
+                    }
+                """)
+                class_report_btn.clicked.connect(lambda checked=False, p=dict(program): self.export_class_based_report(p))
+                
                 actions_layout.addWidget(view_btn)
+                actions_layout.addWidget(excel_btn)
+                actions_layout.addWidget(pdf_btn)
+                actions_layout.addWidget(class_report_btn)
                 actions_layout.addWidget(delete_btn)
                 actions_layout.addStretch()
                 
@@ -648,7 +849,7 @@ class SinavOlusturView(QWidget):
             QMessageBox.critical(self, "Hata", f"Programlar yüklenirken hata:\n{str(e)}")
     
     def view_program(self, program):
-        """View program details"""
+        """View program details in a dialog"""
         try:
             sinavlar = self.sinav_model.get_sinavlar_by_program(program['program_id'])
             
@@ -656,19 +857,81 @@ class SinavOlusturView(QWidget):
                 QMessageBox.information(self, "Bilgi", "Bu programda henüz sınav yok!")
                 return
             
-            # Create message with exam details
-            message = f"📅 {program['program_adi']}\n"
-            message += f"📝 Tip: {program.get('sinav_tipi', 'Final')}\n"
-            message += f"📆 {program.get('baslangic_tarihi')} - {program.get('bitis_tarihi')}\n\n"
-            message += f"Toplam {len(sinavlar)} sınav:\n\n"
+            from PySide6.QtWidgets import QDialog, QVBoxLayout
             
-            for sinav in sinavlar[:10]:  # Show first 10
-                message += f"• {sinav['ders_kodu']}: {sinav['tarih_saat']} - {sinav.get('derslik_kodu', 'N/A')}\n"
+            dialog = QDialog(self)
+            dialog.setWindowTitle(f"📅 {program['program_adi']} - Program Detayları")
+            dialog.setMinimumSize(900, 600)
             
-            if len(sinavlar) > 10:
-                message += f"\n... ve {len(sinavlar) - 10} sınav daha"
+            layout = QVBoxLayout(dialog)
+            layout.setContentsMargins(20, 20, 20, 20)
+            layout.setSpacing(16)
             
-            QMessageBox.information(self, "Program Detayları", message)
+            # Info header
+            info_label = QLabel(
+                f"📝 Tip: {program.get('sinav_tipi', 'Final')}  |  "
+                f"📆 {program.get('baslangic_tarihi')} - {program.get('bitis_tarihi')}  |  "
+                f"📊 Toplam {len(sinavlar)} sınav"
+            )
+            info_label.setStyleSheet("font-size: 13px; font-weight: bold; color: #374151; padding: 10px; background: #f3f4f6; border-radius: 8px;")
+            layout.addWidget(info_label)
+            
+            # Table - ADD SINIF COLUMN
+            table = QTableWidget()
+            table.setColumnCount(7)  # Added one more column for Sınıf
+            table.setHorizontalHeaderLabels(['Tarih/Saat', 'Ders Kodu', 'Ders Adı', 'Sınıf', 'Öğretim Elemanı', 'Derslik', 'Öğrenci'])
+            table.setEditTriggers(QTableWidget.NoEditTriggers)
+            table.setSelectionBehavior(QTableWidget.SelectRows)
+            table.setAlternatingRowColors(True)
+            table.verticalHeader().setVisible(False)
+            
+            # Column widths
+            header = table.horizontalHeader()
+            header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+            header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+            header.setSectionResizeMode(2, QHeaderView.Stretch)
+            header.setSectionResizeMode(3, QHeaderView.ResizeToContents)  # Sınıf
+            header.setSectionResizeMode(4, QHeaderView.Stretch)
+            header.setSectionResizeMode(5, QHeaderView.ResizeToContents)
+            header.setSectionResizeMode(6, QHeaderView.ResizeToContents)
+            
+            # Populate table
+            for sinav in sinavlar:
+                row = table.rowCount()
+                table.insertRow(row)
+                
+                tarih = datetime.fromisoformat(sinav['tarih_saat']) if isinstance(sinav['tarih_saat'], str) else sinav['tarih_saat']
+                tarih_str = tarih.strftime("%d.%m.%Y %H:%M")
+                
+                # Get sınıf info from ders
+                ders = self.ders_model.get_ders_by_id(sinav['ders_id'])
+                sinif_str = f"{ders.get('sinif', '?')}. Sınıf" if ders else "?"
+                
+                table.setItem(row, 0, QTableWidgetItem(tarih_str))
+                table.setItem(row, 1, QTableWidgetItem(sinav.get('ders_kodu', '')))
+                table.setItem(row, 2, QTableWidgetItem(sinav.get('ders_adi', '')))
+                table.setItem(row, 3, QTableWidgetItem(sinif_str))  # NEW: Sınıf column
+                table.setItem(row, 4, QTableWidgetItem(sinav.get('ogretim_elemani', '')))
+                table.setItem(row, 5, QTableWidgetItem(sinav.get('derslik_adi', sinav.get('derslik_kodu', ''))))
+                
+                ogrenci_item = QTableWidgetItem(str(sinav.get('ogrenci_sayisi', 0)))
+                ogrenci_item.setTextAlignment(Qt.AlignCenter)
+                table.setItem(row, 6, ogrenci_item)  # Column 6 for Öğrenci
+            
+            layout.addWidget(table)
+            
+            # Close button
+            close_btn = QPushButton("✅ Kapat")
+            close_btn.setFixedHeight(40)
+            close_btn.setFixedWidth(120)
+            close_btn.clicked.connect(dialog.accept)
+            
+            btn_layout = QHBoxLayout()
+            btn_layout.addStretch()
+            btn_layout.addWidget(close_btn)
+            layout.addLayout(btn_layout)
+            
+            dialog.exec()
             
         except Exception as e:
             logger.error(f"Error viewing program: {e}", exc_info=True)
@@ -699,10 +962,478 @@ class SinavOlusturView(QWidget):
                 logger.error(f"Error deleting program: {e}", exc_info=True)
                 QMessageBox.critical(self, "Hata", f"Program silinirken hata:\n{str(e)}")
     
+    def export_program_excel(self, program):
+        """Export program to Excel"""
+        try:
+            sinavlar = self.sinav_model.get_sinavlar_by_program(program['program_id'])
+            
+            if not sinavlar:
+                QMessageBox.information(self, "Bilgi", "Bu programda henüz sınav yok!")
+                return
+            
+            # Ask for save location
+            default_name = f"sinav_programi_{program['program_adi']}_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
+            file_path, _ = QFileDialog.getSaveFileName(
+                self,
+                "Excel Dosyası Kaydet",
+                default_name,
+                "Excel Files (*.xlsx)"
+            )
+            
+            if not file_path:
+                return
+            
+            # Get department info
+            bolum_query = "SELECT bolum_adi FROM bolumler WHERE bolum_id = %s"
+            bolum_result = db.execute_query(bolum_query, (self.bolum_id,))
+            bolum_adi = bolum_result[0]['bolum_adi'] if bolum_result else "BÖLÜM"
+            sinav_tipi = program.get('sinav_tipi', 'SINAV')
+            
+            data = {
+                'type': 'sinav_takvimi',
+                'title': 'Sınav Programı',
+                'bolum_adi': bolum_adi,
+                'sinav_tipi': sinav_tipi,
+                'data': sinavlar,
+                'bolum_id': self.bolum_id
+            }
+            
+            success = ExportUtils.export_to_excel(data, file_path)
+            
+            if success:
+                QMessageBox.information(self, "Başarılı", f"✅ Excel dosyası oluşturuldu!\n\n{file_path}")
+            else:
+                QMessageBox.warning(self, "Hata", "Excel dosyası oluşturulamadı!")
+            
+        except Exception as e:
+            logger.error(f"Error exporting program to Excel: {e}", exc_info=True)
+            QMessageBox.critical(self, "Hata", f"Excel'e aktarırken hata:\n{str(e)}")
+    
+    def export_program_pdf(self, program):
+        """Export program to PDF using ExportUtils"""
+        try:
+            sinavlar = self.sinav_model.get_sinavlar_by_program(program['program_id'])
+            
+            if not sinavlar:
+                QMessageBox.information(self, "Bilgi", "Bu programda henüz sınav yok!")
+                return
+            
+            # Get department info
+            bolum_query = "SELECT bolum_adi FROM bolumler WHERE bolum_id = %s"
+            bolum_result = db.execute_query(bolum_query, (self.bolum_id,))
+            bolum_adi = bolum_result[0]['bolum_adi'] if bolum_result else "BÖLÜM"
+            sinav_tipi = program.get('sinav_tipi', 'SINAV')
+            
+            # Ask for save location
+            default_name = f"sinav_programi_{program['program_adi']}_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf"
+            file_path, _ = QFileDialog.getSaveFileName(
+                self,
+                "PDF Dosyası Kaydet",
+                default_name,
+                "PDF Files (*.pdf)"
+            )
+            
+            if not file_path:
+                return
+            
+            data = {
+                'type': 'sinav_takvimi',
+                'title': 'Sınav Programı',
+                'bolum_adi': bolum_adi,
+                'sinav_tipi': sinav_tipi,
+                'data': sinavlar,
+                'bolum_id': self.bolum_id,
+                'options': {}
+            }
+            
+            success = ExportUtils.export_to_pdf(data, file_path)
+            
+            if success:
+                QMessageBox.information(
+                    self,
+                    "Başarılı",
+                    f"✅ Sınav programı PDF'e aktarıldı!\n\nDosya: {file_path}"
+                )
+            else:
+                QMessageBox.warning(self, "Uyarı", "PDF oluşturulamadı!")
+            
+        except Exception as e:
+            logger.error(f"Error exporting program to PDF: {e}", exc_info=True)
+            QMessageBox.critical(self, "Hata", f"PDF'e aktarırken hata:\n{str(e)}")
+    
+    def export_class_based_report(self, program):
+        """Export class-based exam schedule (both Excel and PDF)"""
+        try:
+            from collections import defaultdict
+            from PySide6.QtWidgets import QFileDialog
+            import os
+            from datetime import datetime
+            
+            sinavlar = self.sinav_model.get_sinavlar_by_program(program['program_id'])
+            
+            if not sinavlar:
+                QMessageBox.information(self, "Bilgi", "Bu programda henüz sınav yok!")
+                return
+            
+            logger.info(f"📚 Total exams in program: {len(sinavlar)}")
+            
+            # Group by class
+            sinav_by_class = defaultdict(list)
+            for sinav in sinavlar:
+                # Fetch course to get class info
+                ders = self.ders_model.get_ders_by_id(sinav['ders_id'])
+                if ders:
+                    sinif = ders.get('sinif', 0)
+                    sinav_with_class = sinav.copy()
+                    sinav_with_class['sinif'] = sinif
+                    sinav_by_class[sinif].append(sinav_with_class)
+                    
+                    # Log sample data
+                    if len(sinav_by_class[sinif]) == 1:  # First exam of this class
+                        logger.info(f"   Class {sinif} - {ders['ders_kodu']}: {sinav['tarih']} {sinav['baslangic_saati']}")
+            
+            if not sinav_by_class:
+                QMessageBox.warning(self, "Uyarı", "Sınıf bilgisi bulunamadı!")
+                return
+            
+            # Create selection dialog
+            from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QPushButton, QHBoxLayout, QGroupBox
+            
+            choice_dialog = QDialog(self)
+            choice_dialog.setWindowTitle("Sınıf Bazlı Rapor")
+            choice_dialog.setMinimumWidth(500)
+            choice_dialog.setMinimumHeight(450)
+            choice_layout = QVBoxLayout(choice_dialog)
+            
+            # Header
+            header = QLabel("📊 Sınıf Bazlı Rapor Oluştur")
+            header.setFont(QFont("Segoe UI", 14, QFont.Bold))
+            header.setStyleSheet("padding: 10px; color: #1f2937;")
+            choice_layout.addWidget(header)
+            
+            info = QLabel(f"Raporlanacak sınıfları ve formatı seçin:")
+            info.setStyleSheet("padding: 5px 10px; font-size: 12px; color: #6b7280;")
+            choice_layout.addWidget(info)
+            
+            # Class selection group
+            class_group = QGroupBox("Sınıf Seçimi")
+            class_group.setStyleSheet("""
+                QGroupBox {
+                    font-weight: bold;
+                    border: 2px solid #e5e7eb;
+                    border-radius: 8px;
+                    margin-top: 12px;
+                    padding-top: 15px;
+                }
+                QGroupBox::title {
+                    subcontrol-origin: margin;
+                    left: 10px;
+                    padding: 0 5px;
+                }
+            """)
+            class_layout = QVBoxLayout(class_group)
+            class_layout.setSpacing(8)
+            
+            # Add "Select All" button
+            select_buttons = QHBoxLayout()
+            select_all_btn = QPushButton("✓ Tümünü Seç")
+            select_all_btn.setFixedHeight(30)
+            select_all_btn.setStyleSheet("""
+                QPushButton {
+                    background: #e5e7eb;
+                    border-radius: 4px;
+                    padding: 4px 12px;
+                    font-size: 11px;
+                }
+                QPushButton:hover { background: #d1d5db; }
+            """)
+            
+            clear_all_btn = QPushButton("✗ Temizle")
+            clear_all_btn.setFixedHeight(30)
+            clear_all_btn.setStyleSheet("""
+                QPushButton {
+                    background: #e5e7eb;
+                    border-radius: 4px;
+                    padding: 4px 12px;
+                    font-size: 11px;
+                }
+                QPushButton:hover { background: #d1d5db; }
+            """)
+            select_buttons.addWidget(select_all_btn)
+            select_buttons.addWidget(clear_all_btn)
+            select_buttons.addStretch()
+            class_layout.addLayout(select_buttons)
+            
+            # Create checkboxes for each class
+            class_checkboxes = {}
+            for sinif in sorted(sinav_by_class.keys()):
+                exam_count = len(sinav_by_class[sinif])
+                cb = QCheckBox(f"📚 {sinif}. Sınıf ({exam_count} sınav)")
+                cb.setChecked(True)
+                cb.setStyleSheet("""
+                    QCheckBox {
+                        padding: 8px;
+                        font-size: 13px;
+                    }
+                    QCheckBox::indicator {
+                        width: 20px;
+                        height: 20px;
+                    }
+                """)
+                class_checkboxes[sinif] = cb
+                class_layout.addWidget(cb)
+            
+            # Connect select all buttons
+            select_all_btn.clicked.connect(lambda: [cb.setChecked(True) for cb in class_checkboxes.values()])
+            clear_all_btn.clicked.connect(lambda: [cb.setChecked(False) for cb in class_checkboxes.values()])
+            
+            choice_layout.addWidget(class_group)
+            
+            # Format selection group
+            format_group = QGroupBox("Format Seçimi")
+            format_group.setStyleSheet("""
+                QGroupBox {
+                    font-weight: bold;
+                    border: 2px solid #e5e7eb;
+                    border-radius: 8px;
+                    margin-top: 12px;
+                    padding-top: 15px;
+                }
+                QGroupBox::title {
+                    subcontrol-origin: margin;
+                    left: 10px;
+                    padding: 0 5px;
+                }
+            """)
+            format_layout = QHBoxLayout(format_group)
+            format_layout.setSpacing(10)
+            
+            excel_btn = QPushButton("📊 Excel")
+            excel_btn.setFixedHeight(40)
+            excel_btn.setStyleSheet("""
+                QPushButton {
+                    background: #10b981;
+                    color: white;
+                    font-weight: bold;
+                    border-radius: 6px;
+                    padding: 8px 16px;
+                }
+                QPushButton:hover { background: #059669; }
+            """)
+            excel_btn.clicked.connect(lambda: choice_dialog.done(1))
+            
+            pdf_btn = QPushButton("📄 PDF")
+            pdf_btn.setFixedHeight(40)
+            pdf_btn.setStyleSheet("""
+                QPushButton {
+                    background: #3b82f6;
+                    color: white;
+                    font-weight: bold;
+                    border-radius: 6px;
+                    padding: 8px 16px;
+                }
+                QPushButton:hover { background: #2563eb; }
+            """)
+            pdf_btn.clicked.connect(lambda: choice_dialog.done(2))
+            
+            both_btn = QPushButton("📁 Her İkisi")
+            both_btn.setFixedHeight(40)
+            both_btn.setStyleSheet("""
+                QPushButton {
+                    background: #8b5cf6;
+                    color: white;
+                    font-weight: bold;
+                    border-radius: 6px;
+                    padding: 8px 16px;
+                }
+                QPushButton:hover { background: #7c3aed; }
+            """)
+            both_btn.clicked.connect(lambda: choice_dialog.done(3))
+            
+            format_layout.addWidget(excel_btn)
+            format_layout.addWidget(pdf_btn)
+            format_layout.addWidget(both_btn)
+            
+            choice_layout.addWidget(format_group)
+            
+            # Bottom buttons
+            bottom_layout = QHBoxLayout()
+            bottom_layout.addStretch()
+            
+            cancel_btn = QPushButton("İptal")
+            cancel_btn.setFixedHeight(36)
+            cancel_btn.setFixedWidth(100)
+            cancel_btn.setStyleSheet("""
+                QPushButton {
+                    background: #ef4444;
+                    color: white;
+                    font-weight: bold;
+                    border-radius: 6px;
+                }
+                QPushButton:hover { background: #dc2626; }
+            """)
+            cancel_btn.clicked.connect(choice_dialog.reject)
+            bottom_layout.addWidget(cancel_btn)
+            
+            choice_layout.addLayout(bottom_layout)
+            
+            result = choice_dialog.exec()
+            
+            if result == 0:  # Cancelled
+                return
+            
+            # Get selected classes
+            selected_classes = [sinif for sinif, cb in class_checkboxes.items() if cb.isChecked()]
+            
+            if not selected_classes:
+                QMessageBox.warning(self, "Uyarı", "En az bir sınıf seçmelisiniz!")
+                return
+            
+            # Ask for directory to save files
+            save_dir = QFileDialog.getExistingDirectory(
+                self,
+                "Raporları Kaydetmek İçin Klasör Seçin",
+                "",
+                QFileDialog.ShowDirsOnly
+            )
+            
+            if not save_dir:
+                return
+            
+            # Create separate files for selected classes
+            success_count = 0
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            created_files = []
+            
+            for sinif in sorted(selected_classes):
+                class_sinavlar = sinav_by_class[sinif]
+                
+                # Sort by date and time
+                class_sinavlar.sort(key=lambda x: (x['tarih'], x['baslangic_saati']))
+                
+                # Log all exams for this class to debug
+                logger.info(f"📋 Class {sinif} - {len(class_sinavlar)} exams:")
+                for idx, exam in enumerate(class_sinavlar[:5]):  # Show first 5
+                    logger.info(f"   [{idx+1}] {exam.get('ders_kodu')}")
+                    logger.info(f"        tarih: {exam.get('tarih')}")
+                    logger.info(f"        baslangic_saati: {exam.get('baslangic_saati')}")
+                    logger.info(f"        tarih_saat (STRING): {exam.get('tarih_saat')}")
+                
+                # Use the data AS IS from database - don't modify tarih_saat!
+                # The export utilities handle the tarih_saat parsing internally
+                logger.info(f"📊 Class {sinif}: {len(class_sinavlar)} exams will be exported")
+                
+                title = f"{program['program_adi']} - {sinif}. Sınıf"
+                
+                # Get bolum_adi from user_data or database
+                bolum_adi = self.user_data.get('bolum_adi', '')
+                if not bolum_adi:
+                    # Try to get from database if not in user_data
+                    try:
+                        from models.bolum_model import BolumModel
+                        bolum_model = BolumModel(db)
+                        bolum = bolum_model.get_bolum_by_id(self.bolum_id)
+                        bolum_adi = bolum.get('bolum_adi', '') if bolum else ''
+                    except:
+                        bolum_adi = ''
+                
+                # Convert to format expected by ExportUtils
+                # Use class_sinavlar directly - same format as normal export
+                export_data = {
+                    'type': 'sinav_takvimi',  # Same type as normal export
+                    'title': title,
+                    'data': class_sinavlar,  # Use original data from database
+                    'bolum_adi': bolum_adi,
+                    'sinav_tipi': program.get('sinav_tipi', 'Final'),
+                    'bolum_id': self.bolum_id,
+                    'options': {}
+                }
+                
+                # Excel export
+                if result in [1, 3]:
+                    filename = os.path.join(
+                        save_dir,
+                        f"sinav_programi_{sinif}_sinif_{timestamp}.xlsx"
+                    )
+                    
+                    if ExportUtils.export_to_excel(export_data, filename):
+                        success_count += 1
+                        created_files.append(os.path.basename(filename))
+                        logger.info(f"Class {sinif} exported to Excel: {filename}")
+                
+                # PDF export
+                if result in [2, 3]:
+                    filename = os.path.join(
+                        save_dir,
+                        f"sinav_programi_{sinif}_sinif_{timestamp}.pdf"
+                    )
+                    
+                    if ExportUtils.export_to_pdf(export_data, filename):
+                        success_count += 1
+                        created_files.append(os.path.basename(filename))
+                        logger.info(f"Class {sinif} exported to PDF: {filename}")
+            
+            if success_count > 0:
+                files_list = "\n".join([f"  • {f}" for f in created_files])
+                class_names = ", ".join([f"{s}. Sınıf" for s in sorted(selected_classes)])
+                QMessageBox.information(
+                    self,
+                    "Başarılı",
+                    f"✅ Sınıf bazlı raporlar başarıyla oluşturuldu!\n\n"
+                    f"Seçilen Sınıflar: {class_names}\n"
+                    f"Klasör: {save_dir}\n\n"
+                    f"Oluşturulan dosyalar ({success_count}):\n{files_list}"
+                )
+            else:
+                QMessageBox.warning(
+                    self,
+                    "Uyarı",
+                    "❌ Hiçbir dosya oluşturulamadı!\n\nLütfen log dosyasını kontrol edin."
+                )
+            
+        except Exception as e:
+            logger.error(f"Error exporting class-based report: {e}", exc_info=True)
+            QMessageBox.critical(self, "Hata", f"Sınıf bazlı rapor oluşturulurken hata:\n{str(e)}")
+    
+    def _get_day_name(self, date):
+        """Get Turkish day name from date"""
+        from datetime import datetime, date as date_type
+        
+        days = {
+            0: "Pazartesi",
+            1: "Salı",
+            2: "Çarşamba",
+            3: "Perşembe",
+            4: "Cuma",
+            5: "Cumartesi",
+            6: "Pazar"
+        }
+        
+        try:
+            # If it's already a date or datetime object
+            if hasattr(date, 'weekday'):
+                return days.get(date.weekday(), str(date))
+            
+            # If it's a string, try to parse it
+            if isinstance(date, str):
+                try:
+                    parsed_date = datetime.strptime(date, '%Y-%m-%d')
+                    return days.get(parsed_date.weekday(), date)
+                except:
+                    try:
+                        parsed_date = datetime.strptime(date, '%d.%m.%Y')
+                        return days.get(parsed_date.weekday(), date)
+                    except:
+                        pass
+            
+            return str(date)
+        except Exception as e:
+            logger.error(f"Error getting day name for date {date}: {e}")
+            return str(date)
+    
     def load_data(self):
         """Load necessary data"""
         try:
-            # Load courses and classrooms to verify availability
             dersler = self.ders_model.get_dersler_by_bolum(self.bolum_id)
             derslikler = self.derslik_model.get_derslikler_by_bolum(self.bolum_id)
             
@@ -714,15 +1445,13 @@ class SinavOlusturView(QWidget):
                 QMessageBox.warning(self, "Uyarı", "Henüz derslik tanımlanmamış!")
                 return
             
-            # Populate course checkboxes
             self.populate_course_list(dersler)
                 
         except Exception as e:
             logger.error(f"Error loading data: {e}")
     
     def populate_course_list(self, dersler):
-        """Populate course selection checkboxes with duration controls"""
-        # Clear existing
+        """Populate course selection checkboxes with custom duration"""
         while self.ders_container_layout.count():
             item = self.ders_container_layout.takeAt(0)
             if item.widget():
@@ -732,38 +1461,37 @@ class SinavOlusturView(QWidget):
         self.ders_duration_spinboxes.clear()
         
         for ders in dersler:
-            # Create horizontal layout for each course
-            course_row = QWidget()
-            course_layout = QHBoxLayout(course_row)
-            course_layout.setContentsMargins(0, 0, 0, 0)
-            course_layout.setSpacing(10)
+            # Create row widget
+            row_widget = QWidget()
+            row_layout = QHBoxLayout(row_widget)
+            row_layout.setContentsMargins(0, 0, 0, 0)
+            row_layout.setSpacing(8)
             
-            # Checkbox for course selection
+            # Checkbox
             checkbox = QCheckBox(f"{ders['ders_kodu']} - {ders['ders_adi']}")
-            checkbox.setChecked(True)  # All selected by default
+            checkbox.setChecked(True)
             checkbox.setProperty('ders_id', ders['ders_id'])
-            checkbox.setProperty('ders_kodu', ders['ders_kodu'])
             checkbox.stateChanged.connect(self.update_course_stats)
-            checkbox.setMinimumWidth(400)
+            row_layout.addWidget(checkbox, 1)
             
-            # Duration spinbox for this course
+            # Duration label
             duration_label = QLabel("Süre:")
+            duration_label.setStyleSheet("color: #6b7280; font-size: 11px;")
+            row_layout.addWidget(duration_label)
+            
+            # Duration spinbox
             duration_spinbox = QSpinBox()
-            duration_spinbox.setMinimum(30)
-            duration_spinbox.setMaximum(240)
-            # Initialize from current global duration
-            duration_spinbox.setValue(self.sinav_suresi.value())
+            duration_spinbox.setRange(1, 999)
+            duration_spinbox.setValue(75)  # Default
             duration_spinbox.setSuffix(" dk")
             duration_spinbox.setFixedWidth(90)
-            
-            course_layout.addWidget(checkbox)
-            course_layout.addStretch()
-            course_layout.addWidget(duration_label)
-            course_layout.addWidget(duration_spinbox)
+            duration_spinbox.setFixedHeight(28)
+            duration_spinbox.setToolTip("Bu ders için sınav süresi")
+            row_layout.addWidget(duration_spinbox)
             
             self.ders_checkboxes[ders['ders_id']] = checkbox
             self.ders_duration_spinboxes[ders['ders_id']] = duration_spinbox
-            self.ders_container_layout.addWidget(course_row)
+            self.ders_container_layout.addWidget(row_widget)
         
         self.update_course_stats()
     
@@ -773,17 +1501,25 @@ class SinavOlusturView(QWidget):
         
         for ders_id, checkbox in self.ders_checkboxes.items():
             text = checkbox.text().lower()
-            # Show/hide the parent widget (course_row) instead of just checkbox
-            parent_widget = checkbox.parent()
-            if parent_widget:
-                parent_widget.setVisible(search_text in text)
+            # Show/hide the parent row widget
+            checkbox.parent().setVisible(search_text in text)
+    
+    def select_all_courses(self):
+        """Select all courses"""
+        for checkbox in self.ders_checkboxes.values():
+            checkbox.setChecked(True)
+        self.update_course_stats()
+    
+    def clear_all_courses(self):
+        """Clear all course selections"""
+        for checkbox in self.ders_checkboxes.values():
+            checkbox.setChecked(False)
+        self.update_course_stats()
     
     def toggle_all_courses(self):
         """Toggle all course selections"""
-        # Check if all are selected
         all_checked = all(cb.isChecked() for cb in self.ders_checkboxes.values())
         
-        # Toggle
         for checkbox in self.ders_checkboxes.values():
             checkbox.setChecked(not all_checked)
         
@@ -793,7 +1529,204 @@ class SinavOlusturView(QWidget):
         """Update course selection statistics"""
         total = len(self.ders_checkboxes)
         selected = sum(1 for cb in self.ders_checkboxes.values() if cb.isChecked())
-        self.ders_stats_label.setText(f"Seçili: {selected} / {total} ders")
+        self.ders_stats_label.setText(f"📊 Seçili: {selected} / {total} ders")
+    
+    def show_parallel_exams(self):
+        """Show which courses can be held in parallel (no common students)"""
+        try:
+            # Get all courses
+            dersler = self.ders_model.get_dersler_by_bolum(self.bolum_id)
+            if not dersler or len(dersler) < 2:
+                QMessageBox.information(self, "Bilgi", "En az 2 ders olmalıdır!")
+                return
+            
+            # Build student-course mapping
+            course_students = {}
+            course_info = {}
+            
+            for ders in dersler:
+                ogrenciler = self.ogrenci_model.get_ogrenciler_by_ders(ders['ders_id'])
+                student_ids = set(o['ogrenci_no'] for o in ogrenciler)
+                course_students[ders['ders_id']] = student_ids
+                course_info[ders['ders_id']] = {
+                    'ders_kodu': ders['ders_kodu'],
+                    'ders_adi': ders['ders_adi'],
+                    'sinif': ders.get('sinif', 0),
+                    'ogrenci_sayisi': len(student_ids)
+                }
+            
+            # Find parallel groups
+            no_conflict_pairs = []
+            high_conflict_pairs = []
+            
+            course_ids = list(course_info.keys())
+            for i, ders_id1 in enumerate(course_ids):
+                for ders_id2 in course_ids[i+1:]:
+                    shared = len(course_students[ders_id1] & course_students[ders_id2])
+                    
+                    if shared == 0:
+                        no_conflict_pairs.append((
+                            course_info[ders_id1]['ders_kodu'],
+                            course_info[ders_id2]['ders_kodu'],
+                            course_info[ders_id1]['sinif'],
+                            course_info[ders_id2]['sinif']
+                        ))
+                    elif shared >= 10:
+                        high_conflict_pairs.append((
+                            course_info[ders_id1]['ders_kodu'],
+                            course_info[ders_id2]['ders_kodu'],
+                            course_info[ders_id1]['sinif'],
+                            course_info[ders_id2]['sinif'],
+                            shared
+                        ))
+            
+            # Create dialog
+            dialog = QDialog(self)
+            dialog.setWindowTitle("Ortak Öğrenci Analizi")
+            dialog.setMinimumSize(800, 600)
+            
+            layout = QVBoxLayout(dialog)
+            
+            # Header
+            header = QLabel("📊 Paralel Sınav Yapılabilirlik Analizi")
+            header.setFont(QFont("Segoe UI", 14, QFont.Bold))
+            layout.addWidget(header)
+            
+            # Tabs
+            tab_widget = QTabWidget()
+            
+            # Tab 1: No conflicts
+            no_conflict_tab = QWidget()
+            no_conflict_layout = QVBoxLayout(no_conflict_tab)
+            
+            info1 = QLabel(f"✅ Hiç ortak öğrencisi olmayan {len(no_conflict_pairs)} ders çifti bulundu.\n"
+                          "Bu dersler aynı anda yapılabilir!")
+            info1.setStyleSheet("color: #059669; padding: 10px; background: #d1fae5; border-radius: 4px;")
+            no_conflict_layout.addWidget(info1)
+            
+            if no_conflict_pairs:
+                table1 = QTableWidget()
+                table1.setColumnCount(5)
+                table1.setHorizontalHeaderLabels(["Ders 1", "Sınıf", "Ders 2", "Sınıf", "Notlar"])
+                table1.setRowCount(len(no_conflict_pairs))
+                
+                for row, (d1, d2, s1, s2) in enumerate(no_conflict_pairs):
+                    # Ders 1
+                    item1 = QTableWidgetItem(d1)
+                    item1.setFont(QFont("Segoe UI", 10, QFont.Bold))
+                    table1.setItem(row, 0, item1)
+                    
+                    # Sınıf 1
+                    class1_item = QTableWidgetItem(f"{s1}. Sınıf")
+                    class1_item.setTextAlignment(Qt.AlignCenter)
+                    table1.setItem(row, 1, class1_item)
+                    
+                    # Ders 2
+                    item2 = QTableWidgetItem(d2)
+                    item2.setFont(QFont("Segoe UI", 10, QFont.Bold))
+                    table1.setItem(row, 2, item2)
+                    
+                    # Sınıf 2
+                    class2_item = QTableWidgetItem(f"{s2}. Sınıf")
+                    class2_item.setTextAlignment(Qt.AlignCenter)
+                    table1.setItem(row, 3, class2_item)
+                    
+                    # Notlar
+                    if s1 == s2:
+                        note = "⚠️ Aynı sınıf"
+                    else:
+                        note = "✅ Farklı sınıf"
+                    table1.setItem(row, 4, QTableWidgetItem(note))
+                
+                table1.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+                table1.setAlternatingRowColors(True)
+                no_conflict_layout.addWidget(table1)
+            else:
+                no_conflict_layout.addWidget(QLabel("Ortak öğrencisi olmayan ders çifti bulunamadı."))
+            
+            tab_widget.addTab(no_conflict_tab, f"✅ Paralel Yapılabilir ({len(no_conflict_pairs)})")
+            
+            # Tab 2: High conflicts
+            conflict_tab = QWidget()
+            conflict_layout = QVBoxLayout(conflict_tab)
+            
+            info2 = QLabel(f"⚠️ Çok fazla ortak öğrencisi olan {len(high_conflict_pairs)} ders çifti.\n"
+                          "Bu dersler farklı günlerde yapılmalı!")
+            info2.setStyleSheet("color: #dc2626; padding: 10px; background: #fee2e2; border-radius: 4px;")
+            conflict_layout.addWidget(info2)
+            
+            if high_conflict_pairs:
+                table2 = QTableWidget()
+                table2.setColumnCount(6)
+                table2.setHorizontalHeaderLabels(["Ders 1", "Sınıf", "Ders 2", "Sınıf", "Ortak Öğrenci", "Uyarı"])
+                table2.setRowCount(len(high_conflict_pairs))
+                
+                for row, (d1, d2, s1, s2, shared) in enumerate(high_conflict_pairs):
+                    # Ders 1
+                    item1 = QTableWidgetItem(d1)
+                    item1.setFont(QFont("Segoe UI", 10, QFont.Bold))
+                    table2.setItem(row, 0, item1)
+                    
+                    # Sınıf 1
+                    class1_item = QTableWidgetItem(f"{s1}. Sınıf")
+                    class1_item.setTextAlignment(Qt.AlignCenter)
+                    table2.setItem(row, 1, class1_item)
+                    
+                    # Ders 2
+                    item2 = QTableWidgetItem(d2)
+                    item2.setFont(QFont("Segoe UI", 10, QFont.Bold))
+                    table2.setItem(row, 2, item2)
+                    
+                    # Sınıf 2
+                    class2_item = QTableWidgetItem(f"{s2}. Sınıf")
+                    class2_item.setTextAlignment(Qt.AlignCenter)
+                    table2.setItem(row, 3, class2_item)
+                    
+                    # Ortak öğrenci sayısı
+                    count_item = QTableWidgetItem(str(shared))
+                    count_item.setTextAlignment(Qt.AlignCenter)
+                    count_item.setFont(QFont("Segoe UI", 11, QFont.Bold))
+                    if shared >= 20:
+                        count_item.setForeground(QColor("#dc2626"))  # Red for very high
+                    elif shared >= 10:
+                        count_item.setForeground(QColor("#f59e0b"))  # Orange for high
+                    table2.setItem(row, 4, count_item)
+                    
+                    # Uyarı
+                    if s1 == s2:
+                        warning = "⚠️ Aynı sınıf!"
+                    else:
+                        warning = "Farklı sınıf"
+                    warning_item = QTableWidgetItem(warning)
+                    warning_item.setTextAlignment(Qt.AlignCenter)
+                    table2.setItem(row, 5, warning_item)
+                
+                table2.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+                table2.setAlternatingRowColors(True)
+                conflict_layout.addWidget(table2)
+            else:
+                conflict_layout.addWidget(QLabel("Yüksek çakışmalı ders çifti bulunamadı."))
+            
+            tab_widget.addTab(conflict_tab, f"⚠️ Yüksek Çakışma ({len(high_conflict_pairs)})")
+            
+            layout.addWidget(tab_widget)
+            
+            # Close button
+            close_btn = QPushButton("Kapat")
+            close_btn.setFixedHeight(35)
+            close_btn.clicked.connect(dialog.accept)
+            layout.addWidget(close_btn)
+            
+            dialog.exec()
+            
+        except Exception as e:
+            logger.error(f"Error analyzing parallel exams: {e}")
+            QMessageBox.critical(self, "Hata", f"Analiz hatası: {str(e)}")
+    
+    def update_all_course_durations(self, value):
+        """Update all course duration spinboxes when default duration changes"""
+        for spinbox in self.ders_duration_spinboxes.values():
+            spinbox.setValue(value)
     
     def create_schedule(self):
         """Create exam schedule"""
@@ -816,14 +1749,11 @@ class SinavOlusturView(QWidget):
             QMessageBox.warning(self, "Uyarı", "En az bir ders seçmelisiniz!")
             return
         
-        # Collect custom exam durations for each course
-        ders_sinavlari_suresi = {}
-        for ders_id in selected_ders_ids:
-            if ders_id in self.ders_duration_spinboxes:
-                course_duration = self.ders_duration_spinboxes[ders_id].value()
-                # Only include custom duration if it differs from global, so global applies by default
-                if course_duration != self.sinav_suresi.value():
-                    ders_sinavlari_suresi[ders_id] = course_duration
+        # Get custom durations for each course
+        ders_sureleri = {}
+        for ders_id, spinbox in self.ders_duration_spinboxes.items():
+            if ders_id in selected_ders_ids:
+                ders_sureleri[ders_id] = spinbox.value()
         
         # Format time strings
         ilk_sinav = f"{self.ilk_sinav_saat.value():02d}:{self.ilk_sinav_dakika.value():02d}"
@@ -840,14 +1770,13 @@ class SinavOlusturView(QWidget):
             'ara_suresi': self.ara_suresi.value(),
             'allowed_weekdays': allowed_weekdays,
             'selected_ders_ids': selected_ders_ids,
-            'ders_sinavlari_suresi': ders_sinavlari_suresi,
             'gunluk_ilk_sinav': ilk_sinav,
             'gunluk_son_sinav': son_sinav,
             'ogle_arasi_baslangic': ogle_baslangic,
             'ogle_arasi_bitis': ogle_bitis,
-            'class_per_day_limit': self.class_per_day_limit.value(),
-            'min_conflict_overlap': self.min_conflict_overlap.value(),
-            'no_parallel_exams': self.no_parallel_checkbox.isChecked(),
+            'no_parallel_exams': self.ayni_anda_sinav_checkbox.isChecked(),
+            'class_per_day_limit': self.gunluk_sinav_limiti.value(),
+            'ders_sinavlari_suresi': ders_sureleri,
         }
         
         # Show progress
@@ -863,21 +1792,6 @@ class SinavOlusturView(QWidget):
         self.planning_thread.finished.connect(self.on_planning_finished)
         self.planning_thread.error.connect(self.on_planning_error)
         self.planning_thread.start()
-
-    def on_global_duration_changed(self, new_value: int):
-        """When the global exam duration changes, update per-course durations that
-        were previously equal to the old global value (preserve explicit overrides)."""
-        try:
-            # If course widgets not yet built, nothing to update
-            if not hasattr(self, 'ders_duration_spinboxes'):
-                self._last_global_duration = new_value
-                return
-            for ders_id, sb in self.ders_duration_spinboxes.items():
-                if sb.value() == self._last_global_duration:
-                    sb.setValue(new_value)
-            self._last_global_duration = new_value
-        except Exception as e:
-            logger.error(f"Error syncing global duration: {e}")
     
     def on_planning_progress(self, percent, message):
         """Update planning progress"""
@@ -890,38 +1804,29 @@ class SinavOlusturView(QWidget):
         self.progress_label.setVisible(False)
         self.create_btn.setEnabled(True)
         
+        # Stop and cleanup thread
+        if hasattr(self, 'planning_thread') and self.planning_thread:
+            self.planning_thread.quit()
+            self.planning_thread.wait()
+            self.planning_thread = None
+        
         schedule = result.get('schedule', [])
         
-        if schedule:
-            # Show partial or complete schedule
-            self.current_schedule = schedule
-            self.display_schedule(schedule)
-        
-        # Count unique exams (ders + datetime) to avoid overcounting per-classroom rows
-        unique_exam_keys = set()
-        for s in schedule:
-            ts = s['tarih_saat']
-            key_dt = ts if not isinstance(ts, str) else datetime.fromisoformat(ts)
-            unique_exam_keys.add((s.get('ders_id'), key_dt))
-        unique_exam_count = len(unique_exam_keys)
-
-        if result.get('success'):
-            QMessageBox.information(
-                self,
-                "Başarılı",
-                f"✅ Sınav programı başarıyla oluşturuldu!\n\n"
-                f"Toplam {unique_exam_count} sınav planlandı."
-            )
+        if schedule and result.get('success'):
+            # Show result dialog
+            params = {
+                'bolum_id': self.bolum_id,
+                'sinav_tipi': self.sinav_tipi_combo.currentText()
+            }
+            dialog = ProgramResultDialog(schedule, params, self)
+            dialog.exec()
+            
+            # Refresh programs list
+            self.load_existing_programs()
         else:
-            # Show warning with details and partial schedule
-            unassigned = result.get('unassigned_courses', [])
+            # Show error
             message = result.get('message', 'Program oluşturulamadı!')
-            
-            if schedule:
-                message += f"\n\n✅ {unique_exam_count} sınav yerleştirildi."
-                message += f"\n❌ {len(unassigned)} ders yerleştirilemedi."
-            
-            QMessageBox.warning(self, "Kısmi Program Oluşturuldu", message)
+            QMessageBox.warning(self, "Hata", message)
     
     def on_planning_error(self, error_msg):
         """Handle planning error"""
@@ -929,226 +1834,10 @@ class SinavOlusturView(QWidget):
         self.progress_label.setVisible(False)
         self.create_btn.setEnabled(True)
         
+        # Stop and cleanup thread
+        if hasattr(self, 'planning_thread') and self.planning_thread:
+            self.planning_thread.quit()
+            self.planning_thread.wait()
+            self.planning_thread = None
+        
         QMessageBox.critical(self, "Hata", f"Program oluşturulurken hata oluştu:\n{error_msg}")
-    
-    def display_schedule(self, schedule):
-        """Display created schedule"""
-        self.results_group.setVisible(True)
-        self.results_table.setRowCount(0)
-        
-        for row, sinav in enumerate(schedule):
-            self.results_table.insertRow(row)
-            
-            tarih = datetime.fromisoformat(sinav['tarih_saat']) if isinstance(sinav['tarih_saat'], str) else sinav['tarih_saat']
-            tarih_str = tarih.strftime("%d.%m.%Y %H:%M")
-            
-            self.results_table.setItem(row, 0, QTableWidgetItem(tarih_str))
-            self.results_table.setItem(row, 1, QTableWidgetItem(sinav.get('ders_kodu', '')))
-            self.results_table.setItem(row, 2, QTableWidgetItem(sinav.get('ders_adi', '')))
-            self.results_table.setItem(row, 3, QTableWidgetItem(sinav.get('ogretim_elemani', '')))
-            # Show derslik_adi if available, otherwise derslik_kodu
-            derslik_display = sinav.get('derslik_adi', sinav.get('derslik_kodu', ''))
-            self.results_table.setItem(row, 4, QTableWidgetItem(derslik_display))
-            
-            ogrenci_item = QTableWidgetItem(str(sinav.get('ogrenci_sayisi', 0)))
-            ogrenci_item.setTextAlignment(Qt.AlignCenter)
-            self.results_table.setItem(row, 5, ogrenci_item)
-    
-    def save_schedule(self):
-        """Save schedule to database"""
-        if not hasattr(self, 'current_schedule') or not self.current_schedule:
-            QMessageBox.warning(self, "Uyarı", "Kaydedilecek program bulunamadı!")
-            return
-        
-        reply = QMessageBox.question(
-            self,
-            "Programı Kaydet",
-            f"{len(self.current_schedule)} sınavı veritabanına kaydetmek istediğinizden emin misiniz?",
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.Yes
-        )
-        
-        if reply == QMessageBox.Yes:
-            try:
-                result = self.sinav_controller.save_exam_schedule(self.current_schedule)
-                
-                if result['success']:
-                    QMessageBox.information(self, "Başarılı", result['message'])
-                    self.current_schedule = []
-                    self.results_group.setVisible(False)
-                else:
-                    QMessageBox.warning(self, "Hata", result['message'])
-                    
-            except Exception as e:
-                logger.error(f"Error saving schedule: {e}")
-                QMessageBox.critical(self, "Hata", f"Program kaydedilirken hata oluştu:\n{str(e)}")
-    
-    def export_to_excel(self):
-        """Export schedule to Excel file with professional formatting (like the example)"""
-        if not hasattr(self, 'current_schedule') or not self.current_schedule:
-            QMessageBox.warning(self, "Uyarı", "Aktarılacak program bulunamadı!")
-            return
-        
-        from openpyxl import Workbook
-        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-        from collections import defaultdict
-        
-        # Ask for save location
-        default_name = f"sinav_programi_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
-        file_path, _ = QFileDialog.getSaveFileName(
-            self,
-            "Excel Dosyası Kaydet",
-            default_name,
-            "Excel Files (*.xlsx)"
-        )
-        
-        if not file_path:
-            return
-        
-        try:
-            # Group schedule by date and time
-            schedule_by_datetime = defaultdict(list)
-            for sinav in self.current_schedule:
-                tarih = datetime.fromisoformat(sinav['tarih_saat']) if isinstance(sinav['tarih_saat'], str) else sinav['tarih_saat']
-                datetime_key = (tarih.date(), tarih.time())
-                schedule_by_datetime[datetime_key].append(sinav)
-            
-            # Sort by datetime
-            sorted_datetimes = sorted(schedule_by_datetime.keys())
-            
-            # Create workbook
-            wb = Workbook()
-            ws = wb.active
-            ws.title = "Sınav Programı"
-            
-            # Get bolum name for title
-            bolum_adi = "BİLGİSAYAR MÜHENDİSLİĞİ BÖLÜMÜ"  # You can make this dynamic
-            sinav_tipi = self.current_schedule[0].get('sinav_tipi', 'SINAV')
-            
-            # Title row - merged cells with orange background
-            ws.merge_cells('A1:E1')
-            title_cell = ws['A1']
-            title_cell.value = f"{bolum_adi} {sinav_tipi.upper()} SINAV PROGRAMI"
-            title_cell.font = Font(size=14, bold=True, color="FFFFFF")
-            title_cell.fill = PatternFill(start_color="E67E22", end_color="E67E22", fill_type="solid")
-            title_cell.alignment = Alignment(horizontal='center', vertical='center')
-            ws.row_dimensions[1].height = 25
-            
-            # Header row
-            headers = ['Tarih', 'Sınav Saati', 'Ders Adı', 'Öğretim Elemanı', 'Derslik']
-            ws.append(headers)
-            
-            # Style header row
-            header_fill = PatternFill(start_color="E67E22", end_color="E67E22", fill_type="solid")
-            header_font = Font(bold=True, color="FFFFFF", size=11)
-            
-            for cell in ws[2]:
-                cell.fill = header_fill
-                cell.font = header_font
-                cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
-            
-            ws.row_dimensions[2].height = 20
-            
-            # Border style
-            thin_border = Border(
-                left=Side(style='thin'),
-                right=Side(style='thin'),
-                top=Side(style='thin'),
-                bottom=Side(style='thin')
-            )
-            
-            # Data rows
-            current_row = 3
-            date_merge_start = {}  # Track where each date starts for merging
-            
-            for datetime_key in sorted_datetimes:
-                date_obj, time_obj = datetime_key
-                exams_at_this_time = schedule_by_datetime[datetime_key]
-                
-                # Group exams by course (multiple classrooms for same course)
-                course_groups = defaultdict(list)
-                for exam in exams_at_this_time:
-                    course_key = (exam['ders_id'], exam['ders_kodu'], exam['ders_adi'])
-                    course_groups[course_key].append(exam)
-                
-                date_str = date_obj.strftime('%d.%m.%Y')
-                time_str = time_obj.strftime('%H.%M')
-                
-                # Track start row for this date
-                if date_str not in date_merge_start:
-                    date_merge_start[date_str] = current_row
-                
-                # Add each course
-                for (ders_id, ders_kodu, ders_adi), course_exams in course_groups.items():
-                    # Combine all classroom NAMES (not codes) for this course
-                    derslikler = '-'.join([exam.get('derslik_adi', exam.get('derslik_kodu', '')) for exam in course_exams])
-                    
-                    # Get instructor from exam data
-                    ogretim_elemani = course_exams[0].get('ogretim_elemani', '')
-                    
-                    # Use ders_adi as display name
-                    ders_display = ders_adi
-                    
-                    ws.append([date_str, time_str, ders_display, ogretim_elemani, derslikler])
-                    
-                    # Style data cells
-                    for col in range(1, 6):
-                        cell = ws.cell(row=current_row, column=col)
-                        cell.border = thin_border
-                        cell.alignment = Alignment(horizontal='center' if col in [1, 2, 5] else 'left', 
-                                                  vertical='center',
-                                                  wrap_text=True)
-                    
-                    current_row += 1
-            
-            # Merge date cells vertically for same dates
-            for date_str, start_row in date_merge_start.items():
-                # Find end row for this date
-                end_row = start_row
-                for row in range(start_row, current_row):
-                    if ws.cell(row=row, column=1).value == date_str:
-                        end_row = row
-                
-                # Merge if multiple rows
-                if end_row > start_row:
-                    ws.merge_cells(f'A{start_row}:A{end_row}')
-                    merged_cell = ws.cell(row=start_row, column=1)
-                    merged_cell.alignment = Alignment(horizontal='center', vertical='center')
-                    merged_cell.fill = PatternFill(start_color="F0F0F0", end_color="F0F0F0", fill_type="solid")
-                    merged_cell.font = Font(bold=True)
-            
-            # Set column widths
-            ws.column_dimensions['A'].width = 12  # Tarih
-            ws.column_dimensions['B'].width = 12  # Sınav Saati
-            ws.column_dimensions['C'].width = 40  # Ders Adı
-            ws.column_dimensions['D'].width = 25  # Öğretim Elemanı
-            ws.column_dimensions['E'].width = 20  # Derslik
-            
-            # Add left border marker (colored bar like in example)
-            for row in range(3, current_row):
-                first_cell = ws.cell(row=row, column=1)
-                # Add thick left border with color
-                first_cell.border = Border(
-                    left=Side(style='thick', color="3498DB"),
-                    right=Side(style='thin'),
-                    top=Side(style='thin'),
-                    bottom=Side(style='thin')
-                )
-            
-            # Save workbook
-            wb.save(file_path)
-            
-            total_courses = len(set((s['ders_id'], s['tarih_saat']) for s in self.current_schedule))
-            
-            QMessageBox.information(
-                self,
-                "Başarılı",
-                f"✅ Sınav programı Excel'e aktarıldı!\n\n"
-                f"📊 {total_courses} sınav\n"
-                f"📅 {len(date_merge_start)} gün\n\n"
-                f"Dosya: {file_path}"
-            )
-            
-        except Exception as e:
-            logger.error(f"Error exporting to Excel: {e}", exc_info=True)
-            QMessageBox.critical(self, "Hata", f"Excel'e aktarırken hata oluştu:\n{str(e)}")

@@ -4,14 +4,15 @@ Login ekranında gösterilecek duyuruları yönetme
 """
 
 import logging
-from datetime import datetime
+
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QFrame, QTableWidget, QTableWidgetItem, QHeaderView,
     QTextEdit, QCheckBox, QMessageBox, QDialog, QFormLayout
 )
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont
+
 from models.database import db
 
 logger = logging.getLogger(__name__)
@@ -195,7 +196,7 @@ class DuyuruYonetimiView(QWidget):
         header.setSectionResizeMode(1, QHeaderView.ResizeToContents)  # Durum
         header.setSectionResizeMode(2, QHeaderView.ResizeToContents)  # Tarih
         header.setSectionResizeMode(3, QHeaderView.Fixed)  # İşlemler
-        self.table.setColumnWidth(3, 200)
+        self.table.setColumnWidth(3, 250)
         
         layout.addWidget(self.table)
     
@@ -220,6 +221,7 @@ class DuyuruYonetimiView(QWidget):
             
             for row_idx, row in enumerate(results):
                 self.table.insertRow(row_idx)
+                self.table.setRowHeight(row_idx, 50)  # Butonların tam görünmesi için yeterli yükseklik
                 
                 # Metin (truncated)
                 metin = row['metin']
@@ -249,12 +251,12 @@ class DuyuruYonetimiView(QWidget):
                 
                 edit_btn = QPushButton("✏️ Düzenle")
                 edit_btn.setFixedHeight(32)
-                edit_btn.clicked.connect(lambda checked, r=row: self._edit_duyuru(r))
+                edit_btn.clicked.connect(lambda checked=False, r=row: self._edit_duyuru(r))
                 
                 delete_btn = QPushButton("🗑️ Sil")
                 delete_btn.setFixedHeight(32)
                 delete_btn.setProperty("class", "dangerBtn")
-                delete_btn.clicked.connect(lambda checked, did=row['duyuru_id']: self._delete_duyuru(did))
+                delete_btn.clicked.connect(lambda checked=False, did=row['duyuru_id']: self._delete_duyuru(did))
                 
                 actions_layout.addWidget(edit_btn)
                 actions_layout.addWidget(delete_btn)

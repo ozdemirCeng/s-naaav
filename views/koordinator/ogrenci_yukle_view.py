@@ -4,18 +4,19 @@ Professional interface for uploading and managing students from Excel
 """
 
 import logging
+
+from PySide6.QtCore import Qt, QThread, Signal
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QTableWidget, QTableWidgetItem, QHeaderView, QFrame,
     QFileDialog, QMessageBox, QGroupBox, QLineEdit, QSplitter,
-    QSpinBox, QFormLayout, QDialog, QDialogButtonBox, QScrollArea
+    QSpinBox, QFormLayout, QDialog, QDialogButtonBox
 )
-from PySide6.QtCore import Qt, QThread, Signal
-from PySide6.QtGui import QFont
 
+from controllers.ogrenci_controller import OgrenciController
 from models.database import db
 from models.ogrenci_model import OgrenciModel
-from controllers.ogrenci_controller import OgrenciController
 from utils.excel_parser import ExcelParser
 
 logger = logging.getLogger(__name__)
@@ -44,6 +45,7 @@ class OgrenciYukleView(QWidget):
     
     def __init__(self, user_data, parent=None):
         super().__init__(parent)
+        self.search_input = None
         self.user_data = user_data
         self.bolum_id = user_data.get('bolum_id', 1)
         

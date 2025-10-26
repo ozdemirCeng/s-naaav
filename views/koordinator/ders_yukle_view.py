@@ -4,20 +4,20 @@ Professional interface for uploading and managing courses from Excel
 """
 
 import logging
-from pathlib import Path
+
+from PySide6.QtCore import Qt, QThread, Signal
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QTableWidget, QTableWidgetItem, QHeaderView, QFrame,
-    QFileDialog, QMessageBox, QProgressBar, QGroupBox, QSplitter,
-    QScrollArea, QComboBox
+    QFileDialog, QMessageBox, QGroupBox, QSplitter,
+    QComboBox
 )
-from PySide6.QtCore import Qt, QThread, Signal
-from PySide6.QtGui import QFont
 
+from controllers.ders_controller import DersController
 from models.database import db
 from models.ders_model import DersModel
 from models.ogrenci_model import OgrenciModel
-from controllers.ders_controller import DersController
 from utils.excel_parser import ExcelParser
 
 logger = logging.getLogger(__name__)

@@ -31,15 +31,16 @@ class SinavModel:
         query = """
             SELECT s.sinav_id, s.program_id, s.ders_id, s.tarih, 
                    s.baslangic_saati, s.bitis_saati, s.ogrenci_sayisi,
-                   d.ders_kodu, d.ders_adi,
+                   d.ders_kodu, d.ders_adi, d.ogretim_elemani,
                    STRING_AGG(dr.derslik_kodu, ', ') as derslik_kodu,
+                   STRING_AGG(dr.derslik_adi, ', ') as derslik_adi,
                    (s.tarih || ' ' || s.baslangic_saati) as tarih_saat
             FROM sinavlar s
             JOIN dersler d ON s.ders_id = d.ders_id
             LEFT JOIN sinav_derslikleri sd ON s.sinav_id = sd.sinav_id
             LEFT JOIN derslikler dr ON sd.derslik_id = dr.derslik_id
             WHERE s.program_id = %s
-            GROUP BY s.sinav_id, d.ders_kodu, d.ders_adi
+            GROUP BY s.sinav_id, d.ders_kodu, d.ders_adi, d.ogretim_elemani
             ORDER BY s.tarih, s.baslangic_saati
         """
         return self.db.execute_query(query, (program_id,))

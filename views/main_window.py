@@ -22,8 +22,7 @@ from views.koordinator.derslik_view import DerslikView
 from views.koordinator.ders_yukle_view import DersYukleView
 from views.koordinator.ogrenci_yukle_view import OgrenciYukleView
 from views.koordinator.sinav_olustur_view import SinavOlusturView
-from views.koordinator.oturma_plani_view import OturmaPaniView
-from views.koordinator.raporlar_view import RaporlarView
+from views.koordinator.oturma_plani_view import OturmaPlaniView
 from views.koordinator.ayarlar_view import AyarlarView
 from views.admin.kullanici_yonetimi_view import KullaniciYonetimiView
 from views.admin.bolum_yonetimi_view import BolumYonetimiView
@@ -482,6 +481,9 @@ class MainWindow(QMainWindow):
         user_role = self.user_data.get('role', 'Bölüm Koordinatörü')
         is_impersonating = getattr(self, 'is_impersonating', False)
         
+        # Check if classroom exists for current user/bolum
+        has_classrooms = self._check_classrooms_exist()
+        
         if user_role == 'Admin' and not is_impersonating and self.needs_bolum_selection:
             # Admin bölüm seçmemiş - Yönetim paneli
             menu_items = [
@@ -490,7 +492,6 @@ class MainWindow(QMainWindow):
                 ('🏢', 'Bölüm Yönetimi', 'bolumler'),
                 ('📢', 'Duyuru Yönetimi', 'admin_ayarlar'),
                 ('👤', 'Profil Ayarları', 'ayarlar'),
-                ('', '───────────', 'divider'),
                 ('🎓', 'Bölüm Seçimi', 'bolum_secim')
             ]
         elif user_role == 'Admin' and is_impersonating:
@@ -504,21 +505,28 @@ class MainWindow(QMainWindow):
                 ('👥', 'Öğrenci Listesi', 'ogrenciler'),
                 ('📅', 'Sınav Programı', 'sinavlar'),
                 ('📝', 'Oturma Planı', 'oturma'),
-                ('📊', 'Raporlar', 'raporlar'),
                 ('⚙', 'Ayarlar', 'ayarlar')
             ]
         else:
             # Bölüm Koordinatörü: Operasyonel işlemler
-            menu_items = [
-                ('🏠', 'Ana Sayfa', 'dashboard'),
-                ('🏛', 'Derslikler', 'derslikler'),
-                ('📚', 'Ders Listesi', 'dersler'),
-                ('👥', 'Öğrenci Listesi', 'ogrenciler'),
-                ('📅', 'Sınav Programı', 'sinavlar'),
-                ('📝', 'Oturma Planı', 'oturma'),
-                ('📊', 'Raporlar', 'raporlar'),
-                ('⚙', 'Ayarlar', 'ayarlar')
-            ]
+            if not has_classrooms:
+                # Derslik yoksa sadece derslik yönetimini göster
+                menu_items = [
+                    ('🏠', 'Ana Sayfa', 'dashboard'),
+                    ('🏛', 'Derslikler', 'derslikler'),
+                    ('⚙', 'Ayarlar', 'ayarlar')
+                ]
+            else:
+                # Tam menü
+                menu_items = [
+                    ('🏠', 'Ana Sayfa', 'dashboard'),
+                    ('🏛', 'Derslikler', 'derslikler'),
+                    ('📚', 'Ders Listesi', 'dersler'),
+                    ('👥', 'Öğrenci Listesi', 'ogrenciler'),
+                    ('📅', 'Sınav Programı', 'sinavlar'),
+                    ('📝', 'Oturma Planı', 'oturma'),
+                    ('⚙', 'Ayarlar', 'ayarlar')
+                ]
 
         self.menu_buttons = []
         for icon, text, menu_id in menu_items:
@@ -661,8 +669,7 @@ class MainWindow(QMainWindow):
             actions = [
                 ("Derslik Ekle", "Yeni derslik tanımla", "🏛", "emerald", "derslikler"),
                 ("Excel Yükle", "Ders/Öğrenci listesi", "📄", "blue", "dersler"),
-                ("Program Oluştur", "Sınav takvimi yap", "📅", "indigo", "sinavlar"),
-                ("Rapor Al", "PDF/Excel çıktı", "📊", "orange", "raporlar")
+                ("Program Oluştur", "Sınav takvimi yap", "📅", "indigo", "sinavlar")
             ]
 
         for label, desc, icon, color, page_id in actions:
@@ -1097,9 +1104,7 @@ class MainWindow(QMainWindow):
             elif page_id == 'sinavlar':
                 return SinavOlusturView(eff_user)
             elif page_id == 'oturma':
-                return OturmaPaniView(eff_user)
-            elif page_id == 'raporlar':
-                return RaporlarView(eff_user)
+                return OturmaPlaniView(eff_user)
             elif page_id == 'ayarlar':
                 # Coordinator or impersonated user settings
                 return AyarlarView(eff_user)
@@ -1110,6 +1115,28 @@ class MainWindow(QMainWindow):
         except Exception as e:
             logger.error(f"Error creating page {page_id}: {e}", exc_info=True)
             raise
+    
+    def _check_classrooms_exist(self) -> bool:
+        """Check if classrooms exist for current user/bolum"""
+        try:
+            from models.derslik_model import DerslikModel
+            
+            # Get effective user (handle impersonation)
+            if getattr(self, 'is_impersonating', False) and hasattr(self, 'impersonated_user'):
+                eff_bolum_id = self.impersonated_user.get('bolum_id')
+            else:
+                eff_bolum_id = self.user_data.get('bolum_id')
+            
+            if not eff_bolum_id:
+                return True  # Admin without bolum - allow all
+            
+            derslik_model = DerslikModel(db)
+            derslikler = derslik_model.get_derslikler_by_bolum(eff_bolum_id)
+            return len(derslikler) > 0
+            
+        except Exception as e:
+            logger.error(f"Error checking classrooms: {e}", exc_info=True)
+            return True  # On error, don't block
     
     def create_bolum_yonetimi_page(self):
         """Create department management page"""
