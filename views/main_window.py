@@ -482,7 +482,7 @@ class MainWindow(QMainWindow):
         is_impersonating = getattr(self, 'is_impersonating', False)
         
         # Check if classroom exists for current user/bolum
-        has_classrooms = self._check_classrooms_exist()
+        has_classrooms = self._check_classrooms_exist
         
         if user_role == 'Admin' and not is_impersonating and self.needs_bolum_selection:
             # Admin bölüm seçmemiş - Yönetim paneli
@@ -1116,6 +1116,7 @@ class MainWindow(QMainWindow):
             logger.error(f"Error creating page {page_id}: {e}", exc_info=True)
             raise
     
+    @property
     def _check_classrooms_exist(self) -> bool:
         """Check if classrooms exist for current user/bolum"""
         try:

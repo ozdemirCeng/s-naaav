@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class DerslikModel:
     """Derslik veri erişim katmanı"""
 
-    def __init__(self, db: DatabaseManager):
+    def __init__(self, db: DatabaseManager) -> None:
         self.db = db
 
     def get_derslikler_by_bolum(self, bolum_id: int) -> List[Dict]:
