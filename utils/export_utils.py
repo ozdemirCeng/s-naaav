@@ -13,7 +13,7 @@ from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, A3, landscape
 from reportlab.lib.units import cm
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -454,7 +454,15 @@ class ExportUtils:
                 logger.warning("No seating data or classrooms to export")
                 return False
             
-            doc = SimpleDocTemplate(file_path, pagesize=landscape(A3))
+            # Use A4 landscape for better printing
+            doc = SimpleDocTemplate(
+                file_path, 
+                pagesize=landscape(A4),
+                topMargin=0.5*cm,
+                bottomMargin=0.5*cm,
+                leftMargin=0.5*cm,
+                rightMargin=0.5*cm
+            )
             elements = []
             
             # Register Turkish font
@@ -471,34 +479,21 @@ class ExportUtils:
             if not font_registered:
                 font_name = 'Helvetica'
             
-            # Styles
+            # Minimal header - one line
             styles = getSampleStyleSheet()
-            title_style = ParagraphStyle(
-                'CustomTitle',
-                parent=styles['Heading1'],
-                fontSize=16,
-                textColor=colors.HexColor('#1f2937'),
-                spaceAfter=20,
-                alignment=TA_CENTER,
-                fontName=font_name
-            )
             
-            # Title
-            elements.append(Paragraph(title, title_style))
-            elements.append(Spacer(1, 0.5*cm))
-            
-            # Exam info
             if exam_info:
-                info_text = f"<b>Ders:</b> {exam_info.get('ders_kodu', '')} - {exam_info.get('ders_adi', '')}<br/>"
-                info_text += f"<b>Tarih/Saat:</b> {exam_info.get('tarih_saat', '')}"
-                info_style = ParagraphStyle(
-                    'Info',
+                header_text = f"<b>{exam_info.get('ders_kodu', '')} - {exam_info.get('ders_adi', '')}</b> | {exam_info.get('tarih_saat', '')}"
+                header_style = ParagraphStyle(
+                    'CompactHeader',
                     parent=styles['Normal'],
-                    fontSize=11,
-                    fontName=font_name
+                    fontSize=10,
+                    fontName=font_name,
+                    spaceAfter=4,
+                    alignment=TA_CENTER
                 )
-                elements.append(Paragraph(info_text, info_style))
-                elements.append(Spacer(1, 0.5*cm))
+                elements.append(Paragraph(header_text, header_style))
+                elements.append(Spacer(1, 0.2*cm))
             
             # Group students by classroom
             students_by_classroom = defaultdict(list)
@@ -517,27 +512,20 @@ class ExportUtils:
                 derslik_adi = classroom.get('derslik_adi', classroom.get('derslik_kodu'))
                 rows = classroom.get('satir_sayisi', 10)
                 cols = classroom.get('sutun_sayisi', 6)
+                sira_yapisi = classroom.get('sira_yapisi', 3)  # 2'li veya 3'lü grup
                 
                 students = students_by_classroom.get(derslik_id, [])
                 if not students:
                     continue
                 
-                # Classroom header
+                # Classroom title - inline
                 classroom_title = Paragraph(
-                    f"<b>{derslik_adi}</b> (Kapasite: {classroom['kapasite']})",
-                    ParagraphStyle('ClassroomTitle', parent=styles['Heading2'], fontName=font_name)
+                    f"<b>{derslik_adi}</b> - {len(students)} öğrenci",
+                    ParagraphStyle('ClassroomTitle', parent=styles['Normal'], 
+                                   fontName=font_name, fontSize=10, spaceAfter=2)
                 )
                 elements.append(classroom_title)
-                elements.append(Spacer(1, 0.3*cm))
-                
-                # Board label
-                board_label = Paragraph(
-                    "📺 TAHTA",
-                    ParagraphStyle('BoardLabel', parent=styles['Normal'], fontName=font_name, 
-                                   fontSize=12, alignment=TA_CENTER, textColor=colors.HexColor('#92400e'))
-                )
-                elements.append(board_label)
-                elements.append(Spacer(1, 0.2*cm))
+                elements.append(Spacer(1, 0.1*cm))
                 
                 # Create seat grid
                 seat_lookup = {}
@@ -545,99 +533,152 @@ class ExportUtils:
                     key = (student['sira'], student['sutun'])
                     seat_lookup[key] = student
                 
-                # Build table data for seating grid with window and door
+                # Build table data for seating grid with CORRIDORS, window, and door
                 grid_data = []
-                # Header row: Window label + column headers + Door label
-                header_row = ['🪟'] + [f"S{c}" for c in range(1, cols + 1)] + ['']
-                grid_data.append(header_row)
+                
+                # Calculate corridor positions based on sira_yapisi
+                corridor_positions = []
+                for c in range(1, cols):
+                    if c % sira_yapisi == 0:
+                        corridor_positions.append(c)
+                
+                # Simple header row with TAHTA spanning all
+                num_visual_cols = cols + len(corridor_positions) + 2  # seats + corridors + window + door
+                
+                # Board row (spanning all columns)
+                board_row = ['TAHTA →'] * num_visual_cols
+                grid_data.append(board_row)
                 
                 # Only show used rows
                 max_used_row = max([s['sira'] for s in students]) if students else rows
                 display_rows = min(max_used_row + 1, rows)
                 
                 for row in range(1, display_rows + 1):
-                    row_data = ['PENCERE' if row == 1 else '│']  # Window on left
+                    row_data = ['🪟']  # Window (first column)
+                    
                     for col in range(1, cols + 1):
                         key = (row, col)
                         if key in seat_lookup:
                             student = seat_lookup[key]
-                            cell_text = f"{student['ogrenci_no']}\n{student['ad_soyad'][:12]}"
+                            # Longer names, better formatting
+                            ad_soyad = student['ad_soyad']
+                            # Split name smartly if too long
+                            if len(ad_soyad) > 15:
+                                parts = ad_soyad.split()
+                                if len(parts) >= 2:
+                                    cell_text = f"{student['ogrenci_no']}\n{parts[0][:8]}\n{parts[-1][:8]}"
+                                else:
+                                    cell_text = f"{student['ogrenci_no']}\n{ad_soyad[:15]}"
+                            else:
+                                cell_text = f"{student['ogrenci_no']}\n{ad_soyad}"
                             row_data.append(cell_text)
                         else:
-                            row_data.append('')
-                    # Door on right (only for back rows)
-                    if row >= display_rows - 3:
-                        row_data.append('KAPI' if row == display_rows - 2 else '│')
-                    else:
-                        row_data.append('')
+                            row_data.append('--')  # Empty seat marker
+                        
+                        # Add corridor separator
+                        if col in corridor_positions:
+                            row_data.append('  ')  # Empty corridor space
+                    
+                    # Door (last column)
+                    row_data.append('🚪' if row == display_rows // 2 else '')
                     grid_data.append(row_data)
                 
-                # Create table
-                cell_width = 2.3 * cm
-                cell_height = 1.2 * cm
-                col_widths = [1.2 * cm] + [cell_width] * cols + [1.2 * cm]  # +width for window and door
-                row_heights = [0.6 * cm] + [cell_height] * display_rows
+                # Calculate for A4 landscape: better resolution
+                available_width = 28 * cm
+                available_height = 18 * cm
+                
+                # Calculate sizes
+                num_corridors = len(corridor_positions)
+                total_visual_cols = cols + num_corridors + 2
+                
+                # Larger cells for better readability
+                cell_width = min(2.5*cm, (available_width - 1.6*cm - num_corridors*0.5*cm) / cols)
+                cell_height = min(1.5*cm, (available_height - 1*cm) / (display_rows + 1))
+                corridor_width = 0.5 * cm  # Wider corridor
+                
+                # Larger font for better resolution
+                font_size = 8 if display_rows <= 8 else 7 if display_rows <= 12 else 6.5
+                
+                # Build column widths - optimized
+                col_widths = [0.7*cm]  # Window (narrow)
+                for c in range(1, cols + 1):
+                    col_widths.append(cell_width)
+                    if c in corridor_positions:
+                        col_widths.append(corridor_width)
+                col_widths.append(0.7*cm)  # Door (narrow)
+                
+                # Taller rows for better readability
+                row_heights = [0.8*cm] + [cell_height] * display_rows
                 
                 grid_table = Table(grid_data, colWidths=col_widths, rowHeights=row_heights)
                 
-                # Table style
+                # High-quality table style
                 table_style = TableStyle([
-                    ('BACKGROUND', (0, 0), (0, 0), colors.HexColor('#dbeafe')),  # Window icon
-                    ('BACKGROUND', (1, 0), (-2, 0), colors.HexColor('#fef3c7')),  # Column headers (board)
-                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#1e40af')),
-                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                    ('FONTNAME', (0, 0), (-1, -1), font_name),
-                    ('FONTSIZE', (0, 0), (-1, -1), 8),
-                    ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+                    # Board row (first row) - span entire width
+                    ('SPAN', (0, 0), (-1, 0)),
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#fef3c7')),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#92400e')),
+                    ('FONTSIZE', (0, 0), (-1, 0), 11),
+                    ('FONTNAME', (0, 0), (-1, 0), font_name),
+                    ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+                    
+                    # All cells - better spacing
+                    ('ALIGN', (0, 1), (-1, -1), 'CENTER'),
+                    ('VALIGN', (0, 1), (-1, -1), 'MIDDLE'),
+                    ('FONTNAME', (0, 1), (-1, -1), font_name),
+                    ('FONTSIZE', (0, 1), (-1, -1), font_size),
+                    ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
                     ('BOX', (0, 0), (-1, -1), 2, colors.black),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 2),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+                    ('TOPPADDING', (0, 0), (-1, -1), 3),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+                    
+                    # Window column (emoji)
+                    ('FONTSIZE', (0, 1), (0, -1), 14),
+                    
+                    # Door column (emoji)
+                    ('FONTSIZE', (-1, 1), (-1, -1), 14),
                 ])
                 
-                # Color window column (left)
-                table_style.add('BACKGROUND', (0, 1), (0, -1), colors.HexColor('#dbeafe'))
-                table_style.add('TEXTCOLOR', (0, 1), (0, -1), colors.HexColor('#1e40af'))
-                table_style.add('FONTSIZE', (0, 1), (0, -1), 7)
-                
-                # Color occupied seats
+                # Color occupied seats (light blue) and empty seats (white)
                 for row_idx in range(1, len(grid_data)):
-                    for col_idx in range(1, len(grid_data[row_idx]) - 1):  # Skip door column
-                        if grid_data[row_idx][col_idx] and 'PENCERE' not in grid_data[row_idx][col_idx] and '│' not in grid_data[row_idx][col_idx]:
+                    for col_idx in range(1, len(grid_data[row_idx]) - 1):  # Skip window and door
+                        cell_value = grid_data[row_idx][col_idx]
+                        
+                        # Skip corridor cells
+                        if cell_value == '  ':
+                            continue
+                        
+                        # Occupied seats
+                        if cell_value and cell_value != '--' and '\n' in str(cell_value):
                             table_style.add('BACKGROUND', (col_idx, row_idx), (col_idx, row_idx), colors.HexColor('#dbeafe'))
+                        # Empty seats
+                        elif cell_value == '--':
+                            table_style.add('BACKGROUND', (col_idx, row_idx), (col_idx, row_idx), colors.HexColor('#f3f4f6'))
+                            table_style.add('TEXTCOLOR', (col_idx, row_idx), (col_idx, row_idx), colors.HexColor('#9ca3af'))
                 
-                # Color door column (right side, back rows)
-                for row_idx in range(1, len(grid_data)):
-                    if grid_data[row_idx][-1] and ('KAPI' in grid_data[row_idx][-1] or '│' in grid_data[row_idx][-1]):
-                        table_style.add('BACKGROUND', (-1, row_idx), (-1, row_idx), colors.HexColor('#fef3c7'))
-                        table_style.add('TEXTCOLOR', (-1, row_idx), (-1, row_idx), colors.HexColor('#92400e'))
-                        table_style.add('FONTSIZE', (-1, row_idx), (-1, row_idx), 7)
+                # Color corridor columns - distinct separator
+                corridor_col_indices = []
+                visual_col_idx = 1  # Start after window
+                for c in range(1, cols + 1):
+                    visual_col_idx += 1
+                    if c in corridor_positions:
+                        corridor_col_indices.append(visual_col_idx)
+                        visual_col_idx += 1
+                
+                # Corridor styling - light gray background
+                for corridor_col_idx in corridor_col_indices:
+                    for row_idx in range(1, len(grid_data)):
+                        table_style.add('BACKGROUND', (corridor_col_idx, row_idx), (corridor_col_idx, row_idx), colors.HexColor('#e5e7eb'))
+                        table_style.add('LINEAFTER', (corridor_col_idx-1, row_idx), (corridor_col_idx-1, row_idx), 2, colors.HexColor('#9ca3af'))  # Thicker line before corridor
                 
                 grid_table.setStyle(table_style)
                 elements.append(grid_table)
-                elements.append(Spacer(1, 0.5*cm))
                 
-                # Student list table
-                list_data = [['Öğrenci No', 'Ad Soyad', 'Sıra', 'Sütun']]
-                for student in sorted(students, key=lambda x: (x['sira'], x['sutun'])):
-                    list_data.append([
-                        str(student['ogrenci_no']),
-                        student['ad_soyad'],
-                        str(student['sira']),
-                        str(student['sutun'])
-                    ])
-                
-                list_table = Table(list_data, colWidths=[3*cm, 8*cm, 2*cm, 2*cm])
-                list_table.setStyle(TableStyle([
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#10b981')),
-                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                    ('FONTNAME', (0, 0), (-1, -1), font_name),
-                    ('FONTSIZE', (0, 0), (-1, -1), 9),
-                    ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-                    ('BOX', (0, 0), (-1, -1), 1, colors.black),
-                    ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f3f4f6')])
-                ]))
-                elements.append(list_table)
-                elements.append(Spacer(1, 1*cm))
+                # Add page break after each classroom (except last)
+                if classroom != classrooms[-1]:
+                    elements.append(PageBreak())
             
             # Build PDF
             doc.build(elements)
@@ -661,7 +702,15 @@ class ExportUtils:
                 logger.warning("No seating data to export")
                 return False
             
-            doc = SimpleDocTemplate(file_path, pagesize=A4)
+            # Use A4 with minimal margins for maximum space
+            doc = SimpleDocTemplate(
+                file_path, 
+                pagesize=A4,
+                topMargin=0.5*cm,
+                bottomMargin=0.5*cm,
+                leftMargin=0.5*cm,
+                rightMargin=0.5*cm
+            )
             elements = []
             
             # Register Turkish font
@@ -678,35 +727,22 @@ class ExportUtils:
             if not font_registered:
                 font_name = 'Helvetica'
             
-            # Styles
+            # MINIMAL header - everything in one line
             styles = getSampleStyleSheet()
-            title_style = ParagraphStyle(
-                'CustomTitle',
-                parent=styles['Heading1'],
-                fontSize=16,
-                textColor=colors.HexColor('#1f2937'),
-                spaceAfter=20,
-                alignment=TA_CENTER,
-                fontName=font_name
-            )
             
-            # Title
-            elements.append(Paragraph(title, title_style))
-            elements.append(Spacer(1, 0.5*cm))
-            
-            # Exam info
+            # Single line header with all info
             if exam_info:
-                info_text = f"<b>Ders:</b> {exam_info.get('ders_kodu', '')} - {exam_info.get('ders_adi', '')}<br/>"
-                info_text += f"<b>Tarih/Saat:</b> {exam_info.get('tarih_saat', '')}<br/>"
-                info_text += f"<b>Toplam Öğrenci:</b> {len(seating_data)}"
-                info_style = ParagraphStyle(
-                    'Info',
+                header_text = f"<b>{exam_info.get('ders_kodu', '')} - {exam_info.get('ders_adi', '')}</b> | {exam_info.get('tarih_saat', '')} | Toplam: {len(seating_data)} öğrenci"
+                header_style = ParagraphStyle(
+                    'CompactHeader',
                     parent=styles['Normal'],
-                    fontSize=11,
-                    fontName=font_name
+                    fontSize=9,
+                    fontName=font_name,
+                    spaceAfter=3,
+                    alignment=TA_CENTER
                 )
-                elements.append(Paragraph(info_text, info_style))
-                elements.append(Spacer(1, 0.5*cm))
+                elements.append(Paragraph(header_text, header_style))
+                elements.append(Spacer(1, 0.1*cm))
             
             # Group students by classroom
             students_by_classroom = defaultdict(list)
@@ -731,27 +767,53 @@ class ExportUtils:
                 # Sort by row and column
                 students.sort(key=lambda x: (x['sira'], x['sutun']))
                 
-                # Classroom header
-                classroom_title = Paragraph(
-                    f"<b>{derslik_adi}</b> ({len(students)} Öğrenci)",
-                    ParagraphStyle('ClassroomTitle', parent=styles['Heading2'], fontName=font_name)
-                )
-                elements.append(classroom_title)
-                elements.append(Spacer(1, 0.3*cm))
+                # Classroom header - inline with table, no extra space
+                # (Will be included as table title)
                 
-                # Create table data
-                table_data = [['No', 'Öğrenci No', 'Ad Soyad', 'Sıra', 'Sütun']]
+                # Create table data - classroom name ABOVE table, not in header
+                # Add classroom title as separate paragraph first
+                classroom_header = Paragraph(
+                    f"<b>{derslik_adi}</b> ({len(students)} öğrenci)",
+                    ParagraphStyle('RoomHeader', parent=styles['Normal'], 
+                                   fontName=font_name, fontSize=9, spaceAfter=2)
+                )
+                elements.append(classroom_header)
+                
+                # Now create simple table header
+                table_data = [['#', 'Öğrenci No', 'Ad Soyad', 'Sıra-Süt']]
+                
                 for idx, student in enumerate(students, 1):
                     table_data.append([
                         str(idx),
                         str(student['ogrenci_no']),
                         student['ad_soyad'],
-                        str(student['sira']),
-                        str(student['sutun'])
+                        f"{student['sira']}-{student['sutun']}"
                     ])
                 
-                # Create table
-                list_table = Table(table_data, colWidths=[1.5*cm, 3*cm, 9*cm, 2*cm, 2*cm])
+                # Calculate optimal font to fit EVERYTHING on one page
+                num_rows = len(table_data) - 1
+                available_height = 28 * cm  # Maximum with minimal margins
+                
+                # ULTRA AGGRESSIVE - must fit on page
+                if num_rows <= 20:
+                    font_size = 8
+                    row_padding = 2.5
+                elif num_rows <= 35:
+                    font_size = 7
+                    row_padding = 2
+                elif num_rows <= 50:
+                    font_size = 6.5
+                    row_padding = 1.5
+                elif num_rows <= 70:
+                    font_size = 6
+                    row_padding = 1
+                else:
+                    # Emergency: super tiny
+                    font_size = 5.5
+                    row_padding = 0.5
+                
+                # Optimized column widths
+                list_table = Table(table_data, colWidths=[1*cm, 2.8*cm, 10.5*cm, 1.7*cm])
                 list_table.setStyle(TableStyle([
                     ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#3b82f6')),
                     ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
@@ -759,14 +821,20 @@ class ExportUtils:
                     ('ALIGN', (0, 0), (0, -1), 'CENTER'),  # No column center
                     ('ALIGN', (3, 0), (4, -1), 'CENTER'),  # Sıra/Sütun center
                     ('FONTNAME', (0, 0), (-1, -1), font_name),
-                    ('FONTSIZE', (0, 0), (-1, -1), 9),
+                    ('FONTSIZE', (0, 0), (-1, -1), font_size),  # Dynamic font size
+                    ('FONTSIZE', (0, 0), (-1, 0), font_size + 1),  # Header slightly larger
                     ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
                     ('BOX', (0, 0), (-1, -1), 1, colors.black),
                     ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f3f4f6')]),
-                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ('TOPPADDING', (0, 1), (-1, -1), row_padding),  # Dynamic padding
+                    ('BOTTOMPADDING', (0, 1), (-1, -1), row_padding),
                 ]))
                 elements.append(list_table)
-                elements.append(Spacer(1, 1*cm))
+                
+                # Add page break after each classroom (except last)
+                if classroom != classrooms[-1]:
+                    elements.append(PageBreak())
             
             # Build PDF
             doc.build(elements)

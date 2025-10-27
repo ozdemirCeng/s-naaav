@@ -1120,6 +1120,7 @@ class MainWindow(QMainWindow):
     def _check_classrooms_exist(self) -> bool:
         """Check if classrooms exist for current user/bolum"""
         try:
+            from models.database import db
             from models.derslik_model import DerslikModel
             
             # Get effective user (handle impersonation)

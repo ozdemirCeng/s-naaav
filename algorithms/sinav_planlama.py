@@ -612,8 +612,17 @@ class SinavPlanlama:
         # Get course info from instance variable (set during plan_exam_schedule)
         course_info = getattr(self, '_current_course_info', {})
         
-        for i, ders_id1 in enumerate(course_ids):
-            for ders_id2 in course_ids[i+1:]:
+        # Check EVERY course against EVERY other course (no optimization)
+        for ders_id1 in course_ids:
+            for ders_id2 in course_ids:
+                # Skip comparing a course with itself
+                if ders_id1 == ders_id2:
+                    continue
+                
+                # Skip duplicate pairs (A,B) same as (B,A) - only count once
+                if ders_id1 > ders_id2:
+                    continue
+                
                 has_conflict = False
                 
                 # Rule 1: Check if courses share any students

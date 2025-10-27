@@ -317,19 +317,35 @@ class OgrenciYukleView(QWidget):
             self.save_ogrenciler()
     
     def on_excel_error(self, error_msg):
-        """Handle Excel loading error"""
-        QMessageBox.critical(self, "Hata", f"Excel dosyası yüklenirken hata oluştu:\n{error_msg}")
+        """Handle Excel loading error with detailed information"""
+        # Create detailed error dialog
+        error_dialog = QMessageBox(self)
+        error_dialog.setIcon(QMessageBox.Critical)
+        error_dialog.setWindowTitle("Excel Yükleme Hatası")
+        error_dialog.setText("Excel dosyası yüklenirken hata oluştu!")
+        
+        # Format detailed text for better readability
+        detailed_text = error_msg
+        if "Satır" in error_msg:
+            # Already has line numbers
+            detailed_text = error_msg.replace("Satır ", "\n• Satır ")
+        
+        error_dialog.setDetailedText(detailed_text)
+        error_dialog.setStandardButtons(QMessageBox.Ok)
+        error_dialog.exec()
     
     def save_ogrenciler(self):
-        """Save students to database"""
+        """Save students to database with detailed error reporting"""
         if not self.pending_ogrenciler:
             return
         
         try:
             success_count = 0
             error_count = 0
+            error_details = []
             
-            for ogrenci in self.pending_ogrenciler:
+            for idx, ogrenci in enumerate(self.pending_ogrenciler, 1):
+                excel_row = idx + 1  # +1 for header row in Excel
                 ogrenci['bolum_id'] = self.bolum_id
                 result = self.ogrenci_controller.create_ogrenci(ogrenci)
                 
@@ -337,19 +353,41 @@ class OgrenciYukleView(QWidget):
                     success_count += 1
                 else:
                     error_count += 1
-                    logger.warning(f"Failed to save student: {ogrenci['ogrenci_no']} - {result['message']}")
+                    # Track which row failed
+                    error_msg = f"Satır {excel_row} ({ogrenci.get('ogrenci_no', '?')} - {ogrenci.get('ad_soyad', '?')}): {result['message']}"
+                    error_details.append(error_msg)
+                    logger.warning(error_msg)
             
-            QMessageBox.information(
-                self,
-                "İşlem Tamamlandı",
-                f"✅ {success_count} öğrenci kaydedildi\n❌ {error_count} öğrenci kaydedilemedi"
-            )
+            # Show detailed results
+            if error_count > 0:
+                error_dialog = QMessageBox(self)
+                error_dialog.setIcon(QMessageBox.Warning)
+                error_dialog.setWindowTitle("Kaydetme Sonuçları")
+                error_dialog.setText(
+                    f"✅ {success_count} öğrenci kaydedildi\n"
+                    f"❌ {error_count} öğrenci kaydedilemedi"
+                )
+                
+                # Show first 20 errors in detail
+                detailed_text = "\n".join(error_details[:20])
+                if len(error_details) > 20:
+                    detailed_text += f"\n\n... ve {len(error_details) - 20} hata daha"
+                
+                error_dialog.setDetailedText(detailed_text)
+                error_dialog.setStandardButtons(QMessageBox.Ok)
+                error_dialog.exec()
+            else:
+                QMessageBox.information(
+                    self,
+                    "Başarılı",
+                    f"✅ {success_count} öğrenci başarıyla kaydedildi!"
+                )
             
             self.pending_ogrenciler = []
             self.load_existing_ogrenciler()
             
         except Exception as e:
-            logger.error(f"Error saving students: {e}")
+            logger.error(f"Error saving students: {e}", exc_info=True)
             QMessageBox.critical(self, "Hata", f"Öğrenciler kaydedilirken hata oluştu:\n{str(e)}")
     
     def update_stats(self, existing, pending):

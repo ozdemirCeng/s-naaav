@@ -39,6 +39,7 @@ class OturmaPlaniView(QWidget):
         # Current selection
         self.selected_sinav = None
         self.seating_data = {}  # {ogrenci_no: {derslik_id, sira, sutun}}
+        self.seating_data_sinav_id = None  # Track which exam the seating data belongs to
 
         self.init_ui()
         self.load_exams()
@@ -256,7 +257,7 @@ class OturmaPlaniView(QWidget):
                     }
                     QPushButton:hover { background: #d97706; }
                 """)
-                change_btn.clicked.connect(lambda checked, e=exam: self.change_classroom(e))
+                change_btn.clicked.connect(lambda checked=False, e=exam: self.change_classroom(e))
                 self.exams_table.setCellWidget(row, 4, change_btn)
 
                 # Store exam data
@@ -280,18 +281,72 @@ class OturmaPlaniView(QWidget):
             self.export_visual_btn.setEnabled(False)
             self.export_list_btn.setEnabled(False)
             self.clear_seating_plan()
+            logger.info("❌ No exam selected - all buttons disabled")
             return
 
         # Get exam data from first item
         exam_data = selected_items[0].data(Qt.UserRole)
         if not exam_data:
+            logger.warning("⚠️ Selected item has no exam data")
             return
 
+        # Check if this is a different exam
+        is_different_exam = (
+            not self.selected_sinav or 
+            self.selected_sinav.get('sinav_id') != exam_data.get('sinav_id')
+        )
+
+        # Save old exam info before updating
+        old_exam_kodu = self.selected_sinav.get('ders_kodu', '') if self.selected_sinav else ''
+        old_sinav_id = self.selected_sinav.get('sinav_id') if self.selected_sinav else None
+        
         self.selected_sinav = exam_data
+        new_sinav_id = exam_data.get('sinav_id')
+        new_ders_kodu = exam_data.get('ders_kodu', '')
+        
+        logger.info(f"📋 Exam selected: {new_ders_kodu} (Sınav ID: {new_sinav_id})")
+        
         self.create_plan_btn.setEnabled(True)
 
-        # Check if seating plan already exists
-        self.load_existing_seating_plan()
+        # Only clear if selecting a different exam
+        if is_different_exam:
+            # Log the change with IDs for debugging
+            logger.warning(f"🔄 EXAM CHANGED: {old_exam_kodu} (ID:{old_sinav_id}) → {new_ders_kodu} (ID:{new_sinav_id})")
+            
+            # Warn if there was seating data
+            if self.seating_data and self.seating_data_sinav_id:
+                logger.warning(f"⚠️ Clearing seating data for exam {self.seating_data_sinav_id}")
+                QMessageBox.information(
+                    self,
+                    "Sınav Değişti",
+                    f"⚠️ Farklı bir sınav seçtiniz!\n\n"
+                    f"Önceki: {old_exam_kodu} (ID: {old_sinav_id})\n"
+                    f"Yeni: {new_ders_kodu} (ID: {new_sinav_id})\n\n"
+                    f"Önceki oturma düzeni temizlendi.\n"
+                    f"Yeni sınav için oturma düzeni oluşturmanız gerekiyor."
+                )
+            
+            self.load_existing_seating_plan()  # This calls clear_seating_plan()
+        elif self.seating_data and self.seating_data_sinav_id == new_sinav_id:
+            # Same exam and we have VALID seating data for THIS exam
+            logger.info(f"✅ Same exam re-selected, keeping seating data. Exam: {new_ders_kodu} (ID: {new_sinav_id})")
+            self.export_visual_btn.setEnabled(True)
+            self.export_list_btn.setEnabled(True)
+            
+            # Update tooltips
+            exam_info_text = f"Oturma düzeni: {new_ders_kodu} (Sınav ID: {new_sinav_id})"
+            self.export_visual_btn.setToolTip(f"📄 {exam_info_text}\n\nGörsel PDF olarak indir")
+            self.export_list_btn.setToolTip(f"📋 {exam_info_text}\n\nListe PDF olarak indir")
+        elif self.seating_data and self.seating_data_sinav_id != new_sinav_id:
+            # CRITICAL: Same exam selected but seating data is for DIFFERENT exam!
+            logger.error(f"❌ MISMATCH: Selected exam {new_sinav_id} but seating data is for exam {self.seating_data_sinav_id}!")
+            logger.error(f"   This shouldn't happen - clearing seating data")
+            self.clear_seating_plan()
+        else:
+            # Same exam but no seating data
+            logger.info(f"ℹ️ Same exam selected but no seating data. Exam: {new_ders_kodu} (ID: {new_sinav_id})")
+            self.export_visual_btn.setEnabled(False)
+            self.export_list_btn.setEnabled(False)
 
     def load_existing_seating_plan(self):
         """Load existing seating plan if available"""
@@ -346,6 +401,11 @@ class OturmaPlaniView(QWidget):
                 return
 
             self.seating_data = seating_data
+            self.seating_data_sinav_id = sinav_id  # Track which exam this data belongs to
+            
+            logger.info(f"💾 SEATING DATA SAVED: {len(seating_data)} students for exam {sinav_id}")
+            logger.info(f"   self.seating_data = {len(self.seating_data)} students")
+            logger.info(f"   self.seating_data_sinav_id = {self.seating_data_sinav_id}")
 
             # Visualize seating plan
             self.visualize_seating_plan(classrooms, seating_data)
@@ -353,8 +413,16 @@ class OturmaPlaniView(QWidget):
             # Update student list
             self.update_student_list(students, seating_data)
 
+            # Enable export buttons with clear tooltips
             self.export_visual_btn.setEnabled(True)
             self.export_list_btn.setEnabled(True)
+            
+            # Add tooltips showing which exam this data is for
+            exam_info_text = f"Oturma düzeni: {self.selected_sinav.get('ders_kodu', '')} (Sınav ID: {sinav_id})"
+            self.export_visual_btn.setToolTip(f"📄 {exam_info_text}\n\nGörsel PDF olarak indir")
+            self.export_list_btn.setToolTip(f"📋 {exam_info_text}\n\nListe PDF olarak indir")
+            
+            logger.info(f"Export buttons enabled for exam {sinav_id} ({self.selected_sinav.get('ders_kodu', '')})")
 
             # Show result message
             placed_count = len(seating_data)
@@ -363,14 +431,20 @@ class OturmaPlaniView(QWidget):
                     self,
                     "Kısmi Başarı",
                     f"⚠️ {placed_count}/{len(students)} öğrenci yerleştirildi!\n\n"
-                    f"Kapasite yetersiz olduğu için {len(students) - placed_count} öğrenci yerleştirilemedi."
+                    f"Kapasite yetersiz olduğu için {len(students) - placed_count} öğrenci yerleştirilemedi.\n\n"
+                    f"Şimdi PDF butonlarını kullanarak indirebilirsiniz."
                 )
             else:
                 QMessageBox.information(
                     self,
                     "Başarılı",
-                    f"✅ {len(students)} öğrenci için oturma düzeni oluşturuldu!"
+                    f"✅ {len(students)} öğrenci için oturma düzeni oluşturuldu!\n\n"
+                    f"📄 Görsel PDF: Derslik yerleşimi\n"
+                    f"📋 Liste PDF: Öğrenci tablosu\n\n"
+                    f"PDF butonlarını kullanarak indirebilirsiniz."
                 )
+            
+            logger.info(f"Seating plan created successfully for exam {sinav_id}. Placed {placed_count} students.")
 
         except Exception as e:
             logger.error(f"Error creating seating plan: {e}", exc_info=True)
@@ -474,8 +548,12 @@ class OturmaPlaniView(QWidget):
 
     def visualize_seating_plan(self, classrooms: List[Dict], seating_data: Dict):
         """Visualize seating arrangement with corridor groups"""
-        # Clear existing layout
-        self.clear_seating_plan()
+        # Clear existing VISUALIZATION ONLY (don't touch seating_data!)
+        logger.info("🎨 Clearing old visualization widgets (keeping seating data)")
+        while self.seating_layout.count():
+            child = self.seating_layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
 
         for classroom in classrooms:
             derslik_id = classroom['derslik_id']
@@ -641,6 +719,14 @@ class OturmaPlaniView(QWidget):
 
     def clear_seating_plan(self):
         """Clear seating plan visualization"""
+        import traceback
+        logger.warning(f"🗑️ CLEARING SEATING PLAN - Called from:")
+        for line in traceback.format_stack()[-4:-1]:  # Show last 3 stack frames
+            logger.warning(f"   {line.strip()}")
+        
+        if self.seating_data:
+            logger.warning(f"   Clearing {len(self.seating_data)} students for exam {self.seating_data_sinav_id}")
+        
         while self.seating_layout.count():
             child = self.seating_layout.takeAt(0)
             if child.widget():
@@ -648,13 +734,40 @@ class OturmaPlaniView(QWidget):
 
         self.students_table.setRowCount(0)
         self.seating_data = {}
+        self.seating_data_sinav_id = None
         self.export_visual_btn.setEnabled(False)
         self.export_list_btn.setEnabled(False)
 
     def export_visual_pdf(self):
         """Export visual seating plan (classroom layout) to PDF"""
-        if not self.selected_sinav or not self.seating_data:
-            QMessageBox.warning(self, "Uyarı", "Önce oturma düzeni oluşturun!")
+        if not self.selected_sinav:
+            QMessageBox.warning(self, "Uyarı", "Lütfen önce bir sınav seçin!")
+            logger.warning("Export failed: No exam selected")
+            return
+        
+        if not self.seating_data:
+            logger.error(f"❌ VISUAL PDF Export failed: No seating data!")
+            logger.error(f"   Selected exam: {self.selected_sinav.get('ders_kodu')} (ID: {self.selected_sinav.get('sinav_id')})")
+            logger.error(f"   self.seating_data length: {len(self.seating_data)}")
+            logger.error(f"   self.seating_data_sinav_id: {self.seating_data_sinav_id}")
+            QMessageBox.warning(self, "Uyarı", "Önce oturma düzeni oluşturun!\n\n'🎯 Oturma Düzeni Oluştur' butonuna tıklayın.")
+            return
+        
+        # CRITICAL: Check if seating data matches selected exam
+        current_sinav_id = self.selected_sinav.get('sinav_id')
+        if self.seating_data_sinav_id != current_sinav_id:
+            QMessageBox.warning(
+                self,
+                "Yanlış Sınav!",
+                f"⚠️ DİKKAT: Oturma düzeni farklı bir sınav için oluşturulmuş!\n\n"
+                f"Seçili sınav: {self.selected_sinav.get('ders_kodu', '')}\n\n"
+                f"Önce bu sınav için oturma düzeni oluşturun:\n"
+                f"'🎯 Oturma Düzeni Oluştur' butonuna tıklayın."
+            )
+            logger.error(f"Export failed: Seating data for exam {self.seating_data_sinav_id} but trying to export for exam {current_sinav_id}")
+            # Disable export buttons
+            self.export_visual_btn.setEnabled(False)
+            self.export_list_btn.setEnabled(False)
             return
 
         try:
@@ -674,10 +787,22 @@ class OturmaPlaniView(QWidget):
                 return
 
             # Prepare data for visual export
+            # Format exam info with proper date string
+            exam_info = self.selected_sinav.copy()
+            tarih_saat = exam_info.get('tarih_saat', '')
+            if isinstance(tarih_saat, str):
+                try:
+                    dt = datetime.fromisoformat(tarih_saat)
+                    exam_info['tarih_saat'] = dt.strftime('%d.%m.%Y %H:%M')
+                except:
+                    pass
+            elif hasattr(tarih_saat, 'strftime'):
+                exam_info['tarih_saat'] = tarih_saat.strftime('%d.%m.%Y %H:%M')
+            
             export_data = {
                 'type': 'oturma_plani',
                 'title': f"{self.selected_sinav.get('ders_adi', '')} - Oturma Düzeni",
-                'exam_info': self.selected_sinav,
+                'exam_info': exam_info,
                 'seating_data': self.seating_data,
                 'classrooms': self._get_exam_classrooms(self.selected_sinav.get('sinav_id'))
             }
@@ -697,8 +822,34 @@ class OturmaPlaniView(QWidget):
 
     def export_list_pdf(self):
         """Export student list (table format) to PDF"""
-        if not self.selected_sinav or not self.seating_data:
-            QMessageBox.warning(self, "Uyarı", "Önce oturma düzeni oluşturun!")
+        if not self.selected_sinav:
+            QMessageBox.warning(self, "Uyarı", "Lütfen önce bir sınav seçin!")
+            logger.warning("Export failed: No exam selected")
+            return
+        
+        if not self.seating_data:
+            logger.error(f"❌ LIST PDF Export failed: No seating data!")
+            logger.error(f"   Selected exam: {self.selected_sinav.get('ders_kodu')} (ID: {self.selected_sinav.get('sinav_id')})")
+            logger.error(f"   self.seating_data length: {len(self.seating_data)}")
+            logger.error(f"   self.seating_data_sinav_id: {self.seating_data_sinav_id}")
+            QMessageBox.warning(self, "Uyarı", "Önce oturma düzeni oluşturun!\n\n'🎯 Oturma Düzeni Oluştur' butonuna tıklayın.")
+            return
+        
+        # CRITICAL: Check if seating data matches selected exam
+        current_sinav_id = self.selected_sinav.get('sinav_id')
+        if self.seating_data_sinav_id != current_sinav_id:
+            QMessageBox.warning(
+                self,
+                "Yanlış Sınav!",
+                f"⚠️ DİKKAT: Oturma düzeni farklı bir sınav için oluşturulmuş!\n\n"
+                f"Seçili sınav: {self.selected_sinav.get('ders_kodu', '')}\n\n"
+                f"Önce bu sınav için oturma düzeni oluşturun:\n"
+                f"'🎯 Oturma Düzeni Oluştur' butonuna tıklayın."
+            )
+            logger.error(f"Export failed: Seating data for exam {self.seating_data_sinav_id} but trying to export for exam {current_sinav_id}")
+            # Disable export buttons
+            self.export_visual_btn.setEnabled(False)
+            self.export_list_btn.setEnabled(False)
             return
 
         try:
@@ -718,10 +869,22 @@ class OturmaPlaniView(QWidget):
                 return
 
             # Prepare data for list export
+            # Format exam info with proper date string
+            exam_info = self.selected_sinav.copy()
+            tarih_saat = exam_info.get('tarih_saat', '')
+            if isinstance(tarih_saat, str):
+                try:
+                    dt = datetime.fromisoformat(tarih_saat)
+                    exam_info['tarih_saat'] = dt.strftime('%d.%m.%Y %H:%M')
+                except:
+                    pass
+            elif hasattr(tarih_saat, 'strftime'):
+                exam_info['tarih_saat'] = tarih_saat.strftime('%d.%m.%Y %H:%M')
+            
             export_data = {
                 'type': 'oturma_liste',
                 'title': f"{self.selected_sinav.get('ders_adi', '')} - Öğrenci Oturma Listesi",
-                'exam_info': self.selected_sinav,
+                'exam_info': exam_info,
                 'seating_data': self.seating_data,
                 'classrooms': self._get_exam_classrooms(self.selected_sinav.get('sinav_id'))
             }
@@ -746,8 +909,8 @@ class OturmaPlaniView(QWidget):
             if not sinav_id:
                 return
 
-            # Get all available classrooms
-            all_classrooms = self.derslik_model.get_all_derslikler()
+            # Get all available classrooms for this department
+            all_classrooms = self.derslik_model.get_derslikler_by_bolum(self.bolum_id)
 
             if not all_classrooms:
                 QMessageBox.warning(self, "Uyarı", "Sistemde derslik bulunamadı!")
@@ -822,14 +985,26 @@ class OturmaPlaniView(QWidget):
                 # Update database
                 self._update_exam_classrooms(sinav_id, selected_ids)
 
+                # Save current selection and seating data
+                saved_sinav = self.selected_sinav
+                saved_seating_data = self.seating_data.copy() if self.seating_data else {}
+
                 # Reload exams
                 self.load_exams()
 
-                # Clear current seating plan if this exam was selected
-                if self.selected_sinav and self.selected_sinav.get('sinav_id') == sinav_id:
+                # Restore selection and seating data if it was the same exam
+                if saved_sinav and saved_sinav.get('sinav_id') == sinav_id:
+                    self.selected_sinav = saved_sinav
+                    # Only clear seating data (it's invalid now with new classrooms)
                     self.clear_seating_plan()
+                    # Re-select the row
+                    for row in range(self.exams_table.rowCount()):
+                        item = self.exams_table.item(row, 0)
+                        if item and item.data(Qt.UserRole) and item.data(Qt.UserRole).get('sinav_id') == sinav_id:
+                            self.exams_table.selectRow(row)
+                            break
 
-                QMessageBox.information(self, "Başarılı", "✅ Derslik değişikliği başarıyla kaydedildi!")
+                QMessageBox.information(self, "Başarılı", "✅ Derslik değişikliği başarıyla kaydedildi!\n\nYeni derslik düzenine göre oturma planını yeniden oluşturun.")
 
         except Exception as e:
             logger.error(f"Error changing classroom: {e}", exc_info=True)
@@ -838,27 +1013,25 @@ class OturmaPlaniView(QWidget):
     def _update_exam_classrooms(self, sinav_id: int, classroom_ids: List[int]):
         """Update classrooms for an exam"""
         try:
-            # Start transaction
-            db.connection.autocommit = False
+            # Use context manager for transaction
+            with db.get_connection() as conn:
+                cursor = conn.cursor()
+                
+                # Delete existing assignments
+                delete_query = "DELETE FROM sinav_derslikleri WHERE sinav_id = %s"
+                cursor.execute(delete_query, (sinav_id,))
 
-            # Delete existing assignments
-            delete_query = "DELETE FROM sinav_derslikleri WHERE sinav_id = %s"
-            db.execute_query(delete_query, (sinav_id,))
+                # Insert new assignments
+                insert_query = "INSERT INTO sinav_derslikleri (sinav_id, derslik_id) VALUES (%s, %s)"
+                for derslik_id in classroom_ids:
+                    cursor.execute(insert_query, (sinav_id, derslik_id))
 
-            # Insert new assignments
-            insert_query = "INSERT INTO sinav_derslikleri (sinav_id, derslik_id) VALUES (%s, %s)"
-            for derslik_id in classroom_ids:
-                db.execute_query(insert_query, (sinav_id, derslik_id))
-
-            # Commit transaction
-            db.connection.commit()
-            db.connection.autocommit = True
+                # Commit transaction
+                conn.commit()
+                cursor.close()
 
             logger.info(f"Updated classrooms for exam {sinav_id}: {classroom_ids}")
 
         except Exception as e:
-            # Rollback on error
-            db.connection.rollback()
-            db.connection.autocommit = True
             logger.error(f"Error updating exam classrooms: {e}", exc_info=True)
             raise

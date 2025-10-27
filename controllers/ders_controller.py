@@ -16,14 +16,30 @@ class DersController:
         self.ders_model = ders_model
     
     def create_ders(self, ders_data: Dict) -> Dict:
-        """Create new course"""
+        """Create new course with detailed validation"""
         try:
-            # Validate data
+            import re
+            
+            # Validate required fields
             if not ders_data.get('ders_kodu'):
-                return {'success': False, 'message': "Ders kodu gereklidir!"}
+                return {'success': False, 'message': "Ders kodu gereklidir"}
             
             if not ders_data.get('ders_adi'):
-                return {'success': False, 'message': "Ders adı gereklidir!"}
+                return {'success': False, 'message': "Ders adı gereklidir"}
+            
+            if not ders_data.get('ogretim_elemani'):
+                return {'success': False, 'message': "Öğretim elemanı gereklidir"}
+            
+            # Validate course code format (ABC123)
+            ders_kodu = str(ders_data['ders_kodu']).strip().upper()
+            if not re.match(r'^[A-Z]{3}\d{3}$', ders_kodu):
+                return {
+                    'success': False,
+                    'message': f"Geçersiz ders kodu formatı: '{ders_kodu}' (Beklenen: ABC123)"
+                }
+            
+            # Normalize the code
+            ders_data['ders_kodu'] = ders_kodu
             
             # Check for duplicate
             existing = self.ders_model.get_ders_by_kod(
@@ -34,7 +50,7 @@ class DersController:
             if existing:
                 return {
                     'success': False,
-                    'message': f"Ders kodu '{ders_data['ders_kodu']}' zaten mevcut!"
+                    'message': f"Bu ders kodu zaten kayıtlı"
                 }
             
             # Create course
@@ -47,8 +63,8 @@ class DersController:
             }
             
         except Exception as e:
-            logger.error(f"Error creating course: {e}")
-            return {'success': False, 'message': str(e)}
+            logger.error(f"Error creating course: {e}", exc_info=True)
+            return {'success': False, 'message': f"Veritabanı hatası: {str(e)}"}
     
     def update_ders(self, ders_id: int, ders_data: Dict) -> Dict:
         """Update course"""

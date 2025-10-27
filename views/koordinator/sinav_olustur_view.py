@@ -1555,161 +1555,135 @@ class SinavOlusturView(QWidget):
                     'ogrenci_sayisi': len(student_ids)
                 }
             
-            # Find parallel groups
-            no_conflict_pairs = []
-            high_conflict_pairs = []
+            # Find ALL course pairs (no filtering)
+            all_pairs = []
             
             course_ids = list(course_info.keys())
-            for i, ders_id1 in enumerate(course_ids):
-                for ders_id2 in course_ids[i+1:]:
+            
+            # DEBUG: Log course count
+            logger.info(f"🔍 Ortak Öğrenci Analizi:")
+            logger.info(f"   Toplam ders sayısı: {len(course_ids)}")
+            logger.info(f"   Beklenen çift sayısı: {len(course_ids) * (len(course_ids) - 1) // 2}")
+            
+            total_comparisons = 0
+            # Check EVERY course against EVERY other course (no optimization)
+            for ders_id1 in course_ids:
+                for ders_id2 in course_ids:
+                    # Skip comparing a course with itself
+                    if ders_id1 == ders_id2:
+                        continue
+                    
+                    # Skip duplicate pairs (A,B) same as (B,A)
+                    if ders_id1 > ders_id2:
+                        continue
+                    
+                    total_comparisons += 1
+                    
                     shared = len(course_students[ders_id1] & course_students[ders_id2])
                     
-                    if shared == 0:
-                        no_conflict_pairs.append((
-                            course_info[ders_id1]['ders_kodu'],
-                            course_info[ders_id2]['ders_kodu'],
-                            course_info[ders_id1]['sinif'],
-                            course_info[ders_id2]['sinif']
-                        ))
-                    elif shared >= 10:
-                        high_conflict_pairs.append((
-                            course_info[ders_id1]['ders_kodu'],
-                            course_info[ders_id2]['ders_kodu'],
-                            course_info[ders_id1]['sinif'],
-                            course_info[ders_id2]['sinif'],
-                            shared
-                        ))
+                    # Add ALL pairs to the list (no filtering!)
+                    all_pairs.append((
+                        course_info[ders_id1]['ders_kodu'],
+                        course_info[ders_id2]['ders_kodu'],
+                        course_info[ders_id1]['sinif'],
+                        course_info[ders_id2]['sinif'],
+                        shared  # Ortak öğrenci sayısı
+                    ))
+            
+            # DEBUG: Log results
+            logger.info(f"   Yapılan karşılaştırma: {total_comparisons}")
+            logger.info(f"   Toplam gösterilecek: {len(all_pairs)}")
             
             # Create dialog
             dialog = QDialog(self)
-            dialog.setWindowTitle("Ortak Öğrenci Analizi")
-            dialog.setMinimumSize(800, 600)
+            dialog.setWindowTitle("Tüm Ders Çiftleri - Ortak Öğrenci Analizi")
+            dialog.setMinimumSize(1000, 700)
             
             layout = QVBoxLayout(dialog)
             
             # Header
-            header = QLabel("📊 Paralel Sınav Yapılabilirlik Analizi")
+            header = QLabel(f"📊 Tüm Ders Çiftleri Analizi ({len(all_pairs)} çift)")
             header.setFont(QFont("Segoe UI", 14, QFont.Bold))
             layout.addWidget(header)
             
-            # Tabs
-            tab_widget = QTabWidget()
+            # Info with statistics
+            zero_conflict = sum(1 for p in all_pairs if p[4] == 0)
+            high_conflict = sum(1 for p in all_pairs if p[4] >= 10)
             
-            # Tab 1: No conflicts
-            no_conflict_tab = QWidget()
-            no_conflict_layout = QVBoxLayout(no_conflict_tab)
+            info = QLabel(
+                f"{len(course_ids)} ders × {len(course_ids)-1} ders ÷ 2 = {len(all_pairs)} benzersiz ders çifti\n\n"
+                f"✅ Ortak öğrencisi olmayan: {zero_conflict} çift\n"
+                f"⚠️ Orta çakışma (5-9 öğrenci): {sum(1 for p in all_pairs if 5 <= p[4] < 10)} çift\n"
+                f"❌ Yüksek çakışma (10+ öğrenci): {high_conflict} çift"
+            )
+            info.setStyleSheet("color: #6b7280; padding: 10px; background: #f3f4f6; border-radius: 4px;")
+            layout.addWidget(info)
             
-            info1 = QLabel(f"✅ Hiç ortak öğrencisi olmayan {len(no_conflict_pairs)} ders çifti bulundu.\n"
-                          "Bu dersler aynı anda yapılabilir!")
-            info1.setStyleSheet("color: #059669; padding: 10px; background: #d1fae5; border-radius: 4px;")
-            no_conflict_layout.addWidget(info1)
+            # Sort by shared students (descending)
+            all_pairs.sort(key=lambda x: x[4], reverse=True)
             
-            if no_conflict_pairs:
-                table1 = QTableWidget()
-                table1.setColumnCount(5)
-                table1.setHorizontalHeaderLabels(["Ders 1", "Sınıf", "Ders 2", "Sınıf", "Notlar"])
-                table1.setRowCount(len(no_conflict_pairs))
+            # Table with ALL pairs
+            table = QTableWidget()
+            table.setColumnCount(6)
+            table.setHorizontalHeaderLabels(["Ders 1", "Sınıf", "Ders 2", "Sınıf", "Ortak Öğrenci", "Durum"])
+            table.setRowCount(len(all_pairs))
+            
+            for row, (d1, d2, s1, s2, shared) in enumerate(all_pairs):
+                # Ders 1
+                item1 = QTableWidgetItem(d1)
+                item1.setFont(QFont("Segoe UI", 9))
+                table.setItem(row, 0, item1)
                 
-                for row, (d1, d2, s1, s2) in enumerate(no_conflict_pairs):
-                    # Ders 1
-                    item1 = QTableWidgetItem(d1)
-                    item1.setFont(QFont("Segoe UI", 10, QFont.Bold))
-                    table1.setItem(row, 0, item1)
-                    
-                    # Sınıf 1
-                    class1_item = QTableWidgetItem(f"{s1}. Sınıf")
-                    class1_item.setTextAlignment(Qt.AlignCenter)
-                    table1.setItem(row, 1, class1_item)
-                    
-                    # Ders 2
-                    item2 = QTableWidgetItem(d2)
-                    item2.setFont(QFont("Segoe UI", 10, QFont.Bold))
-                    table1.setItem(row, 2, item2)
-                    
-                    # Sınıf 2
-                    class2_item = QTableWidgetItem(f"{s2}. Sınıf")
-                    class2_item.setTextAlignment(Qt.AlignCenter)
-                    table1.setItem(row, 3, class2_item)
-                    
-                    # Notlar
-                    if s1 == s2:
-                        note = "⚠️ Aynı sınıf"
-                    else:
-                        note = "✅ Farklı sınıf"
-                    table1.setItem(row, 4, QTableWidgetItem(note))
+                # Sınıf 1
+                class1_item = QTableWidgetItem(f"{s1}. Sınıf")
+                class1_item.setTextAlignment(Qt.AlignCenter)
+                table.setItem(row, 1, class1_item)
                 
-                table1.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-                table1.setAlternatingRowColors(True)
-                no_conflict_layout.addWidget(table1)
-            else:
-                no_conflict_layout.addWidget(QLabel("Ortak öğrencisi olmayan ders çifti bulunamadı."))
-            
-            tab_widget.addTab(no_conflict_tab, f"✅ Paralel Yapılabilir ({len(no_conflict_pairs)})")
-            
-            # Tab 2: High conflicts
-            conflict_tab = QWidget()
-            conflict_layout = QVBoxLayout(conflict_tab)
-            
-            info2 = QLabel(f"⚠️ Çok fazla ortak öğrencisi olan {len(high_conflict_pairs)} ders çifti.\n"
-                          "Bu dersler farklı günlerde yapılmalı!")
-            info2.setStyleSheet("color: #dc2626; padding: 10px; background: #fee2e2; border-radius: 4px;")
-            conflict_layout.addWidget(info2)
-            
-            if high_conflict_pairs:
-                table2 = QTableWidget()
-                table2.setColumnCount(6)
-                table2.setHorizontalHeaderLabels(["Ders 1", "Sınıf", "Ders 2", "Sınıf", "Ortak Öğrenci", "Uyarı"])
-                table2.setRowCount(len(high_conflict_pairs))
+                # Ders 2
+                item2 = QTableWidgetItem(d2)
+                item2.setFont(QFont("Segoe UI", 9))
+                table.setItem(row, 2, item2)
                 
-                for row, (d1, d2, s1, s2, shared) in enumerate(high_conflict_pairs):
-                    # Ders 1
-                    item1 = QTableWidgetItem(d1)
-                    item1.setFont(QFont("Segoe UI", 10, QFont.Bold))
-                    table2.setItem(row, 0, item1)
-                    
-                    # Sınıf 1
-                    class1_item = QTableWidgetItem(f"{s1}. Sınıf")
-                    class1_item.setTextAlignment(Qt.AlignCenter)
-                    table2.setItem(row, 1, class1_item)
-                    
-                    # Ders 2
-                    item2 = QTableWidgetItem(d2)
-                    item2.setFont(QFont("Segoe UI", 10, QFont.Bold))
-                    table2.setItem(row, 2, item2)
-                    
-                    # Sınıf 2
-                    class2_item = QTableWidgetItem(f"{s2}. Sınıf")
-                    class2_item.setTextAlignment(Qt.AlignCenter)
-                    table2.setItem(row, 3, class2_item)
-                    
-                    # Ortak öğrenci sayısı
-                    count_item = QTableWidgetItem(str(shared))
-                    count_item.setTextAlignment(Qt.AlignCenter)
-                    count_item.setFont(QFont("Segoe UI", 11, QFont.Bold))
-                    if shared >= 20:
-                        count_item.setForeground(QColor("#dc2626"))  # Red for very high
-                    elif shared >= 10:
-                        count_item.setForeground(QColor("#f59e0b"))  # Orange for high
-                    table2.setItem(row, 4, count_item)
-                    
-                    # Uyarı
-                    if s1 == s2:
-                        warning = "⚠️ Aynı sınıf!"
-                    else:
-                        warning = "Farklı sınıf"
-                    warning_item = QTableWidgetItem(warning)
-                    warning_item.setTextAlignment(Qt.AlignCenter)
-                    table2.setItem(row, 5, warning_item)
+                # Sınıf 2
+                class2_item = QTableWidgetItem(f"{s2}. Sınıf")
+                class2_item.setTextAlignment(Qt.AlignCenter)
+                table.setItem(row, 3, class2_item)
                 
-                table2.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-                table2.setAlternatingRowColors(True)
-                conflict_layout.addWidget(table2)
-            else:
-                conflict_layout.addWidget(QLabel("Yüksek çakışmalı ders çifti bulunamadı."))
+                # Ortak öğrenci sayısı
+                count_item = QTableWidgetItem(str(shared))
+                count_item.setTextAlignment(Qt.AlignCenter)
+                count_item.setFont(QFont("Segoe UI", 10, QFont.Bold))
+                
+                # Color code based on shared students
+                if shared == 0:
+                    count_item.setForeground(QColor("#10b981"))  # Green - can be parallel
+                elif shared < 5:
+                    count_item.setForeground(QColor("#3b82f6"))  # Blue - low conflict
+                elif shared < 10:
+                    count_item.setForeground(QColor("#f59e0b"))  # Orange - medium
+                else:
+                    count_item.setForeground(QColor("#dc2626"))  # Red - high conflict
+                
+                table.setItem(row, 4, count_item)
+                
+                # Durum
+                if shared == 0:
+                    status = "✅ Paralel yapılabilir"
+                elif shared < 5:
+                    status = "ℹ️ Az çakışma"
+                elif shared < 10:
+                    status = "⚠️ Orta çakışma"
+                else:
+                    status = "❌ Yüksek çakışma"
+                
+                status_item = QTableWidgetItem(status)
+                status_item.setTextAlignment(Qt.AlignCenter)
+                table.setItem(row, 5, status_item)
             
-            tab_widget.addTab(conflict_tab, f"⚠️ Yüksek Çakışma ({len(high_conflict_pairs)})")
-            
-            layout.addWidget(tab_widget)
+            table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+            table.setAlternatingRowColors(True)
+            table.setSortingEnabled(True)  # Enable sorting
+            layout.addWidget(table)
             
             # Close button
             close_btn = QPushButton("Kapat")

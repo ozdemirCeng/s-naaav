@@ -6,7 +6,7 @@ Professional interface for uploading and managing courses from Excel
 import logging
 
 from PySide6.QtCore import Qt, QThread, Signal
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QColor
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QTableWidget, QTableWidgetItem, QHeaderView, QFrame,
@@ -127,9 +127,9 @@ class DersYukleView(QWidget):
         left_layout.setContentsMargins(0, 0, 0, 0)
         
         self.table = QTableWidget()
-        self.table.setColumnCount(4)
+        self.table.setColumnCount(5)  # Added column for Zorunlu/Seçmeli
         self.table.setHorizontalHeaderLabels([
-            "DERS KODU", "DERSİN ADI", "DERSİ VEREN ÖĞR. ELEMANI", "SINIF"
+            "DERS KODU", "DERSİN ADI", "DERSİ VEREN ÖĞR. ELEMANI", "SINIF", "TÜR"
         ])
         
         self.table.setAlternatingRowColors(True)
@@ -144,9 +144,11 @@ class DersYukleView(QWidget):
         header.setSectionResizeMode(1, QHeaderView.Stretch)   # DERSİN ADI
         header.setSectionResizeMode(2, QHeaderView.Stretch)   # ÖĞR. ELEMANI
         header.setSectionResizeMode(3, QHeaderView.Fixed)     # SINIF
+        header.setSectionResizeMode(4, QHeaderView.Fixed)     # TÜR
         
         self.table.setColumnWidth(0, 100)  # DERS KODU
         self.table.setColumnWidth(3, 60)   # SINIF
+        self.table.setColumnWidth(4, 90)   # TÜR
         
         left_layout.addWidget(self.table)
         
@@ -308,6 +310,20 @@ class DersYukleView(QWidget):
             sinif_item = QTableWidgetItem(sinif_text)
             sinif_item.setTextAlignment(Qt.AlignCenter)
             self.table.setItem(row, 3, sinif_item)
+            
+            # TÜR (Zorunlu/Seçmeli)
+            ders_yapisi = ders.get('ders_yapisi', 'Zorunlu')
+            tur_item = QTableWidgetItem(ders_yapisi)
+            tur_item.setTextAlignment(Qt.AlignCenter)
+            
+            # Color code based on type
+            if ders_yapisi == 'Seçmeli':
+                tur_item.setForeground(QColor('#f59e0b'))  # Orange for elective
+                tur_item.setFont(QFont("Segoe UI", 9, QFont.Bold))
+            else:
+                tur_item.setForeground(QColor('#059669'))  # Green for mandatory
+            
+            self.table.setItem(row, 4, tur_item)
     
     def upload_excel(self):
         """Upload Excel file"""
@@ -329,7 +345,7 @@ class DersYukleView(QWidget):
         self.thread.start()
     
     def on_excel_loaded(self, dersler):
-        """Handle loaded Excel data"""
+        """Handle loaded Excel data with validation summary"""
         if not dersler:
             QMessageBox.warning(self, "Uyarı", "Excel dosyasında ders bulunamadı!")
             return
@@ -338,11 +354,17 @@ class DersYukleView(QWidget):
         self.populate_table(dersler, existing=False)
         self.update_stats(0, len(dersler))
         
+        # Show summary with validation info
+        summary_msg = f"✅ {len(dersler)} ders başarıyla yüklendi"
+        
+        # Check for any validation warnings in logs
+        # (errors are already shown in on_excel_error)
+        
         # Ask for confirmation
         reply = QMessageBox.question(
             self,
             "Dersleri Kaydet",
-            f"{len(dersler)} ders yüklendi. Veritabanına kaydetmek istiyor musunuz?",
+            f"{summary_msg}\n\nVeritabanına kaydetmek istiyor musunuz?",
             QMessageBox.Yes | QMessageBox.No,
             QMessageBox.Yes
         )
@@ -351,19 +373,50 @@ class DersYukleView(QWidget):
             self.save_dersler()
     
     def on_excel_error(self, error_msg):
-        """Handle Excel loading error"""
-        QMessageBox.critical(self, "Hata", f"Excel dosyası yüklenirken hata oluştu:\n{error_msg}")
+        """Handle Excel loading error with detailed information"""
+        # Create detailed error dialog
+        error_dialog = QMessageBox(self)
+        error_dialog.setIcon(QMessageBox.Critical)
+        error_dialog.setWindowTitle("❌ Excel Yükleme Hatası")
+        
+        # Parse error message to provide better formatting
+        if "❌" in error_msg:
+            # Formatted error from parser (e.g., format errors, missing columns)
+            error_dialog.setText("Excel formatı hatalı")
+            error_dialog.setInformativeText(error_msg)
+        elif "Satır" in error_msg and error_msg.count("Satır") > 3:
+            # Multiple row errors - show summary
+            lines = [line for line in error_msg.split('\n') if line.strip()]
+            row_count = error_msg.count("Satır")
+            
+            error_dialog.setText(f"Excel'de {row_count} satırda hata bulundu")
+            error_dialog.setInformativeText(
+                "Lütfen Excel dosyasını kontrol edin ve düzeltip tekrar yükleyin.\n\n"
+                "Detaylar için 'Show Details' butonuna tıklayın."
+            )
+            # Format detailed text for better readability
+            detailed_text = error_msg.replace("Satır ", "\n• Satır ")
+            error_dialog.setDetailedText(detailed_text)
+        else:
+            # Generic or single error
+            error_dialog.setText("Excel dosyası yüklenirken hata oluştu")
+            error_dialog.setInformativeText(error_msg)
+        
+        error_dialog.setStandardButtons(QMessageBox.Ok)
+        error_dialog.exec()
     
     def save_dersler(self):
-        """Save courses to database"""
+        """Save courses to database with detailed error reporting"""
         if not self.pending_dersler:
             return
         
         try:
             success_count = 0
             error_count = 0
+            error_details = []
             
-            for ders in self.pending_dersler:
+            for idx, ders in enumerate(self.pending_dersler, 1):
+                excel_row = idx + 1  # Account for header row
                 ders['bolum_id'] = self.bolum_id
                 result = self.ders_controller.create_ders(ders)
                 
@@ -371,19 +424,41 @@ class DersYukleView(QWidget):
                     success_count += 1
                 else:
                     error_count += 1
-                    logger.warning(f"Failed to save course: {ders['ders_kodu']} - {result['message']}")
+                    # Track which row failed
+                    error_msg = f"Satır {excel_row} ({ders.get('ders_kodu', '?')} - {ders.get('ders_adi', '?')}): {result['message']}"
+                    error_details.append(error_msg)
+                    logger.warning(error_msg)
             
-            QMessageBox.information(
-                self,
-                "İşlem Tamamlandı",
-                f"✅ {success_count} ders kaydedildi\n❌ {error_count} ders kaydedilemedi"
-            )
+            # Show detailed results
+            if error_count > 0:
+                error_dialog = QMessageBox(self)
+                error_dialog.setIcon(QMessageBox.Warning)
+                error_dialog.setWindowTitle("Kaydetme Sonuçları")
+                error_dialog.setText(
+                    f"✅ {success_count} ders kaydedildi\n"
+                    f"❌ {error_count} ders kaydedilemedi"
+                )
+                
+                # Show first 20 errors in detail
+                detailed_text = "\n".join(error_details[:20])
+                if len(error_details) > 20:
+                    detailed_text += f"\n\n... ve {len(error_details) - 20} hata daha"
+                
+                error_dialog.setDetailedText(detailed_text)
+                error_dialog.setStandardButtons(QMessageBox.Ok)
+                error_dialog.exec()
+            else:
+                QMessageBox.information(
+                    self,
+                    "Başarılı",
+                    f"✅ {success_count} ders başarıyla kaydedildi!"
+                )
             
             self.pending_dersler = []
             self.load_existing_dersler()
             
         except Exception as e:
-            logger.error(f"Error saving courses: {e}")
+            logger.error(f"Error saving courses: {e}", exc_info=True)
             QMessageBox.critical(self, "Hata", f"Dersler kaydedilirken hata oluştu:\n{str(e)}")
     
     def update_stats(self, existing, pending):
