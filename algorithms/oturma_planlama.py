@@ -143,30 +143,35 @@ class OturmaPlanlama:
             # Calculate how many students can fit with spacing
             satir_sayisi = derslik['satir_sayisi']
             sutun_sayisi = derslik['sutun_sayisi']
+            sira_yapisi = derslik.get('sira_yapisi', 3)  # 2'li, 3'lü veya 4'lü gruplar
             
-            # New seating pattern: sequential rows, spaced columns
-            # 4-seat rows: seat-empty-empty-seat (columns 1, 4)
-            # 3-seat rows: seat-empty-seat (columns 1, 3)
-            # 2-seat rows: empty-seat (column 2, right-aligned)
+            # Sıra yapısına göre oturma düzeni
+            # Sıra yapısı gruplar halinde çalışır
+            # Örnek: 6 sütun, 2'li yapı → [1,2][3,4][5,6] → 1,3,5 dolu
+            # Örnek: 9 sütun, 3'lü yapı → [1,2,3][4,5,6][7,8,9] → 1,3,4,6,7,9 dolu
             available_seats = []
             
             for satir in range(1, satir_sayisi + 1):
-                if sutun_sayisi == 4:
-                    # 4 kişilik sıra: dolu-boş-boş-dolu (sutun 1 ve 4)
-                    available_seats.append((satir, 1))
-                    available_seats.append((satir, 4))
-                elif sutun_sayisi == 3:
-                    # 3 kişilik sıra: dolu-boş-dolu (sutun 1 ve 3)
-                    available_seats.append((satir, 1))
-                    available_seats.append((satir, 3))
-                elif sutun_sayisi == 2:
-                    # 2 kişilik sıra: boş-dolu (sutun 2, sağdan)
-                    available_seats.append((satir, 2))
-                else:
-                    # Diğer durumlar için genel pattern: ara sütunlarda otur
-                    for sutun in range(1, sutun_sayisi + 1):
-                        # Her iki sütunda bir otur
-                        if sutun % 2 == 1:
+                # Her grup için pattern uygula
+                for grup_baslangic in range(1, sutun_sayisi + 1, sira_yapisi):
+                    # Grup içinde hangi sütunlara oturulacak?
+                    if sira_yapisi == 4:
+                        # 4'lü grup: dolu-boş-boş-dolu (1. ve 4. sütun)
+                        offset_sutunlar = [0, 3]  # Grup başlangıcına göre +0 ve +3
+                    elif sira_yapisi == 3:
+                        # 3'lü grup: dolu-boş-dolu (1. ve 3. sütun)
+                        offset_sutunlar = [0, 2]  # Grup başlangıcına göre +0 ve +2
+                    elif sira_yapisi == 2:
+                        # 2'li grup: boş-dolu (2. sütun, kapı tarafı/sağdan)
+                        offset_sutunlar = [1]  # Grup başlangıcına göre +1 (son sütun)
+                    else:
+                        # Genel durum: ilk sütun
+                        offset_sutunlar = [0]
+                    
+                    # Offsetleri uygula
+                    for offset in offset_sutunlar:
+                        sutun = grup_baslangic + offset
+                        if sutun <= sutun_sayisi:  # Sütun sınırını aşma
                             available_seats.append((satir, sutun))
             
             # Sıralamayı koru (karıştırma, arkaya arkaya oturma için)

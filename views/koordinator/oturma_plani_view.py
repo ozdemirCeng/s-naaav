@@ -19,6 +19,7 @@ from models.database import db
 from models.sinav_model import SinavModel
 from models.derslik_model import DerslikModel
 from models.ogrenci_model import OgrenciModel
+from algorithms.oturma_planlama import OturmaPlanlama
 
 logger = logging.getLogger(__name__)
 
@@ -393,13 +394,25 @@ class OturmaPlaniView(QWidget):
                 if reply == QMessageBox.No:
                     return
 
-            # Create seating arrangement
-            seating_data = self._assign_seats(students, classrooms)
+            # Create seating arrangement using OturmaPlanlama algorithm
+            oturma_planlama = OturmaPlanlama()
+            plan_list = oturma_planlama._generate_multi_classroom_plan(students, classrooms)
 
-            if not seating_data:
+            if not plan_list:
                 QMessageBox.warning(self, "Uyarı", "Oturma düzeni oluşturulamadı!")
                 return
 
+            # Convert list to dict format {ogrenci_no: {derslik_id, sira, sutun, ad_soyad, derslik_adi}}
+            seating_data = {}
+            for item in plan_list:
+                seating_data[item['ogrenci_no']] = {
+                    'derslik_id': item['derslik_id'],
+                    'derslik_adi': item['derslik_adi'],
+                    'sira': item['satir'],
+                    'sutun': item['sutun'],
+                    'ad_soyad': item['ad_soyad']
+                }
+            
             self.seating_data = seating_data
             self.seating_data_sinav_id = sinav_id  # Track which exam this data belongs to
             
@@ -467,85 +480,6 @@ class OturmaPlaniView(QWidget):
             logger.error(f"Error getting exam classrooms: {e}", exc_info=True)
             return []
 
-    def _assign_seats(self, students: List[Dict], classrooms: List[Dict]) -> Dict:
-        """Assign students to seats in classrooms with capacity check and smart distribution"""
-        seating = {}
-        student_idx = 0
-        total_students = len(students)
-
-        # Sort students by name for consistent arrangement
-        students = sorted(students, key=lambda x: x.get('ad_soyad', ''))
-
-        # Calculate total available capacity
-        total_capacity = sum(c.get('kapasite', 0) for c in classrooms)
-
-        if total_students > total_capacity:
-            logger.warning(f"Not enough capacity! Students: {total_students}, Capacity: {total_capacity}")
-            # Will place as many as possible
-
-        for classroom in classrooms:
-            if student_idx >= total_students:
-                break
-
-            derslik_id = classroom['derslik_id']
-            kapasite = classroom.get('kapasite', 60)
-            rows = classroom.get('satir_sayisi', 10)
-            cols = classroom.get('sutun_sayisi', 6)
-
-            # Calculate how many students to place in this classroom
-            remaining_students = total_students - student_idx
-            students_for_this_room = min(remaining_students, kapasite)
-
-            # Calculate required rows (don't use all rows if not needed)
-            required_rows = (students_for_this_room + cols - 1) // cols
-            required_rows = min(required_rows, rows)
-
-            logger.info(f"Classroom {classroom.get('derslik_adi')}: {students_for_this_room} students in {required_rows} rows")
-
-            # TRUE Zigzag pattern to minimize cheating:
-            # Row 1: Students at columns 1, 3, 5 (leave 2, 4, 6 empty)
-            # Row 2: Students at columns 2, 4, 6 (leave 1, 3, 5 empty)
-            # Row 3: Students at columns 1, 3, 5 (leave 2, 4, 6 empty)
-            # This creates a checkerboard pattern
-            placed_in_room = 0
-
-            # Recalculate required rows with zigzag (only half capacity per row)
-            effective_cols_per_row = (cols + 1) // 2  # half of columns per row
-            required_rows_zigzag = (students_for_this_room + effective_cols_per_row - 1) // effective_cols_per_row
-            required_rows_zigzag = min(required_rows_zigzag, rows)
-
-            for row in range(1, required_rows_zigzag + 1):
-                if student_idx >= total_students or placed_in_room >= students_for_this_room:
-                    break
-
-                # Zigzag: odd rows use odd columns, even rows use even columns
-                if row % 2 == 1:
-                    # Odd rows: 1, 3, 5, ... (left to right)
-                    col_list = [c for c in range(1, cols + 1) if c % 2 == 1]
-                else:
-                    # Even rows: 2, 4, 6, ... (left to right)
-                    col_list = [c for c in range(1, cols + 1) if c % 2 == 0]
-
-                for col in col_list:
-                    if student_idx >= total_students or placed_in_room >= students_for_this_room:
-                        break
-
-                    student = students[student_idx]
-                    seating[student['ogrenci_no']] = {
-                        'derslik_id': derslik_id,
-                        'derslik_adi': classroom.get('derslik_adi', classroom.get('derslik_kodu')),
-                        'sira': row,
-                        'sutun': col,
-                        'ad_soyad': student.get('ad_soyad', '')
-                    }
-                    student_idx += 1
-                    placed_in_room += 1
-
-        if student_idx < total_students:
-            logger.warning(f"Could not place all students! Placed: {student_idx}/{total_students}")
-
-        return seating
-
     def visualize_seating_plan(self, classrooms: List[Dict], seating_data: Dict):
         """Visualize seating arrangement with corridor groups"""
         # Clear existing VISUALIZATION ONLY (don't touch seating_data!)
@@ -574,8 +508,12 @@ class OturmaPlaniView(QWidget):
                 if data['derslik_id'] == derslik_id:
                     max_used_row = max(max_used_row, data['sira'])
 
-            # Only show used rows + 1 extra
-            display_rows = min(max_used_row + 1, rows) if max_used_row > 0 else rows
+            # Only show used rows (no extra rows to reduce widget count)
+            display_rows = max_used_row if max_used_row > 0 else min(5, rows)
+            
+            # Count students in this classroom
+            students_in_classroom = sum(1 for data in seating_data.values() if data['derslik_id'] == derslik_id)
+            logger.info(f"    Görselleştirme: {classroom.get('derslik_adi')} - {students_in_classroom} öğrenci, {display_rows} satır gösteriliyor")
 
             # Reverse seat data for lookup
             seat_lookup = {}
@@ -657,7 +595,7 @@ class OturmaPlaniView(QWidget):
                         """)
                         seat_btn.setToolTip(f"{ad_soyad}\nÖğrenci No: {ogrenci_no}\nSıra: {row}, Sütun: {col}")
                     else:
-                        # Empty seat - make it visually distinct (zigzag pattern)
+                        # Empty seat - make it visually distinct
                         seat_btn.setText("✗\nBOŞ")
                         seat_btn.setStyleSheet("""
                             QPushButton {
@@ -669,7 +607,7 @@ class OturmaPlaniView(QWidget):
                                 color: #991b1b;
                             }
                         """)
-                        seat_btn.setToolTip(f"Boş Koltuk (ZigZag) - Sıra: {row}, Sütun: {col}")
+                        seat_btn.setToolTip(f"Boş Koltuk - Sıra: {row}, Sütun: {col}")
 
                     grid.addWidget(seat_btn, row, visual_col)
                     visual_col += 1

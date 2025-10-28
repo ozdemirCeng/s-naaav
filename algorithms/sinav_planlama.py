@@ -269,7 +269,7 @@ class SinavPlanlama:
             
             # Attempt multiple ordering strategies to achieve zero conflict
             # Try many different approaches - don't give up easily!
-            max_attempts = int(params.get('max_attempts', 3000))  # Much more attempts!
+            max_attempts = int(params.get('max_attempts', 500))  # Much more attempts!
             strategies = [
                 'class_interleaved',  # focus on interleaving classes
                 'class_interleaved',
@@ -285,7 +285,7 @@ class SinavPlanlama:
             best_unscheduled = float('inf')
             any_days_exhausted = False
             attempts_without_improvement = 0
-            max_no_improvement = 1500# Give up if no improvement for 15 attempts
+            max_no_improvement = 200# Give up if no improvement for 15 attempts
             
             logger.info(f"🎯 Starting optimization with up to {max_attempts} attempts...")
             logger.info(f"   Target: {len(course_info)} courses to schedule")
@@ -316,15 +316,17 @@ class SinavPlanlama:
                 else:
                     randomized_assignment = course_slot_assignment
                 
-                # Update progress
-                if progress_callback:
+                # Update progress (only every 100 attempts to reduce log spam)
+                if progress_callback and (attempt % 100 == 0 or attempt == max_attempts - 1):
                     progress_pct = 70 + int((attempt / max_attempts) * 15)
                     progress_callback(
                         progress_pct,
                         f"Optimizasyon devam ediyor... (Deneme {attempt+1}/{max_attempts}, En iyi: {len(course_info) - best_unscheduled}/{len(course_info)})"
                     )
                 
-                logger.info(f"🔁 Attempt {attempt+1}/{max_attempts} with strategy={strategy}, randomized={attempt > 0}")
+                # Log only every 500 attempts to avoid spam
+                if attempt % 500 == 0 or attempt == max_attempts - 1:
+                    logger.info(f"🔁 Attempt {attempt+1}/{max_attempts} with strategy={strategy}, randomized={attempt > 0}")
                 self._days_exhausted = False
                 
                 schedule_try = self._assign_times_and_classrooms(
@@ -352,9 +354,11 @@ class SinavPlanlama:
                 # Penalize consecutive same-class slots within a day
                 class_gap_penalty = self._compute_class_consecutive_penalty(schedule_try, course_info)
                 
-                logger.info(f"📈 Attempt {attempt+1}: scheduled={len(scheduled_course_ids)}/{len(all_course_ids)}, "
-                           f"unscheduled={unscheduled}, max_student_load={max_student_load:.1f}, "
-                           f"avg_load={avg_student_load:.2f}")
+                # Log only occasionally to reduce spam
+                if attempt % 500 == 0 or attempt == max_attempts - 1:
+                    logger.info(f"📈 Attempt {attempt+1}: scheduled={len(scheduled_course_ids)}/{len(all_course_ids)}, "
+                               f"unscheduled={unscheduled}, max_student_load={max_student_load:.1f}, "
+                               f"avg_load={avg_student_load:.2f}")
                 
                 # Track improvement using multi-criteria optimization
                 # Priority: 1) More courses scheduled, 2) Lower max student load, 3) Lower avg load, 4) Fewer consecutive same-class slots
