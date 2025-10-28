@@ -122,9 +122,9 @@ class OgrenciYukleView(QWidget):
         left_layout.setContentsMargins(0, 0, 0, 0)
         
         self.table = QTableWidget()
-        self.table.setColumnCount(5)
+        self.table.setColumnCount(4)
         self.table.setHorizontalHeaderLabels([
-            "Öğrenci No", "Ad Soyad", "Sınıf", "E-posta", "Durum"
+            "Öğrenci No", "Ad Soyad", "Sınıf", "Durum"
         ])
         
         self.table.setAlternatingRowColors(True)
@@ -138,12 +138,11 @@ class OgrenciYukleView(QWidget):
         header.setSectionResizeMode(0, QHeaderView.Fixed)
         header.setSectionResizeMode(1, QHeaderView.Stretch)
         header.setSectionResizeMode(2, QHeaderView.Fixed)
-        header.setSectionResizeMode(3, QHeaderView.Stretch)
-        header.setSectionResizeMode(4, QHeaderView.Fixed)
+        header.setSectionResizeMode(3, QHeaderView.Fixed)
         
         self.table.setColumnWidth(0, 120)
         self.table.setColumnWidth(2, 80)
-        self.table.setColumnWidth(4, 100)
+        self.table.setColumnWidth(3, 100)
         
         left_layout.addWidget(self.table)
         
@@ -232,7 +231,7 @@ class OgrenciYukleView(QWidget):
         info_layout.setContentsMargins(12, 8, 12, 8)
         
         info_text = QLabel(
-            "Excel: Öğrenci No • Ad Soyad • Sınıf • E-posta (opsiyonel)"
+            "Excel: Öğrenci No • Ad Soyad • Sınıf"
         )
         info_text.setStyleSheet("color: #6b7280; font-size: 11px;")
         info_text.setWordWrap(True)
@@ -264,12 +263,10 @@ class OgrenciYukleView(QWidget):
             sinif_item.setTextAlignment(Qt.AlignCenter)
             self.table.setItem(row, 2, sinif_item)
             
-            self.table.setItem(row, 3, QTableWidgetItem(str(ogrenci.get('email', '-'))))
-            
             durum = "✅ Kayıtlı" if existing else "⏳ Beklemede"
             durum_item = QTableWidgetItem(durum)
             durum_item.setTextAlignment(Qt.AlignCenter)
-            self.table.setItem(row, 4, durum_item)
+            self.table.setItem(row, 3, durum_item)
     
     def filter_table(self):
         """Filter table based on search"""
@@ -448,69 +445,6 @@ class OgrenciYukleView(QWidget):
             logger.error(f"Error loading student courses: {e}")
             self.courses_stats.setText(f"❌ Hata: {str(e)}")
     
-    def edit_selected_student(self):
-        """Edit selected student"""
-        selected_rows = self.table.selectedIndexes()
-        if not selected_rows:
-            QMessageBox.warning(self, "Uyarı", "Lütfen düzenlemek için bir öğrenci seçin!")
-            return
-        
-        row = selected_rows[0].row()
-        durum = self.table.item(row, 4).text()
-        
-        if durum == "Beklemede":
-            QMessageBox.warning(self, "Uyarı", "Beklemedeki öğrenciler düzenlenemez! Önce kaydedin.")
-            return
-        
-        ogrenci_no = self.table.item(row, 0).text()
-        ad_soyad = self.table.item(row, 1).text()
-        sinif = self.table.item(row, 2).text()
-        email = self.table.item(row, 3).text() if self.table.item(row, 3) else ""
-        
-        # Create edit dialog
-        dialog = QDialog(self)
-        dialog.setWindowTitle("Öğrenci Düzenle")
-        dialog.setMinimumWidth(400)
-        
-        layout = QVBoxLayout(dialog)
-        form = QFormLayout()
-        
-        no_edit = QLineEdit(ogrenci_no)
-        no_edit.setReadOnly(True)
-        ad_edit = QLineEdit(ad_soyad)
-        sinif_edit = QSpinBox()
-        sinif_edit.setRange(1, 6)
-        sinif_edit.setValue(int(sinif))
-        email_edit = QLineEdit(email)
-        
-        form.addRow("Öğrenci No:", no_edit)
-        form.addRow("Ad Soyad:", ad_edit)
-        form.addRow("Sınıf:", sinif_edit)
-        form.addRow("E-posta:", email_edit)
-        
-        layout.addLayout(form)
-        
-        buttons = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
-        buttons.accepted.connect(dialog.accept)
-        buttons.rejected.connect(dialog.reject)
-        layout.addWidget(buttons)
-        
-        if dialog.exec() == QDialog.Accepted:
-            # Update student
-            updated_data = {
-                'ad_soyad': ad_edit.text().strip(),
-                'sinif': sinif_edit.value(),
-                'email': email_edit.text().strip()
-            }
-            
-            result = self.ogrenci_controller.update_ogrenci(ogrenci_no, updated_data)
-            
-            if result['success']:
-                QMessageBox.information(self, "Başarılı", result['message'])
-                self.load_existing_ogrenciler()
-            else:
-                QMessageBox.critical(self, "Hata", result['message'])
-    
     def select_all_students(self):
         """Select all students in table"""
         self.table.selectAll()
@@ -531,8 +465,8 @@ class OgrenciYukleView(QWidget):
         student_list = []
         for index in selected_rows:
             row = index.row()
-            durum = self.table.item(row, 4).text()
-            if durum == "Beklemede":
+            durum = self.table.item(row, 3).text()
+            if durum == "⏳ Beklemede":
                 pending_found = True
                 break
             ogrenci_no = self.table.item(row, 0).text()
@@ -579,16 +513,15 @@ class OgrenciYukleView(QWidget):
             return
         
         row = selected_rows[0].row()
-        durum = self.table.item(row, 4).text()
+        durum = self.table.item(row, 3).text()
         
-        if durum == "Beklemede":
+        if durum == "⏳ Beklemede":
             QMessageBox.warning(self, "Uyarı", "Beklemedeki öğrenciler düzenlenemez! Önce kaydedin.")
             return
         
         ogrenci_no = self.table.item(row, 0).text()
         ad_soyad = self.table.item(row, 1).text()
         sinif = self.table.item(row, 2).text()
-        email = self.table.item(row, 3).text() if self.table.item(row, 3) else ""
         
         # Create edit dialog
         dialog = QDialog(self)
@@ -604,12 +537,10 @@ class OgrenciYukleView(QWidget):
         sinif_edit = QSpinBox()
         sinif_edit.setRange(1, 6)
         sinif_edit.setValue(int(sinif))
-        email_edit = QLineEdit(email)
         
         form.addRow("Öğrenci No:", no_edit)
         form.addRow("Ad Soyad:", ad_edit)
         form.addRow("Sınıf:", sinif_edit)
-        form.addRow("E-posta:", email_edit)
         
         layout.addLayout(form)
         
@@ -622,8 +553,7 @@ class OgrenciYukleView(QWidget):
             # Update student
             updated_data = {
                 'ad_soyad': ad_edit.text().strip(),
-                'sinif': sinif_edit.value(),
-                'email': email_edit.text().strip()
+                'sinif': sinif_edit.value()
             }
             
             result = self.ogrenci_controller.update_ogrenci(ogrenci_no, updated_data)

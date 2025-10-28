@@ -10,7 +10,8 @@ from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QFrame, QTableWidget, QTableWidgetItem, QHeaderView,
-    QTextEdit, QCheckBox, QMessageBox, QDialog, QFormLayout
+    QTextEdit, QCheckBox, QMessageBox, QDialog, QFormLayout,
+    QAbstractItemView
 )
 
 from models.database import db
@@ -170,6 +171,7 @@ class DuyuruYonetimiView(QWidget):
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(QTableWidget.SelectRows)
         self.table.setSelectionMode(QTableWidget.SingleSelection)
+        self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)  # Disable editing
         self.table.verticalHeader().setVisible(False)
         self.table.setShowGrid(False)
         self.table.setStyleSheet("""

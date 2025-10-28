@@ -661,7 +661,7 @@ class DerslikVisualizationDialog(QDialog):
         super().__init__(parent)
         self.derslik = derslik
         self.setWindowTitle(f"Derslik Düzeni - {derslik['derslik_adi']}")
-        self.setMinimumSize(900, 700)
+        self.setMinimumSize(1200, 700)
         self.setup_ui()
     
     def setup_ui(self):
