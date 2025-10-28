@@ -316,8 +316,8 @@ class SinavPlanlama:
                 else:
                     randomized_assignment = course_slot_assignment
                 
-                # Update progress (only every 100 attempts to reduce log spam)
-                if progress_callback and (attempt % 100 == 0 or attempt == max_attempts - 1):
+                # Update progress (every 10 attempts for smoother UI)
+                if progress_callback and (attempt % 10 == 0 or attempt == max_attempts - 1):
                     progress_pct = 70 + int((attempt / max_attempts) * 15)
                     progress_callback(
                         progress_pct,

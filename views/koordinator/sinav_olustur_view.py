@@ -24,6 +24,7 @@ from models.ogrenci_model import OgrenciModel
 from controllers.sinav_controller import SinavController
 from algorithms.sinav_planlama import SinavPlanlama
 from utils.export_utils import ExportUtils
+from utils.modern_dialogs import ModernMessageBox, sanitize_filename
 
 logger = logging.getLogger(__name__)
 
@@ -308,33 +309,41 @@ class ProgramResultDialog(QDialog):
     
     def save_to_db(self):
         """Save schedule to database"""
-        reply = QMessageBox.question(
-            self,
-            "Veritabanına Kaydet",
-            f"Sınav programını veritabanına kaydetmek istediğinizden emin misiniz?\n\n"
-            f"📊 {len(self.schedule_data)} kayıt eklenecek.",
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.Yes
-        )
-        
-        if reply == QMessageBox.Yes:
-            try:
-                sinav_model = SinavModel(db)
-                ders_model = DersModel(db)
-                derslik_model = DerslikModel(db)
-                sinav_controller = SinavController(sinav_model, ders_model, derslik_model)
+        try:
+            # Count unique exams (group by ders_id and tarih_saat)
+            unique_exams = len(set((s.get('ders_id'), s.get('tarih_saat')) for s in self.schedule_data))
+            
+            sinav_model = SinavModel(db)
+            ders_model = DersModel(db)
+            derslik_model = DerslikModel(db)
+            sinav_controller = SinavController(sinav_model, ders_model, derslik_model)
+            
+            result = sinav_controller.save_exam_schedule(self.schedule_data)
+            
+            if result['success']:
+                ModernMessageBox.success(
+                    self, 
+                    "Başarılı", 
+                    f"{unique_exams} sınav başarıyla kaydedildi!",
+                    f"Program ID: {result.get('program_id', 'N/A')}\nToplam kayıt: {unique_exams}"
+                )
+                self.accept()  # Close dialog after successful save
+            else:
+                ModernMessageBox.warning(
+                    self,
+                    "Uyarı",
+                    result['message'],
+                    result.get('details', '')
+                )
                 
-                result = sinav_controller.save_exam_schedule(self.schedule_data)
-                
-                if result['success']:
-                    QMessageBox.information(self, "Başarılı", "✅ " + result['message'])
-                    self.accept()  # Close dialog after successful save
-                else:
-                    QMessageBox.warning(self, "Hata", result['message'])
-                    
-            except Exception as e:
-                logger.error(f"Save error: {e}", exc_info=True)
-                QMessageBox.critical(self, "Hata", f"Kayıt sırasında hata:\n{str(e)}")
+        except Exception as e:
+            logger.error(f"Save error: {e}", exc_info=True)
+            ModernMessageBox.error(
+                self,
+                "Kayıt Hatası",
+                "Sınav programı kaydedilirken bir hata oluştu.",
+                f"Hata detayı:\n{str(e)}"
+            )
 
 
 class SinavOlusturView(QWidget):
@@ -352,6 +361,20 @@ class SinavOlusturView(QWidget):
         
         self.setup_ui()
         self.load_data()
+    
+    def refresh_main_window_ui(self):
+        """Refresh main window UI (update menus after data changes)"""
+        try:
+            # Traverse up to find MainWindow
+            parent = self.parent()
+            while parent:
+                if parent.__class__.__name__ == 'MainWindow':
+                    if hasattr(parent, 'refresh_ui_for_data_change'):
+                        parent.refresh_ui_for_data_change()
+                    break
+                parent = parent.parent()
+        except Exception as e:
+            logger.error(f"Error refreshing main window: {e}")
     
     def setup_ui(self):
         """Setup UI"""
@@ -939,28 +962,44 @@ class SinavOlusturView(QWidget):
     
     def delete_program(self, program):
         """Delete a program"""
-        reply = QMessageBox.question(
+        confirmed = ModernMessageBox.question(
             self,
             "Programı Sil",
             f"'{program['program_adi']}' programını silmek istediğinizden emin misiniz?\n\n"
-            f"Bu işlem geri alınamaz ve programa ait tüm sınavlar silinecektir!",
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No
+            f"⚠️ Bu işlem geri alınamaz!\n"
+            f"⚠️ Programa ait tüm sınavlar silinecektir!",
+            f"Program ID: {program['program_id']}\n"
+            f"Tarih Aralığı: {program.get('baslangic_tarihi', 'N/A')} - {program.get('bitis_tarihi', 'N/A')}"
         )
         
-        if reply == QMessageBox.Yes:
+        if confirmed:
             try:
                 result = self.sinav_model.delete_program(program['program_id'])
                 
                 if result:
-                    QMessageBox.information(self, "Başarılı", "Program başarıyla silindi!")
+                    ModernMessageBox.success(
+                        self, 
+                        "Başarılı", 
+                        f"'{program['program_adi']}' programı başarıyla silindi!"
+                    )
                     self.load_existing_programs()
+                    # Menüleri güncelle (oturma planı menüsü gizlenmeli)
+                    self.refresh_main_window_ui()
                 else:
-                    QMessageBox.warning(self, "Uyarı", "Program silinemedi!")
+                    ModernMessageBox.warning(
+                        self, 
+                        "Uyarı", 
+                        "Program silinemedi!"
+                    )
                     
             except Exception as e:
                 logger.error(f"Error deleting program: {e}", exc_info=True)
-                QMessageBox.critical(self, "Hata", f"Program silinirken hata:\n{str(e)}")
+                ModernMessageBox.error(
+                    self,
+                    "Silme Hatası",
+                    "Program silinirken bir hata oluştu.",
+                    f"Hata detayı:\n{str(e)}"
+                )
     
     def export_program_excel(self, program):
         """Export program to Excel"""
@@ -972,7 +1011,8 @@ class SinavOlusturView(QWidget):
                 return
             
             # Ask for save location
-            default_name = f"sinav_programi_{program['program_adi']}_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
+            program_adi_clean = sanitize_filename(program['program_adi'])
+            default_name = f"sinav_programi_{program_adi_clean}_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
             file_path, _ = QFileDialog.getSaveFileName(
                 self,
                 "Excel Dosyası Kaydet",
@@ -1025,7 +1065,8 @@ class SinavOlusturView(QWidget):
             sinav_tipi = program.get('sinav_tipi', 'SINAV')
             
             # Ask for save location
-            default_name = f"sinav_programi_{program['program_adi']}_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf"
+            program_adi_clean = sanitize_filename(program['program_adi'])
+            default_name = f"sinav_programi_{program_adi_clean}_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf"
             file_path, _ = QFileDialog.getSaveFileName(
                 self,
                 "PDF Dosyası Kaydet",
@@ -1706,21 +1747,37 @@ class SinavOlusturView(QWidget):
         """Create exam schedule"""
         # Validate dates
         if self.baslangic_tarih.dateTime() >= self.bitis_tarih.dateTime():
-            QMessageBox.warning(self, "Uyarı", "Bitiş tarihi başlangıç tarihinden sonra olmalıdır!")
+            ModernMessageBox.warning(
+                self, 
+                "Geçersiz Tarih Aralığı", 
+                "Bitiş tarihi başlangıç tarihinden sonra olmalıdır!",
+                f"Başlangıç: {self.baslangic_tarih.dateTime().toString('dd.MM.yyyy')}\n"
+                f"Bitiş: {self.bitis_tarih.dateTime().toString('dd.MM.yyyy')}"
+            )
             return
         
         # Get allowed weekdays
         allowed_weekdays = [day for day, checkbox in self.gun_checkboxes.items() if checkbox.isChecked()]
         
         if not allowed_weekdays:
-            QMessageBox.warning(self, "Uyarı", "En az bir gün seçmelisiniz!")
+            ModernMessageBox.warning(
+                self, 
+                "Gün Seçilmedi", 
+                "Lütfen sınav yapılacak en az bir gün seçiniz.",
+                "Seçilebilir günler: Pazartesi, Salı, Çarşamba, Perşembe, Cuma, Cumartesi, Pazar"
+            )
             return
         
         # Get selected courses
         selected_ders_ids = [ders_id for ders_id, checkbox in self.ders_checkboxes.items() if checkbox.isChecked()]
         
         if not selected_ders_ids:
-            QMessageBox.warning(self, "Uyarı", "En az bir ders seçmelisiniz!")
+            ModernMessageBox.warning(
+                self, 
+                "Ders Seçilmedi", 
+                "Lütfen sınav programına dahil edilecek en az bir ders seçiniz.",
+                f"Toplam mevcut ders: {len(self.ders_checkboxes)}"
+            )
             return
         
         # Get custom durations for each course
@@ -1793,14 +1850,25 @@ class SinavOlusturView(QWidget):
                 'sinav_tipi': self.sinav_tipi_combo.currentText()
             }
             dialog = ProgramResultDialog(schedule, params, self)
-            dialog.exec()
+            dialog_result = dialog.exec()
             
             # Refresh programs list
             self.load_existing_programs()
+            
+            # Refresh main window menus (show oturma planı menu if program was saved)
+            self.refresh_main_window_ui()
         else:
             # Show error
             message = result.get('message', 'Program oluşturulamadı!')
-            QMessageBox.warning(self, "Hata", message)
+            warnings = result.get('warnings', [])
+            details = "\n".join(warnings) if warnings else "Detay bilgi bulunmuyor"
+            
+            ModernMessageBox.error(
+                self,
+                "Program Oluşturulamadı",
+                message,
+                details
+            )
     
     def on_planning_error(self, error_msg):
         """Handle planning error"""
@@ -1814,4 +1882,9 @@ class SinavOlusturView(QWidget):
             self.planning_thread.wait()
             self.planning_thread = None
         
-        QMessageBox.critical(self, "Hata", f"Program oluşturulurken hata oluştu:\n{error_msg}")
+        ModernMessageBox.error(
+            self,
+            "Planlama Hatası",
+            "Sınav programı oluşturulurken bir hata oluştu.",
+            f"Hata detayı:\n{error_msg}"
+        )

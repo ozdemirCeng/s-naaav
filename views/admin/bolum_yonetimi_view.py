@@ -15,6 +15,7 @@ from PySide6.QtGui import QFont
 
 from models.bolum_model import BolumModel
 from models.database import db
+from utils.modern_dialogs import ModernMessageBox
 
 logger = logging.getLogger(__name__)
 
@@ -337,7 +338,7 @@ class BolumYonetimiView(QWidget):
 
         except Exception as e:
             logger.error(f"Error loading departments: {e}")
-            QMessageBox.critical(self, "Hata", f"Bölümler yüklenirken hata oluştu:\n{str(e)}")
+            ModernMessageBox.error(self, "Hata", "Bölümler yüklenirken oluştu", f"{str(e)}")
 
     def add_bolum(self):
         """Add new department"""
@@ -348,20 +349,18 @@ class BolumYonetimiView(QWidget):
 
                 # Validation
                 if not data['bolum_kodu']:
-                    QMessageBox.warning(self, "Uyarı", "⚠️ Bölüm kodu giriniz!")
+                    ModernMessageBox.warning(self, "Uyarı", "⚠️ Bölüm kodu giriniz!")
                     return
 
                 if not data['bolum_adi']:
-                    QMessageBox.warning(self, "Uyarı", "⚠️ Bölüm adı giriniz!")
+                    ModernMessageBox.warning(self, "Uyarı", "⚠️ Bölüm adı giriniz!")
                     return
 
                 # Check if kod already exists
                 existing = self.bolum_model.get_bolum_by_kod(data['bolum_kodu'])
                 if existing:
-                    QMessageBox.warning(
-                        self,
-                        "Uyarı",
-                        f"⚠️ '{data['bolum_kodu']}' kodu zaten kullanılıyor!\n\n"
+                    ModernMessageBox.warning(
+                        self, "Uyarı", f"⚠️ '{data['bolum_kodu']}' kodu zaten kullanılıyor!", f"\n"
                         f"Mevcut bölüm: {existing['bolum_adi']}"
                     )
                     return
@@ -369,10 +368,8 @@ class BolumYonetimiView(QWidget):
                 # Insert department
                 bolum_id = self.bolum_model.insert_bolum(data)
 
-                QMessageBox.information(
-                    self,
-                    "Başarılı",
-                    f"✅ Bölüm başarıyla eklendi!\n\n"
+                ModernMessageBox.success(
+                    self, "Başarılı", f"Bölüm başarıyla eklendi!", f"\n"
                     f"Kod: {data['bolum_kodu']}\n"
                     f"Ad: {data['bolum_adi']}"
                 )
@@ -381,7 +378,7 @@ class BolumYonetimiView(QWidget):
 
         except Exception as e:
             logger.error(f"Error adding department: {e}")
-            QMessageBox.critical(self, "Hata", f"Bölüm eklenirken hata oluştu:\n{str(e)}")
+            ModernMessageBox.error(self, "Hata", "Bölüm eklenirken oluştu", f"{str(e)}")
 
     def edit_bolum(self, bolum):
         """Edit department"""
@@ -392,20 +389,18 @@ class BolumYonetimiView(QWidget):
 
                 # Validation
                 if not data['bolum_kodu']:
-                    QMessageBox.warning(self, "Uyarı", "⚠️ Bölüm kodu giriniz!")
+                    ModernMessageBox.warning(self, "Uyarı", "⚠️ Bölüm kodu giriniz!")
                     return
 
                 if not data['bolum_adi']:
-                    QMessageBox.warning(self, "Uyarı", "⚠️ Bölüm adı giriniz!")
+                    ModernMessageBox.warning(self, "Uyarı", "⚠️ Bölüm adı giriniz!")
                     return
 
                 # Check if kod already exists (for other departments)
                 existing = self.bolum_model.get_bolum_by_kod(data['bolum_kodu'])
                 if existing and existing['bolum_id'] != bolum['bolum_id']:
-                    QMessageBox.warning(
-                        self,
-                        "Uyarı",
-                        f"⚠️ '{data['bolum_kodu']}' kodu zaten kullanılıyor!\n\n"
+                    ModernMessageBox.warning(
+                        self, "Uyarı", f"⚠️ '{data['bolum_kodu']}' kodu zaten kullanılıyor!", f"\n"
                         f"Mevcut bölüm: {existing['bolum_adi']}"
                     )
                     return
@@ -423,12 +418,12 @@ class BolumYonetimiView(QWidget):
 
         except Exception as e:
             logger.error(f"Error editing department: {e}")
-            QMessageBox.critical(self, "Hata", f"Bölüm güncellenirken hata oluştu:\n{str(e)}")
+            ModernMessageBox.error(self, "Hata", "Bölüm güncellenirken oluştu", f"{str(e)}")
 
     def delete_bolum(self, bolum):
         """Delete department"""
         try:
-            reply = QMessageBox.question(
+            confirmed = ModernMessageBox.question(
                 self,
                 "Bölüm Sil",
                 f"🗑️ {bolum['bolum_adi']} bölümünü silmek istediğinizden emin misiniz?\n\n"
@@ -438,7 +433,7 @@ class BolumYonetimiView(QWidget):
                 QMessageBox.No
             )
 
-            if reply == QMessageBox.Yes:
+            if confirmed:
                 self.bolum_model.delete_bolum(bolum['bolum_id'])
 
                 QMessageBox.information(
@@ -451,4 +446,4 @@ class BolumYonetimiView(QWidget):
 
         except Exception as e:
             logger.error(f"Error deleting department: {e}")
-            QMessageBox.critical(self, "Hata", f"Bölüm silinirken hata oluştu:\n{str(e)}")
+            ModernMessageBox.error(self, "Hata", "Bölüm silinirken oluştu", f"{str(e)}")

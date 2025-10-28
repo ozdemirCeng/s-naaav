@@ -19,6 +19,7 @@ from models.database import db
 from models.sinav_model import SinavModel
 from models.derslik_model import DerslikModel
 from models.ogrenci_model import OgrenciModel
+from utils.modern_dialogs import ModernMessageBox, sanitize_filename
 from algorithms.oturma_planlama import OturmaPlanlama
 
 logger = logging.getLogger(__name__)
@@ -43,6 +44,12 @@ class OturmaPlaniView(QWidget):
         self.seating_data_sinav_id = None  # Track which exam the seating data belongs to
 
         self.init_ui()
+        self.load_exams()
+    
+    def showEvent(self, event):
+        """Refresh exam list when view is shown"""
+        super().showEvent(event)
+        # Reload exams to show newly created ones
         self.load_exams()
 
     def init_ui(self):
@@ -212,6 +219,7 @@ class OturmaPlaniView(QWidget):
             programs = self.sinav_model.get_programs_by_bolum(self.bolum_id)
 
             if not programs:
+                logger.info("Oturma Planı: Henüz sınav programı yok")
                 return
 
             # Get exams from all programs
@@ -223,6 +231,7 @@ class OturmaPlaniView(QWidget):
                     exam['program_adi'] = program['program_adi']
                     all_exams.append(exam)
 
+            logger.info(f"Oturma Planı: {len(all_exams)} sınav yüklendi")
             self.exams_table.setRowCount(0)
 
             for exam in all_exams:
@@ -267,11 +276,9 @@ class OturmaPlaniView(QWidget):
                     if item:
                         item.setData(Qt.UserRole, exam)
 
-            logger.info(f"Loaded {len(all_exams)} exams for seating plans")
-
         except Exception as e:
             logger.error(f"Error loading exams: {e}", exc_info=True)
-            QMessageBox.critical(self, "Hata", f"Sınavlar yüklenirken hata:\n{str(e)}")
+            ModernMessageBox.error(self, "Yükleme Hatası", "Sınavlar yüklenirken bir hata oluştu.", f"Hata detayı:\n{str(e)}")
 
     def on_exam_selected(self):
         """Handle exam selection"""
@@ -311,12 +318,8 @@ class OturmaPlaniView(QWidget):
 
         # Only clear if selecting a different exam
         if is_different_exam:
-            # Log the change with IDs for debugging
-            logger.warning(f"🔄 EXAM CHANGED: {old_exam_kodu} (ID:{old_sinav_id}) → {new_ders_kodu} (ID:{new_sinav_id})")
-            
             # Warn if there was seating data
             if self.seating_data and self.seating_data_sinav_id:
-                logger.warning(f"⚠️ Clearing seating data for exam {self.seating_data_sinav_id}")
                 QMessageBox.information(
                     self,
                     "Sınav Değişti",
@@ -368,30 +371,29 @@ class OturmaPlaniView(QWidget):
             students = self.ogrenci_model.get_ogrenciler_by_ders(ders_id)
 
             if not students:
-                QMessageBox.information(self, "Bilgi", "Bu derse kayıtlı öğrenci bulunamadı!")
+                ModernMessageBox.information(self, "Bilgi", "Bu derse kayıtlı öğrenci bulunamadı!")
                 return
 
             # Get classroom(s) for this exam
             classrooms = self._get_exam_classrooms(sinav_id)
 
             if not classrooms:
-                QMessageBox.warning(self, "Uyarı", "Bu sınav için derslik bilgisi bulunamadı!")
+                ModernMessageBox.warning(self, "Uyarı", "Bu sınav için derslik bilgisi bulunamadı!")
                 return
 
             # Check total capacity
             total_capacity = sum(c.get('kapasite', 0) for c in classrooms)
 
             if len(students) > total_capacity:
-                reply = QMessageBox.question(
+                confirmed = ModernMessageBox.question(
                     self,
                     "Kapasite Uyarısı",
-                    f"⚠️ Uyarı: Öğrenci sayısı ({len(students)}) derslik kapasitesini ({total_capacity}) aşıyor!\n\n"
-                    f"Sadece {total_capacity} öğrenci yerleştirilebilir.\n\n"
+                    f"⚠️ Öğrenci sayısı derslik kapasitesini aşıyor!\n\n"
+                    f"Sadece {total_capacity} öğrenci yerleştirilebilir.\n"
                     f"Devam etmek istiyor musunuz?",
-                    QMessageBox.Yes | QMessageBox.No,
-                    QMessageBox.No
+                    f"Öğrenci: {len(students)}\nKapasite: {total_capacity}\nFark: {len(students) - total_capacity}"
                 )
-                if reply == QMessageBox.No:
+                if not confirmed:
                     return
 
             # Create seating arrangement using OturmaPlanlama algorithm
@@ -399,7 +401,7 @@ class OturmaPlaniView(QWidget):
             plan_list = oturma_planlama._generate_multi_classroom_plan(students, classrooms)
 
             if not plan_list:
-                QMessageBox.warning(self, "Uyarı", "Oturma düzeni oluşturulamadı!")
+                ModernMessageBox.warning(self, "Uyarı", "Oturma düzeni oluşturulamadı!")
                 return
 
             # Convert list to dict format {ogrenci_no: {derslik_id, sira, sutun, ad_soyad, derslik_adi}}
@@ -416,9 +418,7 @@ class OturmaPlaniView(QWidget):
             self.seating_data = seating_data
             self.seating_data_sinav_id = sinav_id  # Track which exam this data belongs to
             
-            logger.info(f"💾 SEATING DATA SAVED: {len(seating_data)} students for exam {sinav_id}")
-            logger.info(f"   self.seating_data = {len(self.seating_data)} students")
-            logger.info(f"   self.seating_data_sinav_id = {self.seating_data_sinav_id}")
+            logger.info(f"✅ Oturma düzeni oluşturuldu: {len(seating_data)} öğrenci")
 
             # Visualize seating plan
             self.visualize_seating_plan(classrooms, seating_data)
@@ -434,34 +434,32 @@ class OturmaPlaniView(QWidget):
             exam_info_text = f"Oturma düzeni: {self.selected_sinav.get('ders_kodu', '')} (Sınav ID: {sinav_id})"
             self.export_visual_btn.setToolTip(f"📄 {exam_info_text}\n\nGörsel PDF olarak indir")
             self.export_list_btn.setToolTip(f"📋 {exam_info_text}\n\nListe PDF olarak indir")
-            
-            logger.info(f"Export buttons enabled for exam {sinav_id} ({self.selected_sinav.get('ders_kodu', '')})")
 
             # Show result message
             placed_count = len(seating_data)
             if placed_count < len(students):
-                QMessageBox.warning(
+                ModernMessageBox.warning(
                     self,
                     "Kısmi Başarı",
                     f"⚠️ {placed_count}/{len(students)} öğrenci yerleştirildi!\n\n"
                     f"Kapasite yetersiz olduğu için {len(students) - placed_count} öğrenci yerleştirilemedi.\n\n"
-                    f"Şimdi PDF butonlarını kullanarak indirebilirsiniz."
+                    f"Şimdi PDF butonlarını kullanarak indirebilirsiniz.",
+                    f"Yerleştirilen: {placed_count}\nYerleştirilemeyen: {len(students) - placed_count}"
                 )
             else:
-                QMessageBox.information(
+                ModernMessageBox.success(
                     self,
                     "Başarılı",
-                    f"✅ {len(students)} öğrenci için oturma düzeni oluşturuldu!\n\n"
+                    f"{len(students)} öğrenci için oturma düzeni oluşturuldu!\n\n"
                     f"📄 Görsel PDF: Derslik yerleşimi\n"
                     f"📋 Liste PDF: Öğrenci tablosu\n\n"
-                    f"PDF butonlarını kullanarak indirebilirsiniz."
+                    f"PDF butonlarını kullanarak indirebilirsiniz.",
+                    f"Toplam öğrenci: {len(students)}\nDerslik sayısı: {len(classrooms)}"
                 )
-            
-            logger.info(f"Seating plan created successfully for exam {sinav_id}. Placed {placed_count} students.")
 
         except Exception as e:
             logger.error(f"Error creating seating plan: {e}", exc_info=True)
-            QMessageBox.critical(self, "Hata", f"Oturma düzeni oluşturulurken hata:\n{str(e)}")
+            ModernMessageBox.error(self, "Planlama Hatası", "Oturma düzeni oluşturulurken bir hata oluştu.", f"Hata detayı:\n{str(e)}")
 
     def _get_exam_classrooms(self, sinav_id: int) -> List[Dict]:
         """Get classrooms assigned to an exam"""
@@ -657,19 +655,13 @@ class OturmaPlaniView(QWidget):
 
     def clear_seating_plan(self):
         """Clear seating plan visualization"""
-        import traceback
-        logger.warning(f"🗑️ CLEARING SEATING PLAN - Called from:")
-        for line in traceback.format_stack()[-4:-1]:  # Show last 3 stack frames
-            logger.warning(f"   {line.strip()}")
-        
-        if self.seating_data:
-            logger.warning(f"   Clearing {len(self.seating_data)} students for exam {self.seating_data_sinav_id}")
-        
+        # Clear visualization widgets
         while self.seating_layout.count():
             child = self.seating_layout.takeAt(0)
             if child.widget():
                 child.widget().deleteLater()
 
+        # Clear data
         self.students_table.setRowCount(0)
         self.seating_data = {}
         self.seating_data_sinav_id = None
@@ -679,7 +671,7 @@ class OturmaPlaniView(QWidget):
     def export_visual_pdf(self):
         """Export visual seating plan (classroom layout) to PDF"""
         if not self.selected_sinav:
-            QMessageBox.warning(self, "Uyarı", "Lütfen önce bir sınav seçin!")
+            ModernMessageBox.warning(self, "Uyarı", "Lütfen önce bir sınav seçin!")
             logger.warning("Export failed: No exam selected")
             return
         
@@ -688,7 +680,7 @@ class OturmaPlaniView(QWidget):
             logger.error(f"   Selected exam: {self.selected_sinav.get('ders_kodu')} (ID: {self.selected_sinav.get('sinav_id')})")
             logger.error(f"   self.seating_data length: {len(self.seating_data)}")
             logger.error(f"   self.seating_data_sinav_id: {self.seating_data_sinav_id}")
-            QMessageBox.warning(self, "Uyarı", "Önce oturma düzeni oluşturun!\n\n'🎯 Oturma Düzeni Oluştur' butonuna tıklayın.")
+            ModernMessageBox.warning(self, "Uyarı", "Önce oturma düzeni oluşturun!\n\n'🎯 Oturma Düzeni Oluştur' butonuna tıklayın.")
             return
         
         # CRITICAL: Check if seating data matches selected exam
@@ -711,7 +703,7 @@ class OturmaPlaniView(QWidget):
         try:
             from utils.export_utils import ExportUtils
 
-            ders_kodu = self.selected_sinav.get('ders_kodu', 'DERS')
+            ders_kodu = sanitize_filename(self.selected_sinav.get('ders_kodu', 'DERS'))
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
 
             file_path, _ = QFileDialog.getSaveFileName(
@@ -746,22 +738,23 @@ class OturmaPlaniView(QWidget):
             }
 
             if ExportUtils.export_to_pdf(export_data, file_path):
-                QMessageBox.information(
+                ModernMessageBox.success(
                     self,
                     "Başarılı",
-                    f"✅ Görsel oturma düzeni PDF olarak kaydedildi:\n{file_path}"
+                    "Görsel oturma düzeni PDF olarak kaydedildi!",
+                    f"Dosya konumu:\n{file_path}"
                 )
             else:
-                QMessageBox.warning(self, "Uyarı", "PDF oluşturulamadı!")
+                ModernMessageBox.warning(self, "Uyarı", "PDF oluşturulamadı!")
 
         except Exception as e:
             logger.error(f"Error exporting visual PDF: {e}", exc_info=True)
-            QMessageBox.critical(self, "Hata", f"PDF oluşturulurken hata:\n{str(e)}")
+            ModernMessageBox.error(self, "Export Hatası", "PDF oluşturulurken bir hata oluştu.", f"Hata detayı:\n{str(e)}")
 
     def export_list_pdf(self):
         """Export student list (table format) to PDF"""
         if not self.selected_sinav:
-            QMessageBox.warning(self, "Uyarı", "Lütfen önce bir sınav seçin!")
+            ModernMessageBox.warning(self, "Uyarı", "Lütfen önce bir sınav seçin!")
             logger.warning("Export failed: No exam selected")
             return
         
@@ -770,7 +763,7 @@ class OturmaPlaniView(QWidget):
             logger.error(f"   Selected exam: {self.selected_sinav.get('ders_kodu')} (ID: {self.selected_sinav.get('sinav_id')})")
             logger.error(f"   self.seating_data length: {len(self.seating_data)}")
             logger.error(f"   self.seating_data_sinav_id: {self.seating_data_sinav_id}")
-            QMessageBox.warning(self, "Uyarı", "Önce oturma düzeni oluşturun!\n\n'🎯 Oturma Düzeni Oluştur' butonuna tıklayın.")
+            ModernMessageBox.warning(self, "Uyarı", "Önce oturma düzeni oluşturun!\n\n'🎯 Oturma Düzeni Oluştur' butonuna tıklayın.")
             return
         
         # CRITICAL: Check if seating data matches selected exam
@@ -793,7 +786,7 @@ class OturmaPlaniView(QWidget):
         try:
             from utils.export_utils import ExportUtils
 
-            ders_kodu = self.selected_sinav.get('ders_kodu', 'DERS')
+            ders_kodu = sanitize_filename(self.selected_sinav.get('ders_kodu', 'DERS'))
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
 
             file_path, _ = QFileDialog.getSaveFileName(
@@ -828,17 +821,18 @@ class OturmaPlaniView(QWidget):
             }
 
             if ExportUtils.export_to_pdf(export_data, file_path):
-                QMessageBox.information(
+                ModernMessageBox.success(
                     self,
                     "Başarılı",
-                    f"✅ Öğrenci listesi PDF olarak kaydedildi:\n{file_path}"
+                    "Öğrenci listesi PDF olarak kaydedildi!",
+                    f"Dosya konumu:\n{file_path}"
                 )
             else:
-                QMessageBox.warning(self, "Uyarı", "PDF oluşturulamadı!")
+                ModernMessageBox.warning(self, "Uyarı", "PDF oluşturulamadı!")
 
         except Exception as e:
             logger.error(f"Error exporting list PDF: {e}", exc_info=True)
-            QMessageBox.critical(self, "Hata", f"PDF oluşturulurken hata:\n{str(e)}")
+            ModernMessageBox.error(self, "Export Hatası", "PDF oluşturulurken bir hata oluştu.", f"Hata detayı:\n{str(e)}")
 
     def change_classroom(self, exam: Dict):
         """Change classroom for selected exam"""
@@ -851,7 +845,7 @@ class OturmaPlaniView(QWidget):
             all_classrooms = self.derslik_model.get_derslikler_by_bolum(self.bolum_id)
 
             if not all_classrooms:
-                QMessageBox.warning(self, "Uyarı", "Sistemde derslik bulunamadı!")
+                ModernMessageBox.warning(self, "Uyarı", "Sistemde derslik bulunamadı!")
                 return
 
             # Get currently assigned classrooms
@@ -917,7 +911,7 @@ class OturmaPlaniView(QWidget):
                 selected_ids = [item.data(Qt.UserRole) for item in selected_items]
 
                 if not selected_ids:
-                    QMessageBox.warning(self, "Uyarı", "Lütfen en az bir derslik seçin!")
+                    ModernMessageBox.warning(self, "Uyarı", "Lütfen en az bir derslik seçin!")
                     return
 
                 # Update database
@@ -942,11 +936,11 @@ class OturmaPlaniView(QWidget):
                             self.exams_table.selectRow(row)
                             break
 
-                QMessageBox.information(self, "Başarılı", "✅ Derslik değişikliği başarıyla kaydedildi!\n\nYeni derslik düzenine göre oturma planını yeniden oluşturun.")
+                ModernMessageBox.information(self, "Başarılı", "✅ Derslik değişikliği başarıyla kaydedildi!\n\nYeni derslik düzenine göre oturma planını yeniden oluşturun.")
 
         except Exception as e:
             logger.error(f"Error changing classroom: {e}", exc_info=True)
-            QMessageBox.critical(self, "Hata", f"Derslik değiştirilirken hata:\n{str(e)}")
+            ModernMessageBox.error(self, "Değiştirme Hatası", "Derslik değiştirilirken bir hata oluştu.", f"Hata detayı:\n{str(e)}")
 
     def _update_exam_classrooms(self, sinav_id: int, classroom_ids: List[int]):
         """Update classrooms for an exam"""

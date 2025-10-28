@@ -18,6 +18,7 @@ from controllers.ogrenci_controller import OgrenciController
 from models.database import db
 from models.ogrenci_model import OgrenciModel
 from utils.excel_parser import ExcelParser
+from utils.modern_dialogs import ModernMessageBox
 
 logger = logging.getLogger(__name__)
 
@@ -247,7 +248,7 @@ class OgrenciYukleView(QWidget):
             self.update_stats(len(ogrenciler), 0)
         except Exception as e:
             logger.error(f"Error loading students: {e}")
-            QMessageBox.critical(self, "Hata", f"Öğrenciler yüklenirken hata oluştu:\n{str(e)}")
+            ModernMessageBox.error(self, "Hata", "Öğrenciler yüklenirken oluştu", f"{str(e)}")
     
     def populate_table(self, ogrenciler, existing=False):
         """Populate table with student data"""
@@ -303,41 +304,39 @@ class OgrenciYukleView(QWidget):
     def on_excel_loaded(self, ogrenciler):
         """Handle loaded Excel data"""
         if not ogrenciler:
-            QMessageBox.warning(self, "Uyarı", "Excel dosyasında öğrenci bulunamadı!")
+            ModernMessageBox.warning(self, "Uyarı", "Excel dosyasında öğrenci bulunamadı!")
             return
         
         self.pending_ogrenciler = ogrenciler
         self.populate_table(ogrenciler, existing=False)
         self.update_stats(0, len(ogrenciler))
         
-        reply = QMessageBox.question(
+        confirmed = ModernMessageBox.question(
             self,
             "Öğrencileri Kaydet",
             f"{len(ogrenciler)} öğrenci yüklendi. Veritabanına kaydetmek istiyor musunuz?",
             QMessageBox.Yes | QMessageBox.No,
             QMessageBox.Yes
         )
+
         
-        if reply == QMessageBox.Yes:
+        if confirmed:
             self.save_ogrenciler()
     
     def on_excel_error(self, error_msg):
         """Handle Excel loading error with detailed information"""
-        # Create detailed error dialog
-        error_dialog = QMessageBox(self)
-        error_dialog.setIcon(QMessageBox.Critical)
-        error_dialog.setWindowTitle("Excel Yükleme Hatası")
-        error_dialog.setText("Excel dosyası yüklenirken hata oluştu!")
-        
         # Format detailed text for better readability
         detailed_text = error_msg
         if "Satır" in error_msg:
             # Already has line numbers
             detailed_text = error_msg.replace("Satır ", "\n• Satır ")
         
-        error_dialog.setDetailedText(detailed_text)
-        error_dialog.setStandardButtons(QMessageBox.Ok)
-        error_dialog.exec()
+        ModernMessageBox.error(
+            self,
+            "Excel Yükleme Hatası",
+            "Excel dosyası yüklenirken hata oluştu!",
+            detailed_text
+        )
     
     def save_ogrenciler(self):
         """Save students to database with detailed error reporting"""
@@ -365,27 +364,21 @@ class OgrenciYukleView(QWidget):
             
             # Show detailed results
             if error_count > 0:
-                error_dialog = QMessageBox(self)
-                error_dialog.setIcon(QMessageBox.Warning)
-                error_dialog.setWindowTitle("Kaydetme Sonuçları")
-                error_dialog.setText(
-                    f"✅ {success_count} öğrenci kaydedildi\n"
-                    f"❌ {error_count} öğrenci kaydedilemedi"
-                )
-                
                 # Show first 20 errors in detail
                 detailed_text = "\n".join(error_details[:20])
                 if len(error_details) > 20:
                     detailed_text += f"\n\n... ve {len(error_details) - 20} hata daha"
                 
-                error_dialog.setDetailedText(detailed_text)
-                error_dialog.setStandardButtons(QMessageBox.Ok)
-                error_dialog.exec()
-            else:
-                QMessageBox.information(
+                ModernMessageBox.warning(
                     self,
-                    "Başarılı",
-                    f"✅ {success_count} öğrenci başarıyla kaydedildi!"
+                    "Kaydetme Sonuçları",
+                    f"✅ {success_count} öğrenci kaydedildi\n"
+                    f"❌ {error_count} öğrenci kaydedilemedi",
+                    detailed_text
+                )
+            else:
+                ModernMessageBox.success(
+                    self, "Başarılı", f"{success_count} öğrenci başarıyla kaydedildi!"
                 )
             
             self.pending_ogrenciler = []
@@ -397,7 +390,7 @@ class OgrenciYukleView(QWidget):
             
         except Exception as e:
             logger.error(f"Error saving students: {e}", exc_info=True)
-            QMessageBox.critical(self, "Hata", f"Öğrenciler kaydedilirken hata oluştu:\n{str(e)}")
+            ModernMessageBox.error(self, "Hata", "Öğrenciler kaydedilirken oluştu", f"{str(e)}")
     
     def update_stats(self, existing, pending):
         """Update statistics label"""
@@ -457,7 +450,7 @@ class OgrenciYukleView(QWidget):
         """Delete multiple selected students"""
         selected_rows = self.table.selectionModel().selectedRows()
         if not selected_rows:
-            QMessageBox.warning(self, "Uyarı", "Lütfen silmek için en az bir öğrenci seçin!")
+            ModernMessageBox.warning(self, "Uyarı", "Lütfen silmek için en az bir öğrenci seçin!")
             return
         
         # Check if any are pending
@@ -474,18 +467,19 @@ class OgrenciYukleView(QWidget):
             student_list.append((ogrenci_no, ad_soyad))
         
         if pending_found:
-            QMessageBox.warning(self, "Uyarı", "Beklemedeki öğrenciler silinemez! İptal için sayfayı yenileyin.")
+            ModernMessageBox.warning(self, "Uyarı", "Beklemedeki öğrenciler silinemez! İptal için sayfayı yenileyin.")
             return
         
-        reply = QMessageBox.question(
+        confirmed = ModernMessageBox.question(
             self,
             "Öğrencileri Sil",
             f"{len(student_list)} öğrenciyi silmek istediğinizden emin misiniz?\n\n"
             "Bu işlem geri alınamaz!",
             QMessageBox.Yes | QMessageBox.No
         )
+
         
-        if reply == QMessageBox.Yes:
+        if confirmed:
             success_count = 0
             error_count = 0
             
@@ -497,10 +491,8 @@ class OgrenciYukleView(QWidget):
                     error_count += 1
                     logger.error(f"Failed to delete {ogrenci_no}: {result['message']}")
             
-            QMessageBox.information(
-                self,
-                "İşlem Tamamlandı",
-                f"✅ {success_count} öğrenci silindi\n❌ {error_count} öğrenci silinemedi"
+            ModernMessageBox.success(
+                self, "İşlem Tamamlandı", f"{success_count} öğrenci silindi", f"❌ {error_count} öğrenci silinemedi"
             )
             
             self.load_existing_ogrenciler()
@@ -509,14 +501,14 @@ class OgrenciYukleView(QWidget):
         """Edit selected student"""
         selected_rows = self.table.selectedIndexes()
         if not selected_rows:
-            QMessageBox.warning(self, "Uyarı", "Lütfen düzenlemek için bir öğrenci seçin!")
+            ModernMessageBox.warning(self, "Uyarı", "Lütfen düzenlemek için bir öğrenci seçin!")
             return
         
         row = selected_rows[0].row()
         durum = self.table.item(row, 3).text()
         
         if durum == "⏳ Beklemede":
-            QMessageBox.warning(self, "Uyarı", "Beklemedeki öğrenciler düzenlenemez! Önce kaydedin.")
+            ModernMessageBox.warning(self, "Uyarı", "Beklemedeki öğrenciler düzenlenemez! Önce kaydedin.")
             return
         
         ogrenci_no = self.table.item(row, 0).text()
@@ -559,7 +551,7 @@ class OgrenciYukleView(QWidget):
             result = self.ogrenci_controller.update_ogrenci(ogrenci_no, updated_data)
             
             if result['success']:
-                QMessageBox.information(self, "Başarılı", result['message'])
+                ModernMessageBox.success(self, "Başarılı", result['message'])
                 self.load_existing_ogrenciler()
             else:
-                QMessageBox.critical(self, "Hata", result['message'])
+                ModernMessageBox.error(self, "Güncelleme Hatası", result['message'])

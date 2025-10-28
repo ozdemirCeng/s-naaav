@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
 )
 
 from models.database import db
+from utils.modern_dialogs import ModernMessageBox
 
 logger = logging.getLogger(__name__)
 
@@ -268,7 +269,7 @@ class DuyuruYonetimiView(QWidget):
             
         except Exception as e:
             logger.error(f"Error loading announcements: {e}")
-            QMessageBox.critical(self, "Hata", f"Duyurular yüklenirken hata oluştu:\n{str(e)}")
+            ModernMessageBox.error(self, "Hata", "Duyurular yüklenirken oluştu", f"{str(e)}")
     
     def _add_duyuru(self):
         """Add new announcement"""
@@ -277,7 +278,7 @@ class DuyuruYonetimiView(QWidget):
             data = dialog.get_data()
             
             if not data['metin']:
-                QMessageBox.warning(self, "Uyarı", "Duyuru metni boş olamaz!")
+                ModernMessageBox.warning(self, "Uyarı", "Duyuru metni boş olamaz!")
                 return
             
             try:
@@ -289,12 +290,12 @@ class DuyuruYonetimiView(QWidget):
                 with db.get_cursor(commit=True) as cursor:
                     cursor.execute(query, (data['metin'], data['aktif'], self.user_data['user_id']))
                 
-                QMessageBox.information(self, "Başarılı", "✅ Duyuru başarıyla eklendi!")
+                ModernMessageBox.information(self, "Başarılı", "✅ Duyuru başarıyla eklendi!")
                 self._load_duyurular()
                 
             except Exception as e:
                 logger.error(f"Error adding announcement: {e}")
-                QMessageBox.critical(self, "Hata", f"Duyuru eklenirken hata oluştu:\n{str(e)}")
+                ModernMessageBox.error(self, "Hata", "Duyuru eklenirken oluştu", f"{str(e)}")
     
     def _edit_duyuru(self, row_data):
         """Edit announcement"""
@@ -303,7 +304,7 @@ class DuyuruYonetimiView(QWidget):
             data = dialog.get_data()
             
             if not data['metin']:
-                QMessageBox.warning(self, "Uyarı", "Duyuru metni boş olamaz!")
+                ModernMessageBox.warning(self, "Uyarı", "Duyuru metni boş olamaz!")
                 return
             
             try:
@@ -316,34 +317,34 @@ class DuyuruYonetimiView(QWidget):
                 with db.get_cursor(commit=True) as cursor:
                     cursor.execute(query, (data['metin'], data['aktif'], row_data['duyuru_id']))
                 
-                QMessageBox.information(self, "Başarılı", "✅ Duyuru başarıyla güncellendi!")
+                ModernMessageBox.information(self, "Başarılı", "✅ Duyuru başarıyla güncellendi!")
                 self._load_duyurular()
                 
             except Exception as e:
                 logger.error(f"Error updating announcement: {e}")
-                QMessageBox.critical(self, "Hata", f"Duyuru güncellenirken hata oluştu:\n{str(e)}")
+                ModernMessageBox.error(self, "Hata", "Duyuru güncellenirken oluştu", f"{str(e)}")
     
     def _delete_duyuru(self, duyuru_id):
         """Delete announcement"""
-        reply = QMessageBox.question(
+        confirmed = ModernMessageBox.question(
             self,
             "Duyuru Sil",
             "Bu duyuruyu silmek istediğinizden emin misiniz?",
             QMessageBox.Yes | QMessageBox.No,
             QMessageBox.No
         )
-        
-        if reply == QMessageBox.Yes:
+
+        if confirmed:
             try:
                 query = "DELETE FROM duyurular WHERE duyuru_id = %s"
                 # Use context manager for DELETE (no results expected)
                 with db.get_cursor(commit=True) as cursor:
                     cursor.execute(query, (duyuru_id,))
                 
-                QMessageBox.information(self, "Başarılı", "✅ Duyuru başarıyla silindi!")
+                ModernMessageBox.information(self, "Başarılı", "✅ Duyuru başarıyla silindi!")
                 self._load_duyurular()
                 
             except Exception as e:
                 logger.error(f"Error deleting announcement: {e}")
-                QMessageBox.critical(self, "Hata", f"Duyuru silinirken hata oluştu:\n{str(e)}")
+                ModernMessageBox.error(self, "Hata", "Duyuru silinirken oluştu", f"{str(e)}")
 

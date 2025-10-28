@@ -19,6 +19,7 @@ from models.database import db
 from models.ders_model import DersModel
 from models.ogrenci_model import OgrenciModel
 from utils.excel_parser import ExcelParser
+from utils.modern_dialogs import ModernMessageBox
 
 logger = logging.getLogger(__name__)
 
@@ -286,7 +287,7 @@ class DersYukleView(QWidget):
             self.update_stats(len(dersler), 0)
         except Exception as e:
             logger.error(f"Error loading courses: {e}")
-            QMessageBox.critical(self, "Hata", f"Dersler yüklenirken hata oluştu:\n{str(e)}")
+            ModernMessageBox.error(self, "Hata", "Dersler yüklenirken oluştu", f"{str(e)}")
     
     def populate_table(self, dersler, existing=False):
         """Populate table with course data"""
@@ -355,7 +356,7 @@ class DersYukleView(QWidget):
     def on_excel_loaded(self, dersler):
         """Handle loaded Excel data with validation summary"""
         if not dersler:
-            QMessageBox.warning(self, "Uyarı", "Excel dosyasında ders bulunamadı!")
+            ModernMessageBox.warning(self, "Uyarı", "Excel dosyasında ders bulunamadı!")
             return
         
         self.pending_dersler = dersler
@@ -369,49 +370,48 @@ class DersYukleView(QWidget):
         # (errors are already shown in on_excel_error)
         
         # Ask for confirmation
-        reply = QMessageBox.question(
+        confirmed = ModernMessageBox.question(
             self,
             "Dersleri Kaydet",
             f"{summary_msg}\n\nVeritabanına kaydetmek istiyor musunuz?",
             QMessageBox.Yes | QMessageBox.No,
             QMessageBox.Yes
         )
-        
-        if reply == QMessageBox.Yes:
+
+        if confirmed:
             self.save_dersler()
     
     def on_excel_error(self, error_msg):
         """Handle Excel loading error with detailed information"""
-        # Create detailed error dialog
-        error_dialog = QMessageBox(self)
-        error_dialog.setIcon(QMessageBox.Critical)
-        error_dialog.setWindowTitle("❌ Excel Yükleme Hatası")
-        
         # Parse error message to provide better formatting
         if "❌" in error_msg:
             # Formatted error from parser (e.g., format errors, missing columns)
-            error_dialog.setText("Excel formatı hatalı")
-            error_dialog.setInformativeText(error_msg)
+            ModernMessageBox.error(
+                self,
+                "Excel Format Hatası",
+                "Excel formatı hatalı veya gerekli sütunlar eksik.",
+                error_msg
+            )
         elif "Satır" in error_msg and error_msg.count("Satır") > 3:
             # Multiple row errors - show summary
-            lines = [line for line in error_msg.split('\n') if line.strip()]
             row_count = error_msg.count("Satır")
-            
-            error_dialog.setText(f"Excel'de {row_count} satırda hata bulundu")
-            error_dialog.setInformativeText(
-                "Lütfen Excel dosyasını kontrol edin ve düzeltip tekrar yükleyin.\n\n"
-                "Detaylar için 'Show Details' butonuna tıklayın."
-            )
-            # Format detailed text for better readability
             detailed_text = error_msg.replace("Satır ", "\n• Satır ")
-            error_dialog.setDetailedText(detailed_text)
+            
+            ModernMessageBox.error(
+                self,
+                "Excel Yükleme Hatası",
+                f"Excel'de {row_count} satırda hata bulundu!\n\n"
+                "Lütfen Excel dosyasını kontrol edin ve düzeltip tekrar yükleyin.",
+                detailed_text
+            )
         else:
             # Generic or single error
-            error_dialog.setText("Excel dosyası yüklenirken hata oluştu")
-            error_dialog.setInformativeText(error_msg)
-        
-        error_dialog.setStandardButtons(QMessageBox.Ok)
-        error_dialog.exec()
+            ModernMessageBox.error(
+                self,
+                "Excel Yükleme Hatası",
+                "Excel dosyası yüklenirken bir hata oluştu.",
+                error_msg
+            )
     
     def save_dersler(self):
         """Save courses to database with detailed error reporting"""
@@ -439,27 +439,21 @@ class DersYukleView(QWidget):
             
             # Show detailed results
             if error_count > 0:
-                error_dialog = QMessageBox(self)
-                error_dialog.setIcon(QMessageBox.Warning)
-                error_dialog.setWindowTitle("Kaydetme Sonuçları")
-                error_dialog.setText(
-                    f"✅ {success_count} ders kaydedildi\n"
-                    f"❌ {error_count} ders kaydedilemedi"
-                )
-                
                 # Show first 20 errors in detail
                 detailed_text = "\n".join(error_details[:20])
                 if len(error_details) > 20:
                     detailed_text += f"\n\n... ve {len(error_details) - 20} hata daha"
                 
-                error_dialog.setDetailedText(detailed_text)
-                error_dialog.setStandardButtons(QMessageBox.Ok)
-                error_dialog.exec()
-            else:
-                QMessageBox.information(
+                ModernMessageBox.warning(
                     self,
-                    "Başarılı",
-                    f"✅ {success_count} ders başarıyla kaydedildi!"
+                    "Kaydetme Sonuçları",
+                    f"✅ {success_count} ders kaydedildi\n"
+                    f"❌ {error_count} ders kaydedilemedi",
+                    detailed_text
+                )
+            else:
+                ModernMessageBox.success(
+                    self, "Başarılı", f"{success_count} ders başarıyla kaydedildi!"
                 )
             
             self.pending_dersler = []
@@ -471,7 +465,7 @@ class DersYukleView(QWidget):
             
         except Exception as e:
             logger.error(f"Error saving courses: {e}", exc_info=True)
-            QMessageBox.critical(self, "Hata", f"Dersler kaydedilirken hata oluştu:\n{str(e)}")
+            ModernMessageBox.error(self, "Hata", "Dersler kaydedilirken oluştu", f"{str(e)}")
     
     def update_stats(self, existing, pending):
         """Update statistics label"""
@@ -530,14 +524,14 @@ class DersYukleView(QWidget):
         """Edit selected course"""
         selected_rows = self.table.selectedIndexes()
         if not selected_rows:
-            QMessageBox.warning(self, "Uyarı", "Lütfen düzenlemek için bir ders seçin!")
+            ModernMessageBox.warning(self, "Uyarı", "Lütfen düzenlemek için bir ders seçin!")
             return
         
         row = selected_rows[0].row()
         durum = self.table.item(row, 5).text()
         
         if durum == "Beklemede":
-            QMessageBox.warning(self, "Uyarı", "Beklemedeki dersler düzenlenemez! Önce kaydedin.")
+            ModernMessageBox.warning(self, "Uyarı", "Beklemedeki dersler düzenlenemez! Önce kaydedin.")
             return
         
         ders_kodu = self.table.item(row, 0).text()
@@ -586,7 +580,7 @@ class DersYukleView(QWidget):
             # Update course
             ders = self.ders_model.get_ders_by_kod(self.bolum_id, ders_kodu)
             if not ders:
-                QMessageBox.warning(self, "Hata", "Ders bulunamadı!")
+                ModernMessageBox.warning(self, "Hata", "Ders bulunamadı!")
                 return
             
             updated_data = {
@@ -616,7 +610,7 @@ class DersYukleView(QWidget):
         """Delete multiple selected courses"""
         selected_rows = self.table.selectionModel().selectedRows()
         if not selected_rows:
-            QMessageBox.warning(self, "Uyarı", "Lütfen silmek için en az bir ders seçin!")
+            ModernMessageBox.warning(self, "Uyarı", "Lütfen silmek için en az bir ders seçin!")
             return
         
         # Get course list from selected rows
@@ -629,18 +623,19 @@ class DersYukleView(QWidget):
                 course_list.append((ders_kodu, ders_adi))
         
         if not course_list:
-            QMessageBox.warning(self, "Uyarı", "Silinecek ders bulunamadı!")
+            ModernMessageBox.warning(self, "Uyarı", "Silinecek ders bulunamadı!")
             return
         
-        reply = QMessageBox.question(
+        confirmed = ModernMessageBox.question(
             self,
             "Dersleri Sil",
             f"{len(course_list)} dersi silmek istediğinizden emin misiniz?\n\n"
             "Bu işlem geri alınamaz!",
             QMessageBox.Yes | QMessageBox.No
         )
+
         
-        if reply == QMessageBox.Yes:
+        if confirmed:
             success_count = 0
             error_count = 0
             
@@ -656,10 +651,8 @@ class DersYukleView(QWidget):
                 else:
                     error_count += 1
             
-            QMessageBox.information(
-                self,
-                "İşlem Tamamlandı",
-                f"✅ {success_count} ders silindi\n❌ {error_count} ders silinemedi"
+            ModernMessageBox.success(
+                self, "İşlem Tamamlandı", f"{success_count} ders silindi", f"❌ {error_count} ders silinemedi"
             )
             
             self.load_existing_dersler()
@@ -668,7 +661,7 @@ class DersYukleView(QWidget):
         """Delete selected course"""
         selected_rows = self.table.selectedIndexes()
         if not selected_rows:
-            QMessageBox.warning(self, "Uyarı", "Lütfen silmek için bir ders seçin!")
+            ModernMessageBox.warning(self, "Uyarı", "Lütfen silmek için bir ders seçin!")
             return
         
         row = selected_rows[0].row()
@@ -676,23 +669,24 @@ class DersYukleView(QWidget):
         ders_adi = self.table.item(row, 1).text() if self.table.item(row, 1) else "İsimsiz"
         
         if not ders_kodu:
-            QMessageBox.warning(self, "Uyarı", "Ders kodu bulunamadı!")
+            ModernMessageBox.warning(self, "Uyarı", "Ders kodu bulunamadı!")
             return
         
         ders = self.ders_model.get_ders_by_kod(self.bolum_id, ders_kodu)
         if not ders:
-            QMessageBox.warning(self, "Hata", "Ders bulunamadı!")
+            ModernMessageBox.warning(self, "Hata", "Ders bulunamadı!")
             return
         
-        reply = QMessageBox.question(
+        confirmed = ModernMessageBox.question(
             self,
             "Ders Sil",
             f"'{ders_adi}' ({ders_kodu}) dersini silmek istediğinizden emin misiniz?\n\n"
             "Bu işlem geri alınamaz!",
             QMessageBox.Yes | QMessageBox.No
         )
+
         
-        if reply == QMessageBox.Yes:
+        if confirmed:
             result = self.ders_controller.delete_ders(ders['ders_id'])
             
             if result['success']:

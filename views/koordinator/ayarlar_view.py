@@ -17,6 +17,7 @@ from PySide6.QtGui import QFont
 from models.user_model import UserModel
 from models.database import db
 from utils.password_utils import PasswordUtils
+from utils.modern_dialogs import ModernMessageBox
 
 logger = logging.getLogger(__name__)
 
@@ -393,23 +394,21 @@ class AyarlarView(QWidget):
             
         except Exception as e:
             logger.error(f"Error saving settings: {e}")
-            QMessageBox.critical(
-                self,
-                "Hata",
-                f"Ayarlar kaydedilirken hata oluştu:\n{str(e)}"
+            ModernMessageBox.error(
+                self, "Hata", "Ayarlar kaydedilirken oluştu", f"{str(e)}"
             )
     
     def reset_settings(self):
         """Reset settings to default"""
-        reply = QMessageBox.question(
+        confirmed = ModernMessageBox.question(
             self,
             "Ayarları Sıfırla",
             "Tüm tercihleri varsayılan değerlere döndürmek istediğinizden emin misiniz?",
             QMessageBox.Yes | QMessageBox.No,
             QMessageBox.No
         )
-        
-        if reply == QMessageBox.Yes:
+
+        if confirmed:
             # Reset to defaults
             self.theme_combo.setCurrentIndex(0)
             self.language_combo.setCurrentIndex(0)
@@ -430,19 +429,19 @@ class AyarlarView(QWidget):
         
         # Validation
         if not current_pwd:
-            QMessageBox.warning(self, "Uyarı", "⚠️ Mevcut şifrenizi girin!")
+            ModernMessageBox.warning(self, "Uyarı", "⚠️ Mevcut şifrenizi girin!")
             return
         
         if not new_pwd:
-            QMessageBox.warning(self, "Uyarı", "⚠️ Yeni şifrenizi girin!")
+            ModernMessageBox.warning(self, "Uyarı", "⚠️ Yeni şifrenizi girin!")
             return
         
         if len(new_pwd) < 6:
-            QMessageBox.warning(self, "Uyarı", "⚠️ Yeni şifre en az 6 karakter olmalıdır!")
+            ModernMessageBox.warning(self, "Uyarı", "⚠️ Yeni şifre en az 6 karakter olmalıdır!")
             return
         
         if new_pwd != confirm_pwd:
-            QMessageBox.warning(self, "Uyarı", "⚠️ Yeni şifreler eşleşmiyor!")
+            ModernMessageBox.warning(self, "Uyarı", "⚠️ Yeni şifreler eşleşmiyor!")
             return
         
         try:
@@ -451,12 +450,12 @@ class AyarlarView(QWidget):
             user = self.user_model.get_by_id(user_id)
             
             if not user:
-                QMessageBox.critical(self, "Hata", "❌ Kullanıcı bulunamadı!")
+                ModernMessageBox.error(self, "Hata", "❌ Kullanıcı bulunamadı!")
                 return
             
             # Check current password
             if not PasswordUtils.verify_password(current_pwd, user['sifre']):
-                QMessageBox.warning(self, "Hata", "❌ Mevcut şifre yanlış!")
+                ModernMessageBox.warning(self, "Hata", "❌ Mevcut şifre yanlış!")
                 return
             
             # Update password
@@ -476,12 +475,10 @@ class AyarlarView(QWidget):
                 )
                 logger.info(f"Password changed for user {user_id}")
             else:
-                QMessageBox.critical(self, "Hata", "❌ Şifre değiştirilemedi!")
+                ModernMessageBox.error(self, "Hata", "❌ Şifre değiştirilemedi!")
                 
         except Exception as e:
             logger.error(f"Error changing password: {e}")
-            QMessageBox.critical(
-                self,
-                "Hata",
-                f"Şifre değiştirilirken hata oluştu:\n{str(e)}"
+            ModernMessageBox.error(
+                self, "Hata", "Şifre değiştirilirken oluştu", f"{str(e)}"
             )

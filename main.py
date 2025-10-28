@@ -20,6 +20,7 @@ from views.login_view import LoginView
 from views.main_window import MainWindow
 from styles.theme import KocaeliTheme
 from models.database import db
+from utils.modern_dialogs import ModernMessageBox
 
 
 def setup_logging():
@@ -189,6 +190,97 @@ class Application:
         # Apply theme
         self.app.setStyle("Fusion")
         self.app.setPalette(KocaeliTheme.get_color_palette())
+        
+        # Apply global stylesheet for oval borders and no focus outlines
+        self.app.setStyleSheet("""
+            /* Global oval borders and no focus outlines */
+            * {
+                outline: none;
+                border: none;
+            }
+            
+            QWidget:focus {
+                outline: none;
+                border: none;
+            }
+            
+            QPushButton {
+                border-radius: 12px;
+                outline: none;
+            }
+            
+            QPushButton:focus {
+                outline: none;
+                border: 2px solid transparent;
+            }
+            
+            QLineEdit {
+                border-radius: 10px;
+                outline: none;
+            }
+            
+            QLineEdit:focus {
+                outline: none;
+            }
+            
+            QComboBox {
+                border-radius: 10px;
+                outline: none;
+            }
+            
+            QComboBox:focus {
+                outline: none;
+            }
+            
+            QSpinBox, QDoubleSpinBox {
+                border-radius: 8px;
+                outline: none;
+            }
+            
+            QSpinBox:focus, QDoubleSpinBox:focus {
+                outline: none;
+            }
+            
+            QTableWidget {
+                border-radius: 12px;
+                outline: none;
+            }
+            
+            QTableWidget:focus {
+                outline: none;
+            }
+            
+            QFrame {
+                border-radius: 16px;
+            }
+            
+            QGroupBox {
+                border-radius: 12px;
+            }
+            
+            QTabWidget::pane {
+                border-radius: 12px;
+            }
+            
+            QDialog {
+                border-radius: 16px;
+            }
+            
+            QMessageBox {
+                border-radius: 16px;
+            }
+            
+            /* Menu items - no extra borders */
+            QMenu {
+                border-radius: 12px;
+                outline: none;
+            }
+            
+            QMenu::item:selected {
+                border-radius: 8px;
+                outline: none;
+            }
+        """)
     
     def run(self):
         """Run application"""
@@ -203,10 +295,8 @@ class Application:
         except Exception as e:
             self.logger.error(f"❌ Kritik hata: {e}", exc_info=True)
             
-            QMessageBox.critical(
-                None,
-                "Kritik Hata",
-                f"Uygulama beklenmeyen bir hatayla karşılaştı:\n\n{str(e)}\n\n"
+            ModernMessageBox.error(
+                None, "Kritik Hata", "Uygulama beklenmeyen biryla karşılaştı", f"\n{str(e)}\n\n"
                 "Detaylar log dosyasında bulunabilir."
             )
             

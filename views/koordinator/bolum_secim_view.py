@@ -13,6 +13,7 @@ from PySide6.QtGui import QFont
 
 from models.database import db
 from models.bolum_model import BolumModel
+from utils.modern_dialogs import ModernMessageBox
 
 logger = logging.getLogger(__name__)
 
@@ -86,26 +87,30 @@ class BolumCard(QFrame):
         self.setStyleSheet("""
             QFrame {
                 background: #ffffff;
-                border: 2px solid #e2e8f0;
+                border: none;
                 border-radius: 16px;
             }
             QFrame:hover {
-                border: 2px solid #10b981;
                 background: #f0fdf4;
+                transform: scale(1.02);
             }
             QPushButton#primaryBtn {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
                     stop:0 #10b981, stop:1 #14b8a6);
                 border: none;
-                border-radius: 8px;
+                border-radius: 12px;
                 color: white;
                 font-weight: 600;
                 font-size: 13px;
                 padding: 8px 16px;
+                outline: none;
             }
             QPushButton#primaryBtn:hover {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
                     stop:0 #059669, stop:1 #0d9488);
+            }
+            QPushButton#primaryBtn:focus {
+                outline: none;
             }
         """)
 
@@ -162,18 +167,27 @@ class BolumSecimView(QWidget):
         
         layout.addWidget(header)
         
-        # Content area
+        # Content area with outer border
         content = QWidget()
+        content.setStyleSheet("""
+            QWidget {
+                background: #f8fafc;
+                border: 2px solid #e2e8f0;
+                border-radius: 0px;
+            }
+        """)
         content_layout = QVBoxLayout(content)
         content_layout.setContentsMargins(48, 48, 48, 48)
         
-        # Scroll area for departments
+        # Scroll area for departments (no border)
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.NoFrame)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")
         
         self.bolum_container = QWidget()
+        self.bolum_container.setStyleSheet("QWidget { border: none; background: transparent; }")
         self.bolum_layout = QHBoxLayout(self.bolum_container)
         self.bolum_layout.setSpacing(24)
         self.bolum_layout.setContentsMargins(0, 0, 0, 0)
@@ -242,10 +256,11 @@ class BolumSecimView(QWidget):
             
         except Exception as e:
             logger.error(f"Error loading departments: {e}")
-            QMessageBox.critical(
+            ModernMessageBox.error(
                 self,
-                "Hata",
-                f"Bolumler yuklenirken hata olustu:\n{str(e)}"
+                "Yükleme Hatası",
+                "Bölümler yüklenirken bir hata oluştu.",
+                f"Hata detayı:\n{str(e)}"
             )
     
     def show_no_departments(self):
@@ -294,15 +309,6 @@ class BolumSecimView(QWidget):
                 koor_names = ", ".join([k['ad_soyad'] for k in koordinatorler])
                 koor_info = f"\n\nKoordinatörler: {koor_names}"
         
-        # Show confirmation
-        reply = QMessageBox.question(
-            self,
-            "Bölüm Seçimi",
-            f"'{bolum_data['bolum_adi']}' bölümü için işlemlere devam etmek istiyor musunuz?{koor_info}",
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.Yes
-        )
-        
-        if reply == QMessageBox.Yes:
-            self.bolum_selected.emit(bolum_data)
+        # Directly emit selection (no confirmation needed)
+        self.bolum_selected.emit(bolum_data)
 

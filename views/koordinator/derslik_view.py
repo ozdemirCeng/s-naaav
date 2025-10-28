@@ -15,6 +15,7 @@ from PySide6.QtGui import QFont
 
 from models.database import db
 from models.derslik_model import DerslikModel
+from utils.modern_dialogs import ModernMessageBox
 from controllers.derslik_controller import DerslikController
 
 logger = logging.getLogger(__name__)
@@ -52,19 +53,49 @@ class DerslikView(QWidget):
             logger.error(f"Error refreshing main window UI: {e}")
     
     def setup_ui(self):
-        """Setup tab-based UI"""
+        """Setup modern tab-based UI"""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(24, 24, 24, 24)
         layout.setSpacing(20)
         
-        # Header
-        header = QLabel("Derslik Yönetimi 🏛")
+        # Simple Header like other pages
+        header = QLabel("Derslik Yönetimi")
         header.setFont(QFont("Segoe UI", 20, QFont.Bold))
+        header.setStyleSheet("color: #1e293b;")
         layout.addWidget(header)
         
-        # Tab widget
+        # Tab widget with clean modern style
         self.tabs = QTabWidget()
         self.tabs.setFont(QFont("Segoe UI", 11))
+        self.tabs.setStyleSheet("""
+            QTabWidget::pane {
+                border: 1px solid #e2e8f0;
+                background: white;
+                border-radius: 8px;
+                padding: 0px;
+            }
+            QTabBar::tab {
+                background: #f8fafc;
+                color: #64748b;
+                padding: 12px 24px;
+                margin-right: 2px;
+                border: 1px solid #e2e8f0;
+                border-bottom: none;
+                border-top-left-radius: 8px;
+                border-top-right-radius: 8px;
+                font-size: 12px;
+                font-weight: 600;
+            }
+            QTabBar::tab:hover {
+                color: #667eea;
+                background: #f1f5f9;
+            }
+            QTabBar::tab:selected {
+                color: #667eea;
+                background: white;
+                border-bottom: 2px solid white;
+            }
+        """)
         
         # Tab 1: Derslik Listesi
         self.list_tab = self.create_list_tab()
@@ -77,28 +108,50 @@ class DerslikView(QWidget):
         layout.addWidget(self.tabs)
     
     def create_list_tab(self):
-        """Create list and edit tab"""
+        """Create modern list and edit tab"""
         tab = QWidget()
         layout = QVBoxLayout(tab)
-        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setContentsMargins(24, 24, 24, 24)
         layout.setSpacing(20)
         
-        # Search bar
+        # Modern Search bar
         search_frame = QFrame()
+        search_frame.setStyleSheet("""
+            QFrame {
+                background: white;
+                border: 2px solid #e2e8f0;
+                border-radius: 12px;
+                padding: 4px;
+            }
+        """)
         search_layout = QHBoxLayout(search_frame)
-        search_layout.setContentsMargins(16, 12, 16, 12)
+        search_layout.setContentsMargins(16, 8, 16, 8)
         
-        search_label = QLabel("🔍 Ara:")
+        search_icon = QLabel("🔍")
+        search_icon.setFont(QFont("Segoe UI", 14))
+        
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Derslik kodu veya adı ile ara...")
         self.search_input.textChanged.connect(self.filter_table)
-        self.search_input.setFixedHeight(38)
+        self.search_input.setFixedHeight(42)
+        self.search_input.setStyleSheet("""
+            QLineEdit {
+                border: none;
+                background: transparent;
+                font-size: 14px;
+                padding: 8px;
+                color: #1e293b;
+            }
+            QLineEdit::placeholder {
+                color: #94a3b8;
+            }
+        """)
         
-        search_layout.addWidget(search_label)
+        search_layout.addWidget(search_icon)
         search_layout.addWidget(self.search_input)
         layout.addWidget(search_frame)
         
-        # Table
+        # Modern Table
         self.table = QTableWidget()
         self.table.setColumnCount(7)
         self.table.setHorizontalHeaderLabels([
@@ -112,7 +165,40 @@ class DerslikView(QWidget):
         self.table.setSelectionMode(QTableWidget.SingleSelection)
         self.table.setAlternatingRowColors(True)
         self.table.verticalHeader().setVisible(False)
-        self.table.verticalHeader().setDefaultSectionSize(44)
+        self.table.verticalHeader().setDefaultSectionSize(56)
+        
+        # Modern table style
+        self.table.setStyleSheet("""
+            QTableWidget {
+                background: white;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                gridline-color: #f1f5f9;
+                font-size: 13px;
+            }
+            QTableWidget::item {
+                padding: 12px 16px;
+                border-bottom: 1px solid #f1f5f9;
+            }
+            QTableWidget::item:selected {
+                background: rgba(102, 126, 234, 0.1);
+                color: #1e293b;
+            }
+            QHeaderView::section {
+                background: #f8fafc;
+                color: #64748b;
+                padding: 12px 16px;
+                border: none;
+                border-bottom: 2px solid #e2e8f0;
+                font-weight: 600;
+                font-size: 12px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            QTableWidget::item:alternate {
+                background: #fafbfc;
+            }
+        """)
         
         # Column widths
         header = self.table.horizontalHeader()
@@ -230,31 +316,71 @@ class DerslikView(QWidget):
         return tab
     
     def create_add_tab(self):
-        """Create add new classroom tab"""
+        """Create modern add new classroom tab"""
         tab = QWidget()
         layout = QVBoxLayout(tab)
-        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setContentsMargins(24, 24, 24, 24)
         layout.setSpacing(20)
         
-        # Info
-        info = QLabel("Yeni derslik eklemek için aşağıdaki formu doldurun:")
-        info.setStyleSheet("color: #6b7280; font-size: 12px;")
+        # Simple Info
+        info = QLabel("💡 Yeni derslik eklemek için aşağıdaki formu doldurun.")
+        info.setFont(QFont("Segoe UI", 11))
+        info.setStyleSheet("color: #64748b; padding: 8px;")
         layout.addWidget(info)
         
-        # Form
+        # Form Card
         form_card = QGroupBox("Derslik Bilgileri")
+        form_card.setFont(QFont("Segoe UI", 12, QFont.Bold))
+        form_card.setStyleSheet("""
+            QGroupBox {
+                background: white;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 16px;
+                margin-top: 12px;
+                font-size: 13px;
+                color: #1e293b;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 16px;
+                padding: 0 8px;
+                color: #1e293b;
+            }
+        """)
         form_layout = QFormLayout(form_card)
         form_layout.setSpacing(16)
         form_layout.setContentsMargins(20, 20, 20, 20)
         
+        # Modern input style
+        input_style = """
+            QLineEdit, QSpinBox {
+                border: 2px solid #e2e8f0;
+                border-radius: 10px;
+                padding: 10px 16px;
+                font-size: 13px;
+                background: white;
+                color: #1e293b;
+            }
+            QLineEdit:focus, QSpinBox:focus {
+                border: 2px solid #667eea;
+                outline: none;
+            }
+            QLineEdit::placeholder {
+                color: #94a3b8;
+            }
+        """
+        
         self.add_kod = QLineEdit()
         self.add_kod.setPlaceholderText("örn: 301")
-        self.add_kod.setFixedHeight(40)
+        self.add_kod.setFixedHeight(44)
+        self.add_kod.setStyleSheet(input_style)
         form_layout.addRow("Derslik Kodu *:", self.add_kod)
         
         self.add_ad = QLineEdit()
         self.add_ad.setPlaceholderText("örn: Amfi A")
-        self.add_ad.setFixedHeight(40)
+        self.add_ad.setFixedHeight(44)
+        self.add_ad.setStyleSheet(input_style)
         form_layout.addRow("Derslik Adı *:", self.add_ad)
         
         kapasite_layout = QHBoxLayout()
@@ -262,8 +388,9 @@ class DerslikView(QWidget):
         self.add_kapasite.setMinimum(1)
         self.add_kapasite.setMaximum(500)
         self.add_kapasite.setValue(42)
-        self.add_kapasite.setFixedHeight(40)
+        self.add_kapasite.setFixedHeight(44)
         self.add_kapasite.setFixedWidth(120)
+        self.add_kapasite.setStyleSheet(input_style)
         kapasite_layout.addWidget(self.add_kapasite)
         kapasite_layout.addStretch()
         form_layout.addRow("Kapasite (Sınav) *:", kapasite_layout)
@@ -273,8 +400,9 @@ class DerslikView(QWidget):
         self.add_satir.setMinimum(1)
         self.add_satir.setMaximum(50)
         self.add_satir.setValue(7)
-        self.add_satir.setFixedHeight(40)
+        self.add_satir.setFixedHeight(44)
         self.add_satir.setFixedWidth(120)
+        self.add_satir.setStyleSheet(input_style)
         self.add_satir.valueChanged.connect(self.update_add_hint)
         satir_layout.addWidget(self.add_satir)
         satir_layout.addWidget(QLabel("satır"))
@@ -286,8 +414,9 @@ class DerslikView(QWidget):
         self.add_sutun.setMinimum(1)
         self.add_sutun.setMaximum(50)
         self.add_sutun.setValue(3)
-        self.add_sutun.setFixedHeight(40)
+        self.add_sutun.setFixedHeight(44)
         self.add_sutun.setFixedWidth(120)
+        self.add_sutun.setStyleSheet(input_style)
         self.add_sutun.valueChanged.connect(self.update_add_hint)
         sutun_layout.addWidget(self.add_sutun)
         sutun_layout.addWidget(QLabel("sütun"))
@@ -299,8 +428,9 @@ class DerslikView(QWidget):
         self.add_sira.setMinimum(1)
         self.add_sira.setMaximum(10)
         self.add_sira.setValue(2)
-        self.add_sira.setFixedHeight(40)
+        self.add_sira.setFixedHeight(44)
         self.add_sira.setFixedWidth(120)
+        self.add_sira.setStyleSheet(input_style)
         sira_layout.addWidget(self.add_sira)
         sira_layout.addWidget(QLabel("kişilik"))
         sira_layout.addStretch()
@@ -320,16 +450,53 @@ class DerslikView(QWidget):
         
         layout.addWidget(form_card)
         
-        # Buttons
+        # Modern Buttons
         btn_layout = QHBoxLayout()
+        btn_layout.setSpacing(16)
         
         clear_btn = QPushButton("🔄 Formu Temizle")
         clear_btn.setFixedHeight(44)
+        clear_btn.setFixedWidth(140)
+        clear_btn.setCursor(Qt.PointingHandCursor)
+        clear_btn.setStyleSheet("""
+            QPushButton {
+                background: white;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                color: #64748b;
+                font-size: 13px;
+                font-weight: 500;
+            }
+            QPushButton:hover {
+                background: #f8fafc;
+                border-color: #cbd5e1;
+            }
+            QPushButton:pressed {
+                background: #e2e8f0;
+            }
+        """)
         clear_btn.clicked.connect(self.clear_add_form)
         
         add_btn = QPushButton("💾 Dersliği Kaydet")
-        add_btn.setObjectName("primaryBtn")
         add_btn.setFixedHeight(44)
+        add_btn.setFixedWidth(160)
+        add_btn.setCursor(Qt.PointingHandCursor)
+        add_btn.setStyleSheet("""
+            QPushButton {
+                background: #667eea;
+                border: none;
+                border-radius: 8px;
+                color: white;
+                font-size: 13px;
+                font-weight: 600;
+            }
+            QPushButton:hover {
+                background: #5568d3;
+            }
+            QPushButton:pressed {
+                background: #4a5ac9;
+            }
+        """)
         add_btn.clicked.connect(self.add_derslik)
         
         btn_layout.addStretch()
@@ -370,7 +537,7 @@ class DerslikView(QWidget):
             self.update_stats(len(derslikler))
         except Exception as e:
             logger.error(f"Error loading classrooms: {e}")
-            QMessageBox.critical(self, "Hata", f"Derslikler yüklenirken hata oluştu:\n{str(e)}")
+            ModernMessageBox.error(self, "Yükleme Hatası", "Derslikler yüklenirken bir hata oluştu.", f"Hata detayı:\n{str(e)}")
     
     def populate_table(self, derslikler):
         """Populate table"""
@@ -479,20 +646,21 @@ class DerslikView(QWidget):
         """Add new classroom"""
         # Validate
         if not self.add_kod.text().strip():
-            QMessageBox.warning(self, "Uyarı", "Derslik kodu boş olamaz!")
+            ModernMessageBox.warning(self, "Uyarı", "Derslik kodu boş olamaz!")
             self.add_kod.setFocus()
             return
         
         if not self.add_ad.text().strip():
-            QMessageBox.warning(self, "Uyarı", "Derslik adı boş olamaz!")
+            ModernMessageBox.warning(self, "Uyarı", "Derslik adı boş olamaz!")
             self.add_ad.setFocus()
             return
         
         max_kap = self.add_satir.value() * self.add_sutun.value()
         if self.add_kapasite.value() > max_kap:
-            QMessageBox.warning(
-                self, "Uyarı",
-                f"Kapasite, satır×sütun ({max_kap}) değerinden büyük olamaz!"
+            ModernMessageBox.warning(
+                self, "Kapasite Uyarısı",
+                f"Kapasite değeri, satır×sütun ({max_kap}) değerinden büyük olamaz!",
+                f"Girilen kapasite: {self.add_kapasite.value()}\nMaksimum: {max_kap}"
             )
             return
         
@@ -509,7 +677,7 @@ class DerslikView(QWidget):
         try:
             result = self.derslik_controller.create_derslik(derslik_data)
             if result['success']:
-                QMessageBox.information(self, "Başarılı ✅", result['message'])
+                ModernMessageBox.success(self, "Başarılı", result['message'])
                 self.load_derslikler()
                 self.clear_add_form()
                 # Switch to list tab
@@ -517,10 +685,10 @@ class DerslikView(QWidget):
                 # Refresh main window UI (menus and shortcuts)
                 self.refresh_main_window_ui()
             else:
-                QMessageBox.warning(self, "Hata", result['message'])
+                ModernMessageBox.warning(self, "Hata", result['message'])
         except Exception as e:
             logger.error(f"Error adding derslik: {e}")
-            QMessageBox.critical(self, "Hata", f"Derslik eklenirken hata oluştu:\n{str(e)}")
+            ModernMessageBox.error(self, "Ekleme Hatası", "Derslik eklenirken bir hata oluştu.", f"Hata detayı:\n{str(e)}")
     
     def edit_derslik(self, derslik):
         """Load derslik for editing"""
@@ -547,13 +715,12 @@ class DerslikView(QWidget):
     def cancel_edit(self):
         """Cancel editing"""
         if self.form_modified:
-            reply = QMessageBox.question(
+            confirmed = ModernMessageBox.question(
                 self, "Değişiklikleri İptal Et",
                 "Kaydedilmemiş değişiklikler var. İptal etmek istediğinizden emin misiniz?",
-                QMessageBox.Yes | QMessageBox.No,
-                QMessageBox.No
+                "Yaptığınız değişiklikler kaybolacaktır."
             )
-            if reply == QMessageBox.No:
+            if not confirmed:
                 return
         
         self.edit_section.setVisible(False)
@@ -567,20 +734,21 @@ class DerslikView(QWidget):
         
         # Validate
         if not self.edit_kod.text().strip():
-            QMessageBox.warning(self, "Uyarı", "Derslik kodu boş olamaz!")
+            ModernMessageBox.warning(self, "Uyarı", "Derslik kodu boş olamaz!")
             self.edit_kod.setFocus()
             return
         
         if not self.edit_ad.text().strip():
-            QMessageBox.warning(self, "Uyarı", "Derslik adı boş olamaz!")
+            ModernMessageBox.warning(self, "Uyarı", "Derslik adı boş olamaz!")
             self.edit_ad.setFocus()
             return
         
         max_kap = self.edit_satir.value() * self.edit_sutun.value()
         if self.edit_kapasite.value() > max_kap:
-            QMessageBox.warning(
-                self, "Uyarı",
-                f"Kapasite, satır×sütun ({max_kap}) değerinden büyük olamaz!"
+            ModernMessageBox.warning(
+                self, "Kapasite Uyarısı",
+                f"Kapasite değeri, satır×sütun ({max_kap}) değerinden büyük olamaz!",
+                f"Girilen kapasite: {self.edit_kapasite.value()}\nMaksimum: {max_kap}"
             )
             return
         
@@ -601,33 +769,34 @@ class DerslikView(QWidget):
             )
             
             if result['success']:
-                QMessageBox.information(self, "Başarılı ✅", result['message'])
+                ModernMessageBox.success(self, "Başarılı", result['message'])
                 self.load_derslikler()
                 self.edit_section.setVisible(False)
                 self.selected_derslik = None
                 self.form_modified = False
             else:
-                QMessageBox.warning(self, "Hata", result['message'])
+                ModernMessageBox.warning(self, "Hata", result['message'])
         except Exception as e:
             logger.error(f"Error updating derslik: {e}")
-            QMessageBox.critical(self, "Hata", f"Derslik güncellenirken hata oluştu:\n{str(e)}")
+            ModernMessageBox.error(self, "Güncelleme Hatası", "Derslik güncellenirken bir hata oluştu.", f"Hata detayı:\n{str(e)}")
     
     def delete_derslik(self, derslik):
         """Delete classroom"""
-        reply = QMessageBox.question(
+        confirmed = ModernMessageBox.question(
             self, "Derslik Sil",
             f"'{derslik['derslik_adi']}' dersliğini silmek istediğinizden emin misiniz?\n\n"
+            f"⚠️ Bu işlem geri alınamaz!",
             f"📊 Kod: {derslik['derslik_kodu']}\n"
-            f"👥 Kapasite: {derslik['kapasite']}",
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No
+            f"👥 Kapasite: {derslik['kapasite']}\n"
+            f"🏢 Bina: {derslik.get('bina', 'N/A')}\n"
+            f"🚪 Kat: {derslik.get('kat', 'N/A')}"
         )
         
-        if reply == QMessageBox.Yes:
+        if confirmed:
             try:
                 result = self.derslik_controller.delete_derslik(derslik['derslik_id'])
                 if result['success']:
-                    QMessageBox.information(self, "Başarılı ✅", result['message'])
+                    ModernMessageBox.success(self, "Başarılı", result['message'])
                     
                     # Hide edit section and clear selection
                     if hasattr(self, 'edit_section'):
@@ -648,10 +817,10 @@ class DerslikView(QWidget):
                     # Refresh main window UI (menus and shortcuts)
                     self.refresh_main_window_ui()
                 else:
-                    QMessageBox.warning(self, "Hata", result['message'])
+                    ModernMessageBox.warning(self, "Hata", result['message'])
             except Exception as e:
                 logger.error(f"Error deleting derslik: {e}")
-                QMessageBox.critical(self, "Hata", f"Derslik silinirken hata oluştu:\n{str(e)}")
+                ModernMessageBox.error(self, "Silme Hatası", "Derslik silinirken bir hata oluştu.", f"Hata detayı:\n{str(e)}")
 
 
 class DerslikVisualizationDialog(QDialog):

@@ -18,6 +18,7 @@ from models.user_model import UserModel
 from models.bolum_model import BolumModel
 from models.database import db
 from utils.password_utils import PasswordUtils
+from utils.modern_dialogs import ModernMessageBox
 
 logger = logging.getLogger(__name__)
 
@@ -542,7 +543,7 @@ class KullaniciYonetimiView(QWidget):
 
         except Exception as e:
             logger.error(f"Error loading users: {e}")
-            QMessageBox.critical(self, "Hata", f"Kullanıcılar yüklenirken hata oluştu:\n{str(e)}")
+            ModernMessageBox.error(self, "Hata", "Kullanıcılar yüklenirken oluştu", f"{str(e)}")
 
     def add_user(self):
         """Add new user"""
@@ -556,27 +557,27 @@ class KullaniciYonetimiView(QWidget):
 
                 # Validation
                 if not data['ad_soyad']:
-                    QMessageBox.warning(self, "Uyarı", "⚠️ Ad Soyad giriniz!")
+                    ModernMessageBox.warning(self, "Uyarı", "⚠️ Ad Soyad giriniz!")
                     return
 
                 if not data['email']:
-                    QMessageBox.warning(self, "Uyarı", "⚠️ E-posta giriniz!")
+                    ModernMessageBox.warning(self, "Uyarı", "⚠️ E-posta giriniz!")
                     return
 
                 if not data['password']:
-                    QMessageBox.warning(self, "Uyarı", "⚠️ Şifre giriniz!")
+                    ModernMessageBox.warning(self, "Uyarı", "⚠️ Şifre giriniz!")
                     return
 
                 if len(data['password']) < 6:
-                    QMessageBox.warning(self, "Uyarı", "⚠️ Şifre en az 6 karakter olmalıdır!")
+                    ModernMessageBox.warning(self, "Uyarı", "⚠️ Şifre en az 6 karakter olmalıdır!")
                     return
 
                 if data['password'] != data['password_confirm']:
-                    QMessageBox.warning(self, "Uyarı", "⚠️ Şifreler eşleşmiyor!")
+                    ModernMessageBox.warning(self, "Uyarı", "⚠️ Şifreler eşleşmiyor!")
                     return
 
                 if data['role'] == 'Bölüm Koordinatörü' and not data['bolum_id']:
-                    QMessageBox.warning(self, "Uyarı", "⚠️ Koordinatör için bölüm seçmelisiniz!")
+                    ModernMessageBox.warning(self, "Uyarı", "⚠️ Koordinatör için bölüm seçmelisiniz!")
                     return
 
                 # Hash password
@@ -593,10 +594,8 @@ class KullaniciYonetimiView(QWidget):
 
                 user_id = self.user_model.insert_user(user_data)
 
-                QMessageBox.information(
-                    self,
-                    "Başarılı",
-                    f"✅ Kullanıcı başarıyla eklendi!\n\n"
+                ModernMessageBox.success(
+                    self, "Başarılı", f"Kullanıcı başarıyla eklendi!", f"\n"
                     f"E-posta: {data['email']}\n"
                     f"Şifre: {data['password']}\n\n"
                     f"Bu bilgileri kullanıcıya iletin."
@@ -606,7 +605,7 @@ class KullaniciYonetimiView(QWidget):
 
         except Exception as e:
             logger.error(f"Error adding user: {e}")
-            QMessageBox.critical(self, "Hata", f"Kullanıcı eklenirken hata oluştu:\n{str(e)}")
+            ModernMessageBox.error(self, "Hata", "Kullanıcı eklenirken oluştu", f"{str(e)}")
 
     def edit_user(self, user):
         """Edit user"""
@@ -620,15 +619,15 @@ class KullaniciYonetimiView(QWidget):
 
                 # Validation
                 if not data['ad_soyad']:
-                    QMessageBox.warning(self, "Uyarı", "⚠️ Ad Soyad giriniz!")
+                    ModernMessageBox.warning(self, "Uyarı", "⚠️ Ad Soyad giriniz!")
                     return
 
                 if not data['email']:
-                    QMessageBox.warning(self, "Uyarı", "⚠️ E-posta giriniz!")
+                    ModernMessageBox.warning(self, "Uyarı", "⚠️ E-posta giriniz!")
                     return
 
                 if data['role'] == 'Bölüm Koordinatörü' and not data['bolum_id']:
-                    QMessageBox.warning(self, "Uyarı", "⚠️ Koordinatör için bölüm seçmelisiniz!")
+                    ModernMessageBox.warning(self, "Uyarı", "⚠️ Koordinatör için bölüm seçmelisiniz!")
                     return
 
                 # Update user
@@ -644,7 +643,7 @@ class KullaniciYonetimiView(QWidget):
 
         except Exception as e:
             logger.error(f"Error editing user: {e}")
-            QMessageBox.critical(self, "Hata", f"Kullanıcı güncellenirken hata oluştu:\n{str(e)}")
+            ModernMessageBox.error(self, "Hata", "Kullanıcı güncellenirken oluştu", f"{str(e)}")
 
     def change_password(self, user):
         """Change user password"""
@@ -655,15 +654,15 @@ class KullaniciYonetimiView(QWidget):
 
                 # Validation
                 if not data['password']:
-                    QMessageBox.warning(self, "Uyarı", "⚠️ Şifre giriniz!")
+                    ModernMessageBox.warning(self, "Uyarı", "⚠️ Şifre giriniz!")
                     return
 
                 if len(data['password']) < 6:
-                    QMessageBox.warning(self, "Uyarı", "⚠️ Şifre en az 6 karakter olmalıdır!")
+                    ModernMessageBox.warning(self, "Uyarı", "⚠️ Şifre en az 6 karakter olmalıdır!")
                     return
 
                 if data['password'] != data['password_confirm']:
-                    QMessageBox.warning(self, "Uyarı", "⚠️ Şifreler eşleşmiyor!")
+                    ModernMessageBox.warning(self, "Uyarı", "⚠️ Şifreler eşleşmiyor!")
                     return
 
                 # Hash password
@@ -672,10 +671,8 @@ class KullaniciYonetimiView(QWidget):
                 # Update password
                 self.user_model.update_password(user['user_id'], hashed_password)
 
-                QMessageBox.information(
-                    self,
-                    "Başarılı",
-                    f"✅ Şifre başarıyla değiştirildi!\n\n"
+                ModernMessageBox.success(
+                    self, "Başarılı", f"Şifre başarıyla değiştirildi!", f"\n"
                     f"Kullanıcı: {user['ad_soyad']}\n"
                     f"E-posta: {user['email']}\n"
                     f"Yeni Şifre: {data['password']}\n\n"
@@ -684,12 +681,12 @@ class KullaniciYonetimiView(QWidget):
 
         except Exception as e:
             logger.error(f"Error changing password: {e}")
-            QMessageBox.critical(self, "Hata", f"Şifre değiştirilirken hata oluştu:\n{str(e)}")
+            ModernMessageBox.error(self, "Hata", "Şifre değiştirilirken oluştu", f"{str(e)}")
 
     def delete_user(self, user):
         """Delete user"""
         try:
-            reply = QMessageBox.question(
+            confirmed = ModernMessageBox.question(
                 self,
                 "Kullanıcı Sil",
                 f"🗑️ {user['ad_soyad']} kullanıcısını silmek istediğinizden emin misiniz?\n\n"
@@ -700,7 +697,7 @@ class KullaniciYonetimiView(QWidget):
                 QMessageBox.No
             )
 
-            if reply == QMessageBox.Yes:
+            if confirmed:
                 self.user_model.delete_user(user['user_id'])
 
                 QMessageBox.information(
@@ -713,7 +710,7 @@ class KullaniciYonetimiView(QWidget):
 
         except Exception as e:
             logger.error(f"Error deleting user: {e}")
-            QMessageBox.critical(self, "Hata", f"Kullanıcı silinirken hata oluştu:\n{str(e)}")
+            ModernMessageBox.error(self, "Hata", "Kullanıcı silinirken oluştu", f"{str(e)}")
 
     def resizeEvent(self, event):
         """Handle resize events"""

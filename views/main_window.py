@@ -28,6 +28,7 @@ from views.admin.kullanici_yonetimi_view import KullaniciYonetimiView
 from views.admin.bolum_yonetimi_view import BolumYonetimiView
 from views.admin.duyuru_yonetimi_view import DuyuruYonetimiView
 from styles.theme import KocaeliTheme
+from utils.modern_dialogs import ModernMessageBox
 
 logger = logging.getLogger(__name__)
 
@@ -272,9 +273,14 @@ class MenuButton(QPushButton):
                 font-weight: 500;
                 min-height: 48px;
                 margin: 2px 0px;
+                outline: none;
             }}
             QPushButton:hover {{
                 {hover}
+            }}
+            QPushButton:focus {{
+                outline: none;
+                border: none;
             }}
         """)
 
@@ -538,9 +544,14 @@ class MainWindow(QMainWindow):
                     ('📚', 'Ders Listesi', 'dersler'),
                     ('👥', 'Öğrenci Listesi', 'ogrenciler'),
                     ('📅', 'Sınav Programı', 'sinavlar'),
-                    ('📝', 'Oturma Planı', 'oturma'),
-                    ('⚙', 'Ayarlar', 'ayarlar')
                 ]
+                
+                # Oturma Planı sadece sınav programı varsa görünsün
+                has_exam_programs = self._check_exam_programs_exist
+                if has_exam_programs:
+                    menu_items.append(('📝', 'Oturma Planı', 'oturma'))
+                
+                menu_items.append(('⚙', 'Ayarlar', 'ayarlar'))
         else:
             # Bölüm Koordinatörü: Hiyerarşik kontrol uygula
             if not has_classrooms:
@@ -575,9 +586,14 @@ class MainWindow(QMainWindow):
                     ('📚', 'Ders Listesi', 'dersler'),
                     ('👥', 'Öğrenci Listesi', 'ogrenciler'),
                     ('📅', 'Sınav Programı', 'sinavlar'),
-                    ('📝', 'Oturma Planı', 'oturma'),
-                    ('⚙', 'Ayarlar', 'ayarlar')
                 ]
+                
+                # Oturma Planı sadece sınav programı varsa görünsün
+                has_exam_programs = self._check_exam_programs_exist
+                if has_exam_programs:
+                    menu_items.append(('📝', 'Oturma Planı', 'oturma'))
+                
+                menu_items.append(('⚙', 'Ayarlar', 'ayarlar'))
 
         self.menu_buttons = []
         for icon, text, menu_id in menu_items:
@@ -743,8 +759,12 @@ class MainWindow(QMainWindow):
                 actions = [
                     ("Derslik Yönetimi", "Derslikleri yönetin", "🏛", "emerald", "derslikler"),
                     ("Sınav Programı", "Sınav takvimi oluşturun", "📅", "indigo", "sinavlar"),
-                    ("Oturma Planı", "Oturma düzeni yapın", "📝", "orange", "oturma")
                 ]
+                
+                # Oturma Planı sadece sınav programı varsa görünsün
+                has_exam_programs = self._check_exam_programs_exist
+                if has_exam_programs:
+                    actions.append(("Oturma Planı", "Oturma düzeni yapın", "📝", "orange", "oturma"))
 
         for label, desc, icon, color, page_id in actions:
             action_card = QuickActionCard(label, desc, icon, color, self.theme)
@@ -960,10 +980,8 @@ class MainWindow(QMainWindow):
                     return
             except Exception as e:
                 logger.error(f"Error creating page {page_id}: {e}", exc_info=True)
-                QMessageBox.critical(
-                    self,
-                    "Sayfa Yükleme Hatası",
-                    f"'{page_id}' sayfası yüklenirken hata oluştu:\n\n{str(e)}"
+                ModernMessageBox.error(
+                    self, "Sayfa Yükleme Hatası", "'{page_id}' sayfası yüklenirken oluştu", f"\n{str(e)}"
                 )
                 return
 
@@ -1253,6 +1271,28 @@ class MainWindow(QMainWindow):
         except Exception as e:
             logger.error(f"Error checking courses: {e}", exc_info=True)
             return True  # On error, don't block
+    
+    @property
+    def _check_exam_programs_exist(self) -> bool:
+        """Check if exam programs exist for current user/bolum"""
+        try:
+            from models.database import db
+            from models.sinav_model import SinavModel
+            
+            # Get effective user (handle impersonation)
+            eff_user = self.get_effective_user_data()
+            eff_bolum_id = eff_user.get('bolum_id')
+            
+            if not eff_bolum_id:
+                return True  # Admin without bolum - allow all
+            
+            sinav_model = SinavModel(db)
+            programs = sinav_model.get_programs_by_bolum(eff_bolum_id)
+            return len(programs) > 0
+            
+        except Exception as e:
+            logger.error(f"Error checking exam programs: {e}", exc_info=True)
+            return False  # On error, hide oturma menu
     
     @property
     def _check_students_exist(self) -> bool:
