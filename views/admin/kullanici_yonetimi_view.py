@@ -47,7 +47,7 @@ class KullaniciDialog(QDialog):
         
         # Ad Soyad
         self.name_input = QLineEdit()
-        self.name_input.setPlaceholderText("Örn: Ahmet Yılmaz")
+        self.name_input.setPlaceholderText("Örn: ömer özdemir")
         self.name_input.setFixedHeight(36)
         if self.is_edit:
             self.name_input.setText(self.user_data.get('ad_soyad', ''))
@@ -55,7 +55,7 @@ class KullaniciDialog(QDialog):
         
         # Email
         self.email_input = QLineEdit()
-        self.email_input.setPlaceholderText("Örn: ahmet@kocaeli.edu.tr")
+        self.email_input.setPlaceholderText("Örn: ömer@kocaeli.edu.tr")
         self.email_input.setFixedHeight(36)
         if self.is_edit:
             self.email_input.setText(self.user_data.get('email', ''))
@@ -189,7 +189,7 @@ class SifreDialog(QDialog):
         layout.setContentsMargins(24, 24, 24, 24)
 
         # Info
-        info = QLabel(f"🔑 {self.user_name} kullanıcısı için yeni şifre belirleyin:")
+        info = QLabel(f" {self.user_name} kullanıcısı için yeni şifre belirleyin:")
         info.setWordWrap(True)
         info.setStyleSheet("color: #374151; font-size: 13px; padding: 8px;")
         layout.addWidget(info)
@@ -233,7 +233,7 @@ class SifreDialog(QDialog):
         """)
         cancel_btn.clicked.connect(self.reject)
 
-        save_btn = QPushButton("🔑 Şifreyi Değiştir")
+        save_btn = QPushButton("Şifreyi Değiştir")
         save_btn.setFixedHeight(40)
         save_btn.setFixedWidth(160)
         save_btn.setStyleSheet("""
@@ -287,7 +287,7 @@ class KullaniciYonetimiView(QWidget):
         header_layout = QHBoxLayout(header)
         header_layout.setContentsMargins(0, 0, 0, 0)
 
-        title = QLabel("👥 Kullanıcı Yönetimi")
+        title = QLabel("Kullanıcı Yönetimi")
         title.setFont(QFont("Segoe UI", 20, QFont.Bold))
         title.setStyleSheet("color: #111827;")
 
@@ -689,7 +689,7 @@ class KullaniciYonetimiView(QWidget):
             confirmed = ModernMessageBox.question(
                 self,
                 "Kullanıcı Sil",
-                f"🗑️ {user['ad_soyad']} kullanıcısını silmek istediğinizden emin misiniz?\n\n"
+                f"{user['ad_soyad']} kullanıcısını silmek istediğinizden emin misiniz?\n\n"
                 f"E-posta: {user['email']}\n"
                 f"Rol: {user['role']}\n\n"
                 f"Bu işlem geri alınamaz!",

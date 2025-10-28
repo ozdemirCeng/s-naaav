@@ -83,10 +83,10 @@ class OgrenciYukleView(QWidget):
         header_layout = QHBoxLayout(header)
         header_layout.setContentsMargins(0, 0, 0, 0)
         
-        title = QLabel("👥 Öğrenci Listesi")
+        title = QLabel("Öğrenci Listesi")
         title.setFont(QFont("Segoe UI", 18, QFont.Bold))
         
-        upload_btn = QPushButton("📤 Excel Yükle")
+        upload_btn = QPushButton("Excel Yükle")
         upload_btn.setObjectName("primaryBtn")
         upload_btn.setFixedHeight(36)
         upload_btn.setCursor(Qt.PointingHandCursor)
@@ -150,22 +150,22 @@ class OgrenciYukleView(QWidget):
         # Student action buttons
         student_actions = QHBoxLayout()
         
-        select_all_btn = QPushButton("☑️ Tümünü Seç")
+        select_all_btn = QPushButton("Tümünü Seç")
         select_all_btn.setFixedHeight(32)
         select_all_btn.setCursor(Qt.PointingHandCursor)
         select_all_btn.clicked.connect(self.select_all_students)
         
-        deselect_all_btn = QPushButton("☐ Seçimi Kaldır")
+        deselect_all_btn = QPushButton("Seçimi Kaldır")
         deselect_all_btn.setFixedHeight(32)
         deselect_all_btn.setCursor(Qt.PointingHandCursor)
         deselect_all_btn.clicked.connect(self.deselect_all_students)
         
-        edit_student_btn = QPushButton("✏️ Düzenle")
+        edit_student_btn = QPushButton("Düzenle")
         edit_student_btn.setFixedHeight(32)
         edit_student_btn.setCursor(Qt.PointingHandCursor)
         edit_student_btn.clicked.connect(self.edit_selected_student)
         
-        delete_student_btn = QPushButton("🗑️ Sil")
+        delete_student_btn = QPushButton("Sil")
         delete_student_btn.setFixedHeight(32)
         delete_student_btn.setCursor(Qt.PointingHandCursor)
         delete_student_btn.setObjectName("dangerBtn")
@@ -185,7 +185,7 @@ class OgrenciYukleView(QWidget):
         right_layout = QVBoxLayout(right_widget)
         right_layout.setContentsMargins(0, 0, 0, 0)
         
-        courses_header = QLabel("📚 Öğrencinin Aldığı Dersler")
+        courses_header = QLabel("Öğrencinin Aldığı Dersler")
         courses_header.setFont(QFont("Segoe UI", 14, QFont.Bold))
         courses_header.setStyleSheet("padding: 8px; background-color: #f3f4f6; border-radius: 4px;")
         right_layout.addWidget(courses_header)

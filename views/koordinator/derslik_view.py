@@ -226,7 +226,7 @@ class DerslikView(QWidget):
         layout.addWidget(self.stats_label)
         
         # Edit section (initially hidden)
-        self.edit_section = QGroupBox("✏️ Seçili Dersliği Düzenle")
+        self.edit_section = QGroupBox("Seçili Dersliği Düzenle")
         self.edit_section.setVisible(False)
         edit_layout = QVBoxLayout(self.edit_section)
         edit_layout.setSpacing(16)
@@ -454,7 +454,7 @@ class DerslikView(QWidget):
         btn_layout = QHBoxLayout()
         btn_layout.setSpacing(16)
         
-        clear_btn = QPushButton("🔄 Formu Temizle")
+        clear_btn = QPushButton("Formu Temizle")
         clear_btn.setFixedHeight(44)
         clear_btn.setFixedWidth(140)
         clear_btn.setCursor(Qt.PointingHandCursor)
@@ -580,21 +580,21 @@ class DerslikView(QWidget):
             action_layout.setContentsMargins(8, 4, 8, 4)
             action_layout.setSpacing(10)
             
-            view_btn = QPushButton("🖼️ Görsel")
+            view_btn = QPushButton("Görüntü")
             view_btn.setFixedHeight(36)
             view_btn.setMinimumWidth(90)
             view_btn.setCursor(Qt.PointingHandCursor)
             view_btn.setStyleSheet("background-color: #3b82f6; color: white;")
             view_btn.clicked.connect(lambda checked=False, d=dict(derslik): self.visualize_derslik(d))
             
-            edit_btn = QPushButton("✏️ Düzenle")
+            edit_btn = QPushButton("Düzenle")
             edit_btn.setFixedHeight(36)
             edit_btn.setMinimumWidth(90)
             edit_btn.setCursor(Qt.PointingHandCursor)
             edit_btn.setProperty('derslik_id', derslik['derslik_id'])
             edit_btn.clicked.connect(lambda checked=False, d=dict(derslik): self.edit_derslik(d))
             
-            delete_btn = QPushButton("🗑️ Sil")
+            delete_btn = QPushButton("Sil")
             delete_btn.setObjectName("dangerBtn")
             delete_btn.setFixedHeight(36)
             delete_btn.setMinimumWidth(80)
@@ -705,7 +705,7 @@ class DerslikView(QWidget):
         
         # Show edit section
         self.edit_section.setVisible(True)
-        self.edit_section.setTitle(f"✏️ '{derslik['derslik_adi']}' Düzenleniyor")
+        self.edit_section.setTitle(f"'{derslik['derslik_adi']}' Düzenleniyor")
         self.save_edit_btn.setEnabled(False)
         self.form_modified = False
         

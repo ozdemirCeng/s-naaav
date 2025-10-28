@@ -59,7 +59,7 @@ class OturmaPlaniView(QWidget):
         layout.setSpacing(15)
 
         # Header
-        header = QLabel("📋 Oturma Planı Yönetimi")
+        header = QLabel("Oturma Planı Yönetimi")
         header.setFont(QFont("Segoe UI", 18, QFont.Bold))
         header.setStyleSheet("color: #1f2937; padding: 10px;")
         layout.addWidget(header)
@@ -131,7 +131,7 @@ class OturmaPlaniView(QWidget):
         # Action buttons
         btn_layout = QHBoxLayout()
 
-        self.create_plan_btn = QPushButton("🎯 Oturma Düzeni Oluştur")
+        self.create_plan_btn = QPushButton("Oturma Düzeni Oluştur")
         self.create_plan_btn.setFixedHeight(40)
         self.create_plan_btn.setEnabled(False)
         self.create_plan_btn.setStyleSheet("""
@@ -149,7 +149,7 @@ class OturmaPlaniView(QWidget):
         self.create_plan_btn.clicked.connect(self.create_seating_plan)
         btn_layout.addWidget(self.create_plan_btn)
 
-        self.export_visual_btn = QPushButton("📄 Görsel PDF (Oturma Düzeni)")
+        self.export_visual_btn = QPushButton("Görsel PDF (Oturma Düzeni)")
         self.export_visual_btn.setFixedHeight(40)
         self.export_visual_btn.setEnabled(False)
         self.export_visual_btn.setStyleSheet("""
@@ -167,7 +167,7 @@ class OturmaPlaniView(QWidget):
         self.export_visual_btn.clicked.connect(self.export_visual_pdf)
         btn_layout.addWidget(self.export_visual_btn)
 
-        self.export_list_btn = QPushButton("📋 Liste PDF (Tablo)")
+        self.export_list_btn = QPushButton("Liste PDF (Tablo)")
         self.export_list_btn.setFixedHeight(40)
         self.export_list_btn.setEnabled(False)
         self.export_list_btn.setStyleSheet("""
@@ -255,7 +255,7 @@ class OturmaPlaniView(QWidget):
                 self.exams_table.setItem(row, 3, QTableWidgetItem(exam.get('derslik_adi', exam.get('derslik_kodu', ''))))
 
                 # Add change classroom button
-                change_btn = QPushButton("🔄 Derslik Değiştir")
+                change_btn = QPushButton("Derslik Değiştir")
                 change_btn.setStyleSheet("""
                     QPushButton {
                         background: #f59e0b;
@@ -339,8 +339,8 @@ class OturmaPlaniView(QWidget):
             
             # Update tooltips
             exam_info_text = f"Oturma düzeni: {new_ders_kodu} (Sınav ID: {new_sinav_id})"
-            self.export_visual_btn.setToolTip(f"📄 {exam_info_text}\n\nGörsel PDF olarak indir")
-            self.export_list_btn.setToolTip(f"📋 {exam_info_text}\n\nListe PDF olarak indir")
+            self.export_visual_btn.setToolTip(f" {exam_info_text}\n\nGörsel PDF olarak indir")
+            self.export_list_btn.setToolTip(f" {exam_info_text}\n\nListe PDF olarak indir")
         elif self.seating_data and self.seating_data_sinav_id != new_sinav_id:
             # CRITICAL: Same exam selected but seating data is for DIFFERENT exam!
             logger.error(f"❌ MISMATCH: Selected exam {new_sinav_id} but seating data is for exam {self.seating_data_sinav_id}!")
@@ -432,8 +432,8 @@ class OturmaPlaniView(QWidget):
             
             # Add tooltips showing which exam this data is for
             exam_info_text = f"Oturma düzeni: {self.selected_sinav.get('ders_kodu', '')} (Sınav ID: {sinav_id})"
-            self.export_visual_btn.setToolTip(f"📄 {exam_info_text}\n\nGörsel PDF olarak indir")
-            self.export_list_btn.setToolTip(f"📋 {exam_info_text}\n\nListe PDF olarak indir")
+            self.export_visual_btn.setToolTip(f" {exam_info_text}\n\nGörsel PDF olarak indir")
+            self.export_list_btn.setToolTip(f" {exam_info_text}\n\nListe PDF olarak indir")
 
             # Show result message
             placed_count = len(seating_data)
@@ -481,7 +481,7 @@ class OturmaPlaniView(QWidget):
     def visualize_seating_plan(self, classrooms: List[Dict], seating_data: Dict):
         """Visualize seating arrangement with corridor groups"""
         # Clear existing VISUALIZATION ONLY (don't touch seating_data!)
-        logger.info("🎨 Clearing old visualization widgets (keeping seating data)")
+        logger.info("Clearing old visualization widgets (keeping seating data)")
         while self.seating_layout.count():
             child = self.seating_layout.takeAt(0)
             if child.widget():
@@ -495,7 +495,7 @@ class OturmaPlaniView(QWidget):
             sira_yapisi = classroom.get('sira_yapisi', 3)  # 2'li veya 3'lü grup
 
             # Classroom header
-            header = QLabel(f"🏫 {classroom.get('derslik_adi', classroom.get('derslik_kodu'))} (Kapasite: {kapasite})")
+            header = QLabel(f" {classroom.get('derslik_adi', classroom.get('derslik_kodu'))} (Kapasite: {kapasite})")
             header.setFont(QFont("Segoe UI", 14, QFont.Bold))
             header.setStyleSheet("color: #1f2937; padding: 10px;")
             self.seating_layout.addWidget(header)
@@ -529,7 +529,7 @@ class OturmaPlaniView(QWidget):
             total_visual_cols = cols + corridor_count + 2  # +1 for window, +1 for door
 
             # Front label (Board)
-            front_label = QLabel("📺 TAHTA")
+            front_label = QLabel(" TAHTA")
             front_label.setAlignment(Qt.AlignCenter)
             front_label.setStyleSheet("""
                 background: #fef3c7;
@@ -611,7 +611,7 @@ class OturmaPlaniView(QWidget):
                     visual_col += 1
 
             # Right side - Door (at the back)
-            door_label = QLabel("🚪\nK\nA\nP\nI")
+            door_label = QLabel("\nK\nA\nP\nI")
             door_label.setAlignment(Qt.AlignCenter)
             door_label.setStyleSheet("""
                 background: #fef3c7;
@@ -692,7 +692,7 @@ class OturmaPlaniView(QWidget):
                 f"⚠️ DİKKAT: Oturma düzeni farklı bir sınav için oluşturulmuş!\n\n"
                 f"Seçili sınav: {self.selected_sinav.get('ders_kodu', '')}\n\n"
                 f"Önce bu sınav için oturma düzeni oluşturun:\n"
-                f"'🎯 Oturma Düzeni Oluştur' butonuna tıklayın."
+                f"'Oturma Düzeni Oluştur' butonuna tıklayın."
             )
             logger.error(f"Export failed: Seating data for exam {self.seating_data_sinav_id} but trying to export for exam {current_sinav_id}")
             # Disable export buttons
@@ -775,7 +775,7 @@ class OturmaPlaniView(QWidget):
                 f"⚠️ DİKKAT: Oturma düzeni farklı bir sınav için oluşturulmuş!\n\n"
                 f"Seçili sınav: {self.selected_sinav.get('ders_kodu', '')}\n\n"
                 f"Önce bu sınav için oturma düzeni oluşturun:\n"
-                f"'🎯 Oturma Düzeni Oluştur' butonuna tıklayın."
+                f"' Oturma Düzeni Oluştur' butonuna tıklayın."
             )
             logger.error(f"Export failed: Seating data for exam {self.seating_data_sinav_id} but trying to export for exam {current_sinav_id}")
             # Disable export buttons
@@ -861,7 +861,7 @@ class OturmaPlaniView(QWidget):
             layout = QVBoxLayout(dialog)
 
             # Info label
-            info = QLabel(f"📚 Ders: {exam.get('ders_kodu', '')} - {exam.get('ders_adi', '')}")
+            info = QLabel(f"Ders: {exam.get('ders_kodu', '')} - {exam.get('ders_adi', '')}")
             info.setStyleSheet("font-weight: bold; padding: 10px; background: #eff6ff; border-radius: 6px;")
             layout.addWidget(info)
 

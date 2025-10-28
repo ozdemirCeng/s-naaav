@@ -125,75 +125,61 @@ class LoadingSpinner(QWidget):
             painter.rotate(45)
 
 
-class ModernInput(QWidget):
-    """Modern floating label input with smooth animations"""
+class SimpleInput(QWidget):
+    """Simple, clean input field without complex animations"""
 
     textChanged = Signal(str)
     returnPressed = Signal()
 
-    def __init__(self, label_text, placeholder="", is_password=False, icon="", parent=None):
+    def __init__(self, label_text, placeholder="", is_password=False, parent=None):
         super().__init__(parent)
         self.label_text = label_text
         self.placeholder = placeholder or label_text
         self.is_password = is_password
-        self.icon = icon
-        self.is_focused = False
         self.password_visible = False
         self.setup_ui()
 
     def setup_ui(self):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
+        layout.setSpacing(8)
 
-        # Container with hover effect
+        # Label
+        self.label = QLabel(self.label_text)
+        self.label.setObjectName("inputLabel")
+        self.label.setFont(QFont("Segoe UI", 11, QFont.DemiBold))
+        layout.addWidget(self.label)
+
+        # Input container
         self.container = QFrame()
         self.container.setObjectName("inputContainer")
         container_layout = QHBoxLayout(self.container)
-        container_layout.setContentsMargins(18, 1, 18, 1)
-        container_layout.setSpacing(1)
-
-        # Icon
-        if self.icon:
-            icon_label = QLabel(self.icon)
-            icon_label.setObjectName("inputIcon")
-            icon_label.setFont(QFont("Segoe UI Emoji", 16))
-            container_layout.addWidget(icon_label)
+        container_layout.setContentsMargins(16, 14, 16, 14)
+        container_layout.setSpacing(12)
 
         # Input field
-        input_layout = QVBoxLayout()
-        input_layout.setSpacing(2)
-
-        self.label = QLabel(self.label_text)
-        self.label.setObjectName("floatingLabel")
-        self.label.setFont(QFont("Segoe UI", 9, QFont.DemiBold))
-
         self.input = QLineEdit()
-        self.input.setObjectName("modernInput")
-        self.input.setFont(QFont("Segoe UI", 12))
+        self.input.setObjectName("simpleInput")
+        self.input.setFont(QFont("Segoe UI", 14))
         self.input.setPlaceholderText(self.placeholder)
-        self.input.setStyleSheet("padding: 0px -1px;")
+        self.input.setMinimumHeight(24)
 
         if self.is_password:
             self.input.setEchoMode(QLineEdit.Password)
 
         self.input.textChanged.connect(self.textChanged.emit)
         self.input.returnPressed.connect(self.returnPressed.emit)
-
-        # Override focus events
         self.input.focusInEvent = self.on_focus_in
         self.input.focusOutEvent = self.on_focus_out
 
-        input_layout.addWidget(self.label)
-        input_layout.addWidget(self.input)
-        container_layout.addLayout(input_layout, 1)
+        container_layout.addWidget(self.input)
 
         # Show password button for password inputs
         if self.is_password:
             self.show_pass_btn = QPushButton("👁️")
             self.show_pass_btn.setObjectName("showPassBtn")
             self.show_pass_btn.setCheckable(True)
-            self.show_pass_btn.setFixedSize(40, 40)
+            self.show_pass_btn.setFixedSize(36, 36)
             self.show_pass_btn.setCursor(Qt.PointingHandCursor)
             self.show_pass_btn.setToolTip("Şifreyi göster/gizle")
             self.show_pass_btn.clicked.connect(self.toggle_password_visibility)
@@ -201,47 +187,17 @@ class ModernInput(QWidget):
 
         layout.addWidget(self.container)
 
-        # Initial state
-        self.label.hide()
-
-        # Opacity effects for animations
-        self.label_effect = QGraphicsOpacityEffect(self.label)
-        self.label.setGraphicsEffect(self.label_effect)
-
     def on_focus_in(self, event):
-        self.is_focused = True
-        self.animate_label(True)
         self.container.setProperty("focused", True)
         self.container.style().unpolish(self.container)
         self.container.style().polish(self.container)
         QLineEdit.focusInEvent(self.input, event)
 
     def on_focus_out(self, event):
-        self.is_focused = False
-        if not self.input.text():
-            self.animate_label(False)
         self.container.setProperty("focused", False)
         self.container.style().unpolish(self.container)
         self.container.style().polish(self.container)
         QLineEdit.focusOutEvent(self.input, event)
-
-    def animate_label(self, show):
-        anim = QPropertyAnimation(self.label_effect, b"opacity")
-        anim.setDuration(200)
-        anim.setEasingCurve(QEasingCurve.OutCubic)
-
-        if show:
-            self.label.show()
-            self.input.setPlaceholderText("")
-            anim.setStartValue(0)
-            anim.setEndValue(1)
-        else:
-            anim.setStartValue(1)
-            anim.setEndValue(0)
-            anim.finished.connect(self.label.hide)
-            self.input.setPlaceholderText(self.placeholder)
-
-        anim.start(QPropertyAnimation.DeleteWhenStopped)
 
     def text(self):
         return self.input.text()
@@ -249,20 +205,16 @@ class ModernInput(QWidget):
     def clear(self):
         self.input.clear()
 
-    def set_echo_mode(self, mode):
-        self.input.setEchoMode(mode)
-
     def toggle_password_visibility(self):
         """Toggle password visibility"""
-        if hasattr(self, 'show_pass_btn'):
-            if self.password_visible:
-                self.input.setEchoMode(QLineEdit.Password)
-                self.show_pass_btn.setText("👁️")
-                self.password_visible = False
-            else:
-                self.input.setEchoMode(QLineEdit.Normal)
-                self.show_pass_btn.setText("🙈")
-                self.password_visible = True
+        if self.password_visible:
+            self.input.setEchoMode(QLineEdit.Password)
+            self.show_pass_btn.setText("👁️")
+            self.password_visible = False
+        else:
+            self.input.setEchoMode(QLineEdit.Normal)
+            self.show_pass_btn.setText("🙈")
+            self.password_visible = True
 
 
 class ModernButton(QPushButton):
@@ -386,26 +338,24 @@ class LoginView(QWidget):
         # Form container with shadow
         form_container = QFrame()
         form_container.setObjectName("formContainer")
-        form_container.setMaximumWidth(500)
+        form_container.setMaximumWidth(480)
         form_layout = QVBoxLayout(form_container)
-        form_layout.setContentsMargins(60, 60, 60, 60)
-        form_layout.setSpacing(28)
+        form_layout.setContentsMargins(48, 48, 48, 48)
+        form_layout.setSpacing(24)
 
         # Header section
         header = QLabel("Hoş Geldiniz 👋")
         header.setObjectName("formHeader")
-        header.setFont(QFont("Segoe UI", 32, QFont.Bold))
+        header.setFont(QFont("Segoe UI", 28, QFont.Bold))
 
         subheader = QLabel("Sisteme giriş yapmak için bilgilerinizi girin")
         subheader.setObjectName("formSubheader")
-        subheader.setFont(QFont("Segoe UI", 12))
+        subheader.setFont(QFont("Segoe UI", 13))
         subheader.setWordWrap(True)
 
         # Input fields
-        self.email_input = ModernInput("E-posta Adresi", "ornek@kocaeli.edu.tr")
-        self.email_input.setFixedHeight(50)
-        self.password_input = ModernInput("Şifre", "••••••••", is_password=True)
-        self.password_input.setFixedHeight(50)
+        self.email_input = SimpleInput("E-posta Adresi", "ornek@kocaeli.edu.tr")
+        self.password_input = SimpleInput("Şifre", "••••••••", is_password=True)
         self.password_input.returnPressed.connect(self.handle_login)
 
         # Remember me and forgot password
@@ -458,14 +408,14 @@ class LoginView(QWidget):
         # Assembly
         form_layout.addWidget(header)
         form_layout.addWidget(subheader)
-        form_layout.addSpacing(10)
+        form_layout.addSpacing(20)
         form_layout.addWidget(self.email_input)
         form_layout.addWidget(self.password_input)
         form_layout.addLayout(options_layout)
-        form_layout.addSpacing(5)
         form_layout.addWidget(self.message_label)
+        form_layout.addSpacing(8)
         form_layout.addWidget(button_container)
-        form_layout.addSpacing(20)
+        form_layout.addSpacing(24)
         form_layout.addWidget(footer)
 
         # Form opacity for entrance animation
@@ -803,99 +753,83 @@ Giriş yaptıktan sonra ilgili bölüm için tüm sınav süreçlerini yönetebi
 
             /* Login Panel */
             #loginPanel {
-                background: qlineargradient(
-                    x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #ffffff,
-                    stop:1 #f8fafc
-                );
+                background: #f8fafc;
             }
 
             #formContainer {
                 background: white;
-                border-radius: 24px;
-                border: 1px solid #e2e8f0;
+                border-radius: 20px;
+                border: 1px solid #e5e7eb;
             }
 
             #formHeader {
-                color: #000000;
+                color: #111827;
                 margin: 0;
                 padding: 0;
-                font-weight: bold;
+                font-weight: 700;
             }
 
             #formSubheader {
-                color: #374151;
+                color: #6b7280;
                 line-height: 1.6;
-                font-weight: 500;
+                font-weight: 400;
             }
 
-            /* Modern Input Container */
+            /* Input Label */
+            #inputLabel {
+                color: #1e293b;
+                background: transparent;
+                padding-left: 4px;
+            }
+
+            /* Simple Input Container */
             #inputContainer {
-                background: #f8fafc;
-                border: 2px solid transparent;
-                border-radius: 14px;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                background: white;
+                border: 2px solid #e2e8f0;
+                border-radius: 10px;
             }
 
             #inputContainer:hover {
-                background: #f1f5f9;
-                border: 2px solid #cbd5e0;
+                border-color: #cbd5e1;
             }
 
             #inputContainer[focused="true"] {
-                background: white;
                 border: 2px solid #00A651;
-                box-shadow: 0 0 0 4px rgba(0, 166, 81, 0.1);
             }
 
-            #inputIcon {
-                color: #374151;
-            }
-
-            #floatingLabel {
-                color: #00A651;
-                background: transparent;
-                font-weight: 600;
-            }
-
-            #modernInput {
+            /* Simple Input Field */
+            #simpleInput {
                 background: transparent;
                 border: none;
-                color: #000000;
-                padding: 8px 0px;
+                color: #1e293b;
+                padding: 0px;
                 selection-background-color: #00A651;
                 selection-color: white;
                 font-weight: 500;
-                line-height: 1.2;
-                vertical-align: middle;
             }
 
-            #modernInput::placeholder {
-                color: #6b7280;
+            #simpleInput::placeholder {
+                color: #94a3b8;
             }
 
             /* Show Password Button */
             #showPassBtn {
-                background: #f1f5f9;
-                border: 2px solid #e2e8f0;
-                border-radius: 12px;
+                background: transparent;
+                border: none;
+                border-radius: 8px;
                 font-size: 18px;
-                transition: all 0.2s ease;
             }
 
             #showPassBtn:hover {
-                background: #e2e8f0;
-                border: 2px solid #cbd5e0;
-                transform: scale(1.05);
+                background: #f1f5f9;
             }
 
             #showPassBtn:checked {
-                background: #dcfce7;
-                border: 2px solid #00A651;
+                background: #f0fdf4;
             }
 
             #showPassBtn:pressed {
-                transform: scale(0.95);
+                background: #e2e8f0;
             }
 
             /* Remember Me Checkbox */
@@ -923,36 +857,25 @@ Giriş yaptıktan sonra ilgili bölüm için tüm sınav süreçlerini yönetebi
 
             /* Buttons */
             #primaryBtn {
-                background: qlineargradient(
-                    x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #00A651,
-                    stop:1 #00C75F
-                );
+                background: #00A651;
                 color: white;
-                border-radius: 14px;
-                font-size: 13px;
+                border-radius: 12px;
+                font-size: 14px;
                 font-weight: 600;
                 padding: 16px 32px;
                 letter-spacing: 0.3px;
-                text-transform: uppercase;
             }
 
             #primaryBtn:hover {
-                background: qlineargradient(
-                    x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #008F47,
-                    stop:1 #00A651
-                );
+                background: #008F47;
             }
 
             #primaryBtn:pressed {
                 background: #007A3D;
-                padding-top: 18px;
-                padding-bottom: 14px;
             }
 
             #primaryBtn:disabled {
-                background: #cbd5e0;
+                background: #cbd5e1;
                 color: #94a3b8;
             }
 

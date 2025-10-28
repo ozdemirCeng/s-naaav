@@ -56,7 +56,7 @@ class ProgramResultDialog(QDialog):
         self.schedule_data = schedule_data
         self.params = params
         self.bolum_id = params.get('bolum_id')
-        self.setWindowTitle("📅 Sınav Programı Oluşturuldu")
+        self.setWindowTitle("Sınav Programı Oluşturuldu")
         self.setMinimumSize(1000, 700)
         self._build_ui()
     
@@ -145,7 +145,7 @@ class ProgramResultDialog(QDialog):
         btn_layout.setSpacing(12)
         
         # Excel button
-        excel_btn = QPushButton("📊 Excel İndir")
+        excel_btn = QPushButton("Excel İndir")
         excel_btn.setFixedHeight(44)
         excel_btn.setStyleSheet("""
             QPushButton {
@@ -163,7 +163,7 @@ class ProgramResultDialog(QDialog):
         excel_btn.clicked.connect(self.export_excel)
         
         # PDF button
-        pdf_btn = QPushButton("📄 PDF İndir")
+        pdf_btn = QPushButton("PDF İndir")
         pdf_btn.setFixedHeight(44)
         pdf_btn.setStyleSheet("""
             QPushButton {
@@ -383,7 +383,7 @@ class SinavOlusturView(QWidget):
         layout.setSpacing(10)
         
         # Header
-        title = QLabel("📅 Sınav Programı Yönetimi")
+        title = QLabel("Sınav Programı Yönetimi")
         title.setFont(QFont("Segoe UI", 16, QFont.Bold))
         layout.addWidget(title)
         
@@ -403,7 +403,7 @@ class SinavOlusturView(QWidget):
         # Tab 1: Existing Programs
         self.programs_tab = QWidget()
         self.setup_programs_tab()
-        self.tab_widget.addTab(self.programs_tab, "📋 Mevcut Programlar")
+        self.tab_widget.addTab(self.programs_tab, "Mevcut Programlar")
         
         # Tab 2: Create New Program
         self.create_tab = QWidget()
@@ -424,7 +424,7 @@ class SinavOlusturView(QWidget):
         info = QLabel("Kayıtlı sınav programlarınızı görüntüleyin, indirin veya silin")
         info.setStyleSheet("color: #6b7280; font-size: 13px;")
         
-        refresh_btn = QPushButton("🔄 Yenile")
+        refresh_btn = QPushButton("Yenile")
         refresh_btn.setFixedHeight(36)
         refresh_btn.setStyleSheet("""
             QPushButton {
@@ -672,7 +672,7 @@ class SinavOlusturView(QWidget):
         clear_all_btn.clicked.connect(self.clear_all_courses)
         toolbar.addWidget(clear_all_btn)
         
-        check_parallel_btn = QPushButton("🔍 Ortak Öğrenciler")
+        check_parallel_btn = QPushButton("Ortak Öğrenciler")
         check_parallel_btn.setFixedHeight(35)
         check_parallel_btn.setStyleSheet("""
             QPushButton {
@@ -724,7 +724,7 @@ class SinavOlusturView(QWidget):
         layout.addWidget(self.progress_label)
         
         # Create button
-        self.create_btn = QPushButton("🚀 Program Oluştur")
+        self.create_btn = QPushButton("Program Oluştur")
         self.create_btn.setMinimumHeight(42)
         self.create_btn.setStyleSheet("""
             QPushButton {
@@ -770,7 +770,7 @@ class SinavOlusturView(QWidget):
                 actions_layout.setContentsMargins(8, 4, 8, 4)
                 actions_layout.setSpacing(8)
                 
-                view_btn = QPushButton("📋 Görüntüle")
+                view_btn = QPushButton("Görüntüle")
                 view_btn.setFixedHeight(36)
                 view_btn.setMinimumWidth(95)
                 view_btn.setStyleSheet("""
@@ -787,7 +787,7 @@ class SinavOlusturView(QWidget):
                 """)
                 view_btn.clicked.connect(lambda checked=False, p=dict(program): self.view_program(p))
                 
-                excel_btn = QPushButton("📊 Excel")
+                excel_btn = QPushButton("Excel")
                 excel_btn.setFixedHeight(36)
                 excel_btn.setMinimumWidth(85)
                 excel_btn.setStyleSheet("""
@@ -804,7 +804,7 @@ class SinavOlusturView(QWidget):
                 """)
                 excel_btn.clicked.connect(lambda checked=False, p=dict(program): self.export_program_excel(p))
                 
-                pdf_btn = QPushButton("📄 PDF")
+                pdf_btn = QPushButton("PDF")
                 pdf_btn.setFixedHeight(36)
                 pdf_btn.setMinimumWidth(75)
                 pdf_btn.setStyleSheet("""
@@ -821,7 +821,7 @@ class SinavOlusturView(QWidget):
                 """)
                 pdf_btn.clicked.connect(lambda checked=False, p=dict(program): self.export_program_pdf(p))
                 
-                delete_btn = QPushButton("🗑️ Sil")
+                delete_btn = QPushButton("Sil")
                 delete_btn.setFixedHeight(36)
                 delete_btn.setMinimumWidth(70)
                 delete_btn.setStyleSheet("""
@@ -839,7 +839,7 @@ class SinavOlusturView(QWidget):
                 delete_btn.clicked.connect(lambda checked=False, p=dict(program): self.delete_program(p))
                 
                 # Class-based report button
-                class_report_btn = QPushButton("🎓 Sınıf Bazlı")
+                class_report_btn = QPushButton("Sınıf Bazlı")
                 class_report_btn.setFixedHeight(36)
                 class_report_btn.setMinimumWidth(105)
                 class_report_btn.setStyleSheet("""

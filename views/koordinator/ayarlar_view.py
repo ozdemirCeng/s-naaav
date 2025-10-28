@@ -61,7 +61,7 @@ class AyarlarView(QWidget):
         header_layout = QHBoxLayout(header)
         header_layout.setContentsMargins(0, 0, 0, 0)
         
-        title = QLabel("Ayarlar ⚙️")
+        title = QLabel("Ayarlar")
         title.setFont(QFont("Segoe UI", 20, QFont.Bold))
         
         subtitle = QLabel("Kullanıcı tercihleri ve profil ayarları")
@@ -80,7 +80,7 @@ class AyarlarView(QWidget):
         layout.addWidget(divider)
         
         # User Profile Card
-        profile_card = QGroupBox("👤 Profil Bilgileri")
+        profile_card = QGroupBox("Profil Bilgileri")
         profile_card.setStyleSheet("""
             QGroupBox {
                 font-size: 14px;
@@ -117,7 +117,7 @@ class AyarlarView(QWidget):
         layout.addWidget(profile_card)
         
         # Appearance Settings Card
-        appearance_card = QGroupBox("🎨 Görünüm Tercihleri")
+        appearance_card = QGroupBox("Görünüm Tercihleri")
         appearance_card.setStyleSheet("""
             QGroupBox {
                 font-size: 14px;
@@ -182,7 +182,7 @@ class AyarlarView(QWidget):
         layout.addWidget(appearance_card)
         
         # Password Change Card
-        password_card = QGroupBox("🔒 Şifre Değiştir")
+        password_card = QGroupBox("Şifre Değiştir")
         password_card.setStyleSheet("""
             QGroupBox {
                 font-size: 14px;
@@ -253,7 +253,7 @@ class AyarlarView(QWidget):
         """)
         password_layout.addRow("Şifre Tekrar:", self.confirm_password)
         
-        change_password_btn = QPushButton("🔑 Şifreyi Değiştir")
+        change_password_btn = QPushButton("Şifreyi Değiştir")
         change_password_btn.setFixedHeight(40)
         change_password_btn.setStyleSheet("""
             QPushButton {

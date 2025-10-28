@@ -85,10 +85,10 @@ class DersYukleView(QWidget):
         header_layout = QHBoxLayout(header)
         header_layout.setContentsMargins(0, 0, 0, 0)
         
-        title = QLabel("📚 Ders Listesi")
+        title = QLabel("Ders Listesi")
         title.setFont(QFont("Segoe UI", 18, QFont.Bold))
         
-        upload_btn = QPushButton("📤 Excel Yükle")
+        upload_btn = QPushButton("Excel Yükle")
         upload_btn.setObjectName("primaryBtn")
         upload_btn.setFixedHeight(36)
         upload_btn.setCursor(Qt.PointingHandCursor)
@@ -164,22 +164,22 @@ class DersYukleView(QWidget):
         # Course action buttons
         course_actions = QHBoxLayout()
         
-        select_all_btn = QPushButton("☑️ Tümünü Seç")
+        select_all_btn = QPushButton("Tümünü Seç")
         select_all_btn.setFixedHeight(32)
         select_all_btn.setCursor(Qt.PointingHandCursor)
         select_all_btn.clicked.connect(self.select_all_courses)
         
-        deselect_all_btn = QPushButton("☐ Seçimi Kaldır")
+        deselect_all_btn = QPushButton("Seçimi Kaldır")
         deselect_all_btn.setFixedHeight(32)
         deselect_all_btn.setCursor(Qt.PointingHandCursor)
         deselect_all_btn.clicked.connect(self.deselect_all_courses)
         
-        edit_course_btn = QPushButton("✏️ Düzenle")
+        edit_course_btn = QPushButton("Düzenle")
         edit_course_btn.setFixedHeight(32)
         edit_course_btn.setCursor(Qt.PointingHandCursor)
         edit_course_btn.clicked.connect(self.edit_selected_course)
         
-        delete_course_btn = QPushButton("🗑️ Sil")
+        delete_course_btn = QPushButton("Sil")
         delete_course_btn.setFixedHeight(32)
         delete_course_btn.setCursor(Qt.PointingHandCursor)
         delete_course_btn.setObjectName("dangerBtn")

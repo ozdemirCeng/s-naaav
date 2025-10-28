@@ -252,11 +252,11 @@ class DuyuruYonetimiView(QWidget):
                 actions_layout.setContentsMargins(4, 4, 4, 4)
                 actions_layout.setSpacing(4)
                 
-                edit_btn = QPushButton("✏️ Düzenle")
+                edit_btn = QPushButton("Düzenle")
                 edit_btn.setFixedHeight(32)
                 edit_btn.clicked.connect(lambda checked=False, r=row: self._edit_duyuru(r))
                 
-                delete_btn = QPushButton("🗑️ Sil")
+                delete_btn = QPushButton("Sil")
                 delete_btn.setFixedHeight(32)
                 delete_btn.setProperty("class", "dangerBtn")
                 delete_btn.clicked.connect(lambda checked=False, did=row['duyuru_id']: self._delete_duyuru(did))

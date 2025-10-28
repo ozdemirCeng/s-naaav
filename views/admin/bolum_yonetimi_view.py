@@ -300,14 +300,14 @@ class BolumYonetimiView(QWidget):
                 action_layout.setContentsMargins(6, 4, 6, 4)
                 action_layout.setSpacing(8)
 
-                edit_btn = QPushButton("✏️ Düzenle")
+                edit_btn = QPushButton("Düzenle")
                 edit_btn.setFixedHeight(34)
                 edit_btn.setFixedWidth(95)
                 edit_btn.setStyleSheet("background-color: #3498db; color: white; border: none; border-radius: 5px; font-weight: 600; font-size: 11px;")
                 edit_btn.setCursor(Qt.PointingHandCursor)
                 edit_btn.clicked.connect(lambda checked=False, b=bolum: self.edit_bolum(b))
 
-                delete_btn = QPushButton("🗑️ Sil")
+                delete_btn = QPushButton("Sil")
                 delete_btn.setFixedHeight(34)
                 delete_btn.setFixedWidth(75)
                 delete_btn.setStyleSheet("background-color: #e74c3c; color: white; border: none; border-radius: 5px; font-weight: 600; font-size: 11px;")
