@@ -481,8 +481,10 @@ class MainWindow(QMainWindow):
         user_role = self.user_data.get('role', 'Bölüm Koordinatörü')
         is_impersonating = getattr(self, 'is_impersonating', False)
         
-        # Check if classroom exists for current user/bolum
+        # Check hierarchical data requirements for coordinator
         has_classrooms = self._check_classrooms_exist
+        has_courses = self._check_courses_exist
+        has_students = self._check_students_exist
         
         if user_role == 'Admin' and not is_impersonating and self.needs_bolum_selection:
             # Admin bölüm seçmemiş - Yönetim paneli
@@ -495,20 +497,52 @@ class MainWindow(QMainWindow):
                 ('🎓', 'Bölüm Seçimi', 'bolum_secim')
             ]
         elif user_role == 'Admin' and is_impersonating:
-            # Admin impersonation modunda - Koordinatör menüsü + Geri Dön
-            menu_items = [
-                ('🏠', 'Ana Sayfa', 'dashboard'),
-                ('⬅️', 'Geri Dön (Admin)', 'exit_imp'),
-                ('', '───────────', 'divider'),
-                ('🏛', 'Derslikler', 'derslikler'),
-                ('📚', 'Ders Listesi', 'dersler'),
-                ('👥', 'Öğrenci Listesi', 'ogrenciler'),
-                ('📅', 'Sınav Programı', 'sinavlar'),
-                ('📝', 'Oturma Planı', 'oturma'),
-                ('⚙', 'Ayarlar', 'ayarlar')
-            ]
+            # Admin impersonation modunda - Hiyerarşik kontrol uygula
+            if not has_classrooms:
+                # Derslik yoksa sadece derslik yönetimi
+                menu_items = [
+                    ('🏠', 'Ana Sayfa', 'dashboard'),
+                    ('⬅️', 'Geri Dön (Admin)', 'exit_imp'),
+                    ('', '───────────', 'divider'),
+                    ('🏛', 'Derslikler', 'derslikler'),
+                    ('⚙', 'Ayarlar', 'ayarlar')
+                ]
+            elif not has_courses:
+                # Derslik var ama ders yoksa - ders yükleme ekle
+                menu_items = [
+                    ('🏠', 'Ana Sayfa', 'dashboard'),
+                    ('⬅️', 'Geri Dön (Admin)', 'exit_imp'),
+                    ('', '───────────', 'divider'),
+                    ('🏛', 'Derslikler', 'derslikler'),
+                    ('📚', 'Ders Listesi', 'dersler'),
+                    ('⚙', 'Ayarlar', 'ayarlar')
+                ]
+            elif not has_students:
+                # Ders var ama öğrenci yoksa - öğrenci yükleme ekle
+                menu_items = [
+                    ('🏠', 'Ana Sayfa', 'dashboard'),
+                    ('⬅️', 'Geri Dön (Admin)', 'exit_imp'),
+                    ('', '───────────', 'divider'),
+                    ('🏛', 'Derslikler', 'derslikler'),
+                    ('📚', 'Ders Listesi', 'dersler'),
+                    ('👥', 'Öğrenci Listesi', 'ogrenciler'),
+                    ('⚙', 'Ayarlar', 'ayarlar')
+                ]
+            else:
+                # Hepsi var - tam menü
+                menu_items = [
+                    ('🏠', 'Ana Sayfa', 'dashboard'),
+                    ('⬅️', 'Geri Dön (Admin)', 'exit_imp'),
+                    ('', '───────────', 'divider'),
+                    ('🏛', 'Derslikler', 'derslikler'),
+                    ('📚', 'Ders Listesi', 'dersler'),
+                    ('👥', 'Öğrenci Listesi', 'ogrenciler'),
+                    ('📅', 'Sınav Programı', 'sinavlar'),
+                    ('📝', 'Oturma Planı', 'oturma'),
+                    ('⚙', 'Ayarlar', 'ayarlar')
+                ]
         else:
-            # Bölüm Koordinatörü: Operasyonel işlemler
+            # Bölüm Koordinatörü: Hiyerarşik kontrol uygula
             if not has_classrooms:
                 # Derslik yoksa sadece derslik yönetimini göster
                 menu_items = [
@@ -516,8 +550,25 @@ class MainWindow(QMainWindow):
                     ('🏛', 'Derslikler', 'derslikler'),
                     ('⚙', 'Ayarlar', 'ayarlar')
                 ]
+            elif not has_courses:
+                # Derslik var ama ders yoksa - ders yükleme ekle
+                menu_items = [
+                    ('🏠', 'Ana Sayfa', 'dashboard'),
+                    ('🏛', 'Derslikler', 'derslikler'),
+                    ('📚', 'Ders Listesi', 'dersler'),
+                    ('⚙', 'Ayarlar', 'ayarlar')
+                ]
+            elif not has_students:
+                # Ders var ama öğrenci yoksa - öğrenci yükleme ekle
+                menu_items = [
+                    ('🏠', 'Ana Sayfa', 'dashboard'),
+                    ('🏛', 'Derslikler', 'derslikler'),
+                    ('📚', 'Ders Listesi', 'dersler'),
+                    ('👥', 'Öğrenci Listesi', 'ogrenciler'),
+                    ('⚙', 'Ayarlar', 'ayarlar')
+                ]
             else:
-                # Tam menü
+                # Hepsi var - tam menü
                 menu_items = [
                     ('🏠', 'Ana Sayfa', 'dashboard'),
                     ('🏛', 'Derslikler', 'derslikler'),
@@ -665,12 +716,35 @@ class MainWindow(QMainWindow):
                 ("Bölüm Seç", "Operasyonel ekrana geç", "🎓", "indigo", "bolum_secim")
             ]
         else:
-            # Coordinator mode (or admin in impersonation) - operational actions
-            actions = [
-                ("Derslik Ekle", "Yeni derslik tanımla", "🏛", "emerald", "derslikler"),
-                ("Excel Yükle", "Ders/Öğrenci listesi", "📄", "blue", "dersler"),
-                ("Program Oluştur", "Sınav takvimi yap", "📅", "indigo", "sinavlar")
-            ]
+            # Coordinator mode (or admin in impersonation) - hierarchical shortcuts
+            has_classrooms = self._check_classrooms_exist
+            has_courses = self._check_courses_exist
+            has_students = self._check_students_exist
+            
+            if not has_classrooms:
+                # Derslik yoksa sadece derslik ekleme
+                actions = [
+                    ("Derslik Ekle", "Önce derslik tanımlayın", "🏛", "emerald", "derslikler")
+                ]
+            elif not has_courses:
+                # Derslik var ama ders yoksa - ders yükleme
+                actions = [
+                    ("Derslik Yönetimi", "Derslikleri yönetin", "🏛", "blue", "derslikler"),
+                    ("Ders Yükle", "Excel'den ders yükleyin", "📚", "emerald", "dersler")
+                ]
+            elif not has_students:
+                # Ders var ama öğrenci yoksa - öğrenci yükleme
+                actions = [
+                    ("Ders Yönetimi", "Dersleri yönetin", "📚", "blue", "dersler"),
+                    ("Öğrenci Yükle", "Excel'den öğrenci yükleyin", "👥", "emerald", "ogrenciler")
+                ]
+            else:
+                # Hepsi var - operasyonel kısayollar
+                actions = [
+                    ("Derslik Yönetimi", "Derslikleri yönetin", "🏛", "emerald", "derslikler"),
+                    ("Sınav Programı", "Sınav takvimi oluşturun", "📅", "indigo", "sinavlar"),
+                    ("Oturma Planı", "Oturma düzeni yapın", "📝", "orange", "oturma")
+                ]
 
         for label, desc, icon, color, page_id in actions:
             action_card = QuickActionCard(label, desc, icon, color, self.theme)
@@ -1042,6 +1116,26 @@ class MainWindow(QMainWindow):
         # Create new sidebar
         self.sidebar = self.create_sidebar()
         content_layout.insertWidget(0, self.sidebar)
+    
+    def refresh_ui_for_data_change(self):
+        """Refresh UI after data changes (classroom/course/student added)"""
+        # Recreate sidebar to update menu items based on new data
+        self.recreate_sidebar()
+        
+        # Refresh dashboard if it's the current page
+        if self.active_menu == 'dashboard':
+            # Remove old dashboard
+            if 'dashboard' in self.pages:
+                old_dashboard = self.pages['dashboard']
+                self.content_stack.removeWidget(old_dashboard)
+                old_dashboard.deleteLater()
+                del self.pages['dashboard']
+            
+            # Create new dashboard
+            self.dashboard_page = self.create_dashboard_page()
+            self.content_stack.addWidget(self.dashboard_page)
+            self.pages['dashboard'] = self.dashboard_page
+            self.content_stack.setCurrentWidget(self.dashboard_page)
 
     def refresh_top_bar(self):
         """Recreate top bar to reflect impersonation state and user info"""
@@ -1124,10 +1218,8 @@ class MainWindow(QMainWindow):
             from models.derslik_model import DerslikModel
             
             # Get effective user (handle impersonation)
-            if getattr(self, 'is_impersonating', False) and hasattr(self, 'impersonated_user'):
-                eff_bolum_id = self.impersonated_user.get('bolum_id')
-            else:
-                eff_bolum_id = self.user_data.get('bolum_id')
+            eff_user = self.get_effective_user_data()
+            eff_bolum_id = eff_user.get('bolum_id')
             
             if not eff_bolum_id:
                 return True  # Admin without bolum - allow all
@@ -1138,6 +1230,50 @@ class MainWindow(QMainWindow):
             
         except Exception as e:
             logger.error(f"Error checking classrooms: {e}", exc_info=True)
+            return True  # On error, don't block
+    
+    @property
+    def _check_courses_exist(self) -> bool:
+        """Check if courses exist for current user/bolum"""
+        try:
+            from models.database import db
+            from models.ders_model import DersModel
+            
+            # Get effective user (handle impersonation)
+            eff_user = self.get_effective_user_data()
+            eff_bolum_id = eff_user.get('bolum_id')
+            
+            if not eff_bolum_id:
+                return True  # Admin without bolum - allow all
+            
+            ders_model = DersModel(db)
+            dersler = ders_model.get_dersler_by_bolum(eff_bolum_id)
+            return len(dersler) > 0
+            
+        except Exception as e:
+            logger.error(f"Error checking courses: {e}", exc_info=True)
+            return True  # On error, don't block
+    
+    @property
+    def _check_students_exist(self) -> bool:
+        """Check if students exist for current user/bolum"""
+        try:
+            from models.database import db
+            from models.ogrenci_model import OgrenciModel
+            
+            # Get effective user (handle impersonation)
+            eff_user = self.get_effective_user_data()
+            eff_bolum_id = eff_user.get('bolum_id')
+            
+            if not eff_bolum_id:
+                return True  # Admin without bolum - allow all
+            
+            ogrenci_model = OgrenciModel(db)
+            ogrenciler = ogrenci_model.get_ogrenciler_by_bolum(eff_bolum_id)
+            return len(ogrenciler) > 0
+            
+        except Exception as e:
+            logger.error(f"Error checking students: {e}", exc_info=True)
             return True  # On error, don't block
     
     def create_bolum_yonetimi_page(self):

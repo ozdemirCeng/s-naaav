@@ -57,6 +57,20 @@ class OgrenciYukleView(QWidget):
         self.setup_ui()
         self.load_existing_ogrenciler()
     
+    def refresh_main_window_ui(self):
+        """Refresh main window UI after data changes"""
+        try:
+            # Find main window by traversing parent hierarchy
+            widget = self.parent()
+            while widget is not None:
+                if hasattr(widget, 'refresh_ui_for_data_change'):
+                    widget.refresh_ui_for_data_change()
+                    logger.info("Main window UI refreshed after ogrenci change")
+                    break
+                widget = widget.parent()
+        except Exception as e:
+            logger.error(f"Error refreshing main window UI: {e}")
+    
     def setup_ui(self):
         """Setup UI - table first, info last"""
         layout = QVBoxLayout(self)
@@ -77,14 +91,8 @@ class OgrenciYukleView(QWidget):
         upload_btn.setCursor(Qt.PointingHandCursor)
         upload_btn.clicked.connect(self.upload_excel)
         
-        export_btn = QPushButton("📊 Excel'e Aktar")
-        export_btn.setFixedHeight(36)
-        export_btn.setCursor(Qt.PointingHandCursor)
-        export_btn.clicked.connect(self.export_to_excel)
-        
         header_layout.addWidget(title)
         header_layout.addStretch()
-        header_layout.addWidget(export_btn)
         header_layout.addWidget(upload_btn)
         
         layout.addWidget(header)
@@ -386,6 +394,10 @@ class OgrenciYukleView(QWidget):
             self.pending_ogrenciler = []
             self.load_existing_ogrenciler()
             
+            # Refresh main window UI (menus and shortcuts) if students were added
+            if success_count > 0:
+                self.refresh_main_window_ui()
+            
         except Exception as e:
             logger.error(f"Error saving students: {e}", exc_info=True)
             QMessageBox.critical(self, "Hata", f"Öğrenciler kaydedilirken hata oluştu:\n{str(e)}")
@@ -621,63 +633,3 @@ class OgrenciYukleView(QWidget):
                 self.load_existing_ogrenciler()
             else:
                 QMessageBox.critical(self, "Hata", result['message'])
-    
-    def export_to_excel(self):
-        """Export students to Excel"""
-        try:
-            import pandas as pd
-            from datetime import datetime
-            
-            # Get all students
-            ogrenciler = self.ogrenci_model.get_ogrenciler_by_bolum(self.bolum_id)
-            
-            if not ogrenciler:
-                QMessageBox.warning(self, "Uyarı", "Aktarılacak öğrenci bulunamadı!")
-                return
-            
-            # Ask for save location
-            default_name = f"ogrenci_listesi_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
-            file_path, _ = QFileDialog.getSaveFileName(
-                self,
-                "Excel Dosyası Kaydet",
-                default_name,
-                "Excel Files (*.xlsx)"
-            )
-            
-            if not file_path:
-                return
-            
-            # Create DataFrame
-            data = []
-            for ogr in ogrenciler:
-                data.append({
-                    'Öğrenci No': ogr['ogrenci_no'],
-                    'Ad Soyad': ogr['ad_soyad'],
-                    'Sınıf': ogr.get('sinif', ''),
-                    'E-posta': ogr.get('email', '')
-                })
-            
-            df = pd.DataFrame(data)
-            
-            # Write to Excel with formatting
-            with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
-                df.to_excel(writer, index=False, sheet_name='Öğrenciler')
-                
-                # Auto-adjust column widths
-                worksheet = writer.sheets['Öğrenciler']
-                for idx, col in enumerate(df.columns):
-                    max_length = max(
-                        df[col].astype(str).apply(len).max(),
-                        len(col)
-                    ) + 2
-                    worksheet.column_dimensions[chr(65 + idx)].width = max_length
-            
-            QMessageBox.information(
-                self,
-                "Başarılı",
-                f"Öğrenci listesi başarıyla aktarıldı!\n{len(data)} öğrenci\n\n{file_path}"
-            )
-            
-        except Exception as e:
-            logger.error(f"Error exporting to Excel: {e}")
-            QMessageBox.critical(self, "Hata", f"Excel aktarma hatası:\n{str(e)}")

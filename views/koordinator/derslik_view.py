@@ -37,6 +37,20 @@ class DerslikView(QWidget):
         self.setup_ui()
         self.load_derslikler()
     
+    def refresh_main_window_ui(self):
+        """Refresh main window UI after data changes"""
+        try:
+            # Find main window by traversing parent hierarchy
+            widget = self.parent()
+            while widget is not None:
+                if hasattr(widget, 'refresh_ui_for_data_change'):
+                    widget.refresh_ui_for_data_change()
+                    logger.info("Main window UI refreshed after derslik change")
+                    break
+                widget = widget.parent()
+        except Exception as e:
+            logger.error(f"Error refreshing main window UI: {e}")
+    
     def setup_ui(self):
         """Setup tab-based UI"""
         layout = QVBoxLayout(self)
@@ -500,6 +514,8 @@ class DerslikView(QWidget):
                 self.clear_add_form()
                 # Switch to list tab
                 self.tabs.setCurrentIndex(0)
+                # Refresh main window UI (menus and shortcuts)
+                self.refresh_main_window_ui()
             else:
                 QMessageBox.warning(self, "Hata", result['message'])
         except Exception as e:
@@ -612,12 +628,25 @@ class DerslikView(QWidget):
                 result = self.derslik_controller.delete_derslik(derslik['derslik_id'])
                 if result['success']:
                     QMessageBox.information(self, "Başarılı ✅", result['message'])
+                    
+                    # Hide edit section and clear selection
+                    if hasattr(self, 'edit_section'):
+                        self.edit_section.setVisible(False)
+                    self.selected_derslik = None
+                    
+                    # Clear add form
+                    if hasattr(self, 'add_kod'):
+                        self.clear_add_form()
+                    
+                    # Reload list
                     self.load_derslikler()
                     
-                    # Hide edit section if this derslik was being edited
-                    if self.selected_derslik and self.selected_derslik['derslik_id'] == derslik['derslik_id']:
-                        self.edit_section.setVisible(False)
-                        self.selected_derslik = None
+                    # Switch to list tab
+                    if hasattr(self, 'tabs'):
+                        self.tabs.setCurrentIndex(0)
+                    
+                    # Refresh main window UI (menus and shortcuts)
+                    self.refresh_main_window_ui()
                 else:
                     QMessageBox.warning(self, "Hata", result['message'])
             except Exception as e:
