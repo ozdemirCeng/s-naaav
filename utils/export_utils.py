@@ -102,33 +102,49 @@ class ExportUtils:
             current_row = 3
             date_merge_start = {}
             
+            # Group exams by (date, time, ders_adi) to merge classrooms
+            exam_groups = defaultdict(lambda: {'exams': [], 'derslikler': []})
             for datetime_key in sorted_datetimes:
                 date_obj, time_obj = datetime_key
                 exams_at_this_time = schedule_by_datetime[datetime_key]
                 
+                for exam in exams_at_this_time:
+                    ders_adi = exam.get('ders_adi', '')
+                    key = (date_obj, time_obj, ders_adi)
+                    exam_groups[key]['exams'].append(exam)
+                    derslik = exam.get('derslikler', exam.get('derslik_adi', ''))
+                    if derslik and derslik not in exam_groups[key]['derslikler']:
+                        exam_groups[key]['derslikler'].append(derslik)
+            
+            # Sort by datetime and course name
+            sorted_groups = sorted(exam_groups.items(), key=lambda x: (x[0][0], x[0][1], x[0][2]))
+            
+            for (date_obj, time_obj, ders_adi), group_data in sorted_groups:
                 date_str = date_obj.strftime('%d.%m.%Y')
                 time_str = time_obj.strftime('%H.%M')
                 
                 if date_str not in date_merge_start:
                     date_merge_start[date_str] = current_row
                 
-                for exam in exams_at_this_time:
-                    ders_adi = exam.get('ders_adi', '')
-                    ogretim_elemani = exam.get('ogretim_elemani', '')
-                    derslik = exam.get('derslikler', exam.get('derslik_adi', ''))
-                    
-                    ws.append([date_str, time_str, ders_adi, ogretim_elemani, derslik])
-                    
-                    for col in range(1, 6):
-                        cell = ws.cell(row=current_row, column=col)
-                        cell.border = thin_border
-                        cell.alignment = Alignment(
-                            horizontal='center' if col in [1, 2, 5] else 'left',
-                            vertical='center',
-                            wrap_text=True
-                        )
-                    
-                    current_row += 1
+                # Get first exam info for common fields
+                exam = group_data['exams'][0]
+                ogretim_elemani = exam.get('ogretim_elemani', '')
+                
+                # Merge all classrooms into one field
+                derslikler_str = '-'.join(group_data['derslikler']) if group_data['derslikler'] else ''
+                
+                ws.append([date_str, time_str, ders_adi, ogretim_elemani, derslikler_str])
+                
+                for col in range(1, 6):
+                    cell = ws.cell(row=current_row, column=col)
+                    cell.border = thin_border
+                    cell.alignment = Alignment(
+                        horizontal='center' if col in [1, 2, 5] else 'left',
+                        vertical='center',
+                        wrap_text=True
+                    )
+                
+                current_row += 1
             
             for date_str, start_row in date_merge_start.items():
                 end_row = start_row
@@ -272,6 +288,23 @@ class ExportUtils:
 
             sorted_datetimes = sorted(schedule_by_datetime.keys())
 
+            # Group exams by (date, time, ders_adi) to merge classrooms
+            exam_groups_pdf = defaultdict(lambda: {'exams': [], 'derslikler': []})
+            for datetime_key in sorted_datetimes:
+                date_obj, time_obj = datetime_key
+                exams_at_this_time = schedule_by_datetime[datetime_key]
+                
+                for exam in exams_at_this_time:
+                    ders_adi = exam.get('ders_adi', '')
+                    key = (date_obj, time_obj, ders_adi)
+                    exam_groups_pdf[key]['exams'].append(exam)
+                    derslik = exam.get('derslikler', exam.get('derslik_adi', ''))
+                    if derslik and derslik not in exam_groups_pdf[key]['derslikler']:
+                        exam_groups_pdf[key]['derslikler'].append(derslik)
+            
+            # Sort by datetime and course name
+            sorted_groups_pdf = sorted(exam_groups_pdf.items(), key=lambda x: (x[0][0], x[0][1], x[0][2]))
+            
             # Build table data with row span info for both date and time
             table_data = []
             table_data.append(['Tarih', 'Sınav Saati', 'Ders Adı', 'Öğretim Elemanı', 'Derslik'])
@@ -283,10 +316,7 @@ class ExportUtils:
             date_start_row = 1  # Start after header
             time_start_row = 1
 
-            for datetime_key in sorted_datetimes:
-                date_obj, time_obj = datetime_key
-                exams_at_this_time = schedule_by_datetime[datetime_key]
-
+            for (date_obj, time_obj, ders_adi), group_data in sorted_groups_pdf:
                 date_str = date_obj.strftime('%d.%m.%Y')
                 time_str = time_obj.strftime('%H:%M')
 
@@ -305,12 +335,14 @@ class ExportUtils:
                     current_time = datetime_str
                     time_start_row = len(table_data)
 
-                for exam in exams_at_this_time:
-                    ders_adi = exam.get('ders_adi', '')
-                    ogretim_elemani = exam.get('ogretim_elemani', '')
-                    derslik = exam.get('derslikler', exam.get('derslik_adi', ''))
+                # Get first exam info for common fields
+                exam = group_data['exams'][0]
+                ogretim_elemani = exam.get('ogretim_elemani', '')
+                
+                # Merge all classrooms into one field
+                derslikler_str = '-'.join(group_data['derslikler']) if group_data['derslikler'] else ''
 
-                    table_data.append([date_str, time_str, ders_adi, ogretim_elemani, derslik if derslik else ''])
+                table_data.append([date_str, time_str, ders_adi, ogretim_elemani, derslikler_str])
 
             # Add last spans
             if current_date is not None:

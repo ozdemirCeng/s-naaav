@@ -140,20 +140,36 @@ class OturmaPlanlama:
                 percent = 50 + int((idx / len(derslikler)) * 40)
                 progress_callback(percent, f"Yerleştiriliyor: {derslik['derslik_adi']}")
             
-            # Calculate how many students can fit with spacing (checkerboard pattern)
+            # Calculate how many students can fit with spacing
             satir_sayisi = derslik['satir_sayisi']
             sutun_sayisi = derslik['sutun_sayisi']
             
-            # Checkerboard seating (skip adjacent seats)
+            # New seating pattern: sequential rows, spaced columns
+            # 4-seat rows: seat-empty-empty-seat (columns 1, 4)
+            # 3-seat rows: seat-empty-seat (columns 1, 3)
+            # 2-seat rows: empty-seat (column 2, right-aligned)
             available_seats = []
-            for satir in range(1, satir_sayisi + 1):
-                for sutun in range(1, sutun_sayisi + 1):
-                    # Checkerboard: (row + col) must be even
-                    if (satir + sutun) % 2 == 0:
-                        available_seats.append((satir, sutun))
             
-            # Shuffle seats for randomization
-            random.shuffle(available_seats)
+            for satir in range(1, satir_sayisi + 1):
+                if sutun_sayisi == 4:
+                    # 4 kişilik sıra: dolu-boş-boş-dolu (sutun 1 ve 4)
+                    available_seats.append((satir, 1))
+                    available_seats.append((satir, 4))
+                elif sutun_sayisi == 3:
+                    # 3 kişilik sıra: dolu-boş-dolu (sutun 1 ve 3)
+                    available_seats.append((satir, 1))
+                    available_seats.append((satir, 3))
+                elif sutun_sayisi == 2:
+                    # 2 kişilik sıra: boş-dolu (sutun 2, sağdan)
+                    available_seats.append((satir, 2))
+                else:
+                    # Diğer durumlar için genel pattern: ara sütunlarda otur
+                    for sutun in range(1, sutun_sayisi + 1):
+                        # Her iki sütunda bir otur
+                        if sutun % 2 == 1:
+                            available_seats.append((satir, sutun))
+            
+            # Sıralamayı koru (karıştırma, arkaya arkaya oturma için)
             
             # Calculate how many students to place in this classroom
             remaining_students = total_students - student_index
