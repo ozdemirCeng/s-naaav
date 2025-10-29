@@ -10,7 +10,7 @@ from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QTableWidget, QTableWidgetItem, QHeaderView, QFrame,
-    QFileDialog, QMessageBox, QGroupBox, QLineEdit, QSplitter,
+    QFileDialog, QGroupBox, QLineEdit, QSplitter,
     QSpinBox, QFormLayout, QDialog, QDialogButtonBox
 )
 
@@ -86,10 +86,30 @@ class OgrenciYukleView(QWidget):
         title = QLabel("Öğrenci Listesi")
         title.setFont(QFont("Segoe UI", 18, QFont.Bold))
         
-        upload_btn = QPushButton("Excel Yükle")
+        upload_btn = QPushButton("📤 Excel Yükle")
         upload_btn.setObjectName("primaryBtn")
         upload_btn.setFixedHeight(36)
+        upload_btn.setMinimumWidth(140)
         upload_btn.setCursor(Qt.PointingHandCursor)
+        upload_btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #3b82f6, stop:1 #2563eb);
+                color: white;
+                border: none;
+                border-radius: 6px;
+                font-weight: bold;
+                font-size: 13px;
+                padding: 8px 16px;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #2563eb, stop:1 #1d4ed8);
+            }
+            QPushButton:pressed {
+                background: #1e40af;
+            }
+        """)
         upload_btn.clicked.connect(self.upload_excel)
         
         header_layout.addWidget(title)
@@ -98,18 +118,42 @@ class OgrenciYukleView(QWidget):
         
         layout.addWidget(header)
         
-        # Search - compact
+        # Modern Search bar with frame
         search_container = QFrame()
+        search_container.setStyleSheet("""
+            QFrame {
+                background: white;
+                border: 2px solid #e2e8f0;
+                border-radius: 12px;
+                padding: 4px;
+            }
+        """)
         search_layout = QHBoxLayout(search_container)
-        search_layout.setContentsMargins(0, 8, 0, 8)
+        search_layout.setContentsMargins(16, 8, 16, 8)
+        search_layout.setSpacing(12)
         
-        search_label = QLabel("🔍")
+        search_icon = QLabel("🔍")
+        search_icon.setFont(QFont("Segoe UI", 14))
+        search_icon.setStyleSheet("background: transparent;")
+        
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Öğrenci no veya ad ile ara...")
         self.search_input.textChanged.connect(self.filter_table)
-        self.search_input.setFixedHeight(32)
+        self.search_input.setFixedHeight(42)
+        self.search_input.setStyleSheet("""
+            QLineEdit {
+                border: none;
+                background: transparent;
+                font-size: 14px;
+                padding: 8px;
+                color: #1e293b;
+            }
+            QLineEdit::placeholder {
+                color: #94a3b8;
+            }
+        """)
         
-        search_layout.addWidget(search_label)
+        search_layout.addWidget(search_icon)
         search_layout.addWidget(self.search_input)
         
         layout.addWidget(search_container)
@@ -149,26 +193,84 @@ class OgrenciYukleView(QWidget):
         
         # Student action buttons
         student_actions = QHBoxLayout()
+        student_actions.setSpacing(8)
         
-        select_all_btn = QPushButton("Tümünü Seç")
-        select_all_btn.setFixedHeight(32)
+        select_all_btn = QPushButton("✓ Tümünü Seç")
+        select_all_btn.setFixedHeight(34)
         select_all_btn.setCursor(Qt.PointingHandCursor)
+        select_all_btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #10b981, stop:1 #059669);
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-weight: 600;
+                padding: 6px 14px;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #059669, stop:1 #047857);
+            }
+        """)
         select_all_btn.clicked.connect(self.select_all_students)
         
-        deselect_all_btn = QPushButton("Seçimi Kaldır")
-        deselect_all_btn.setFixedHeight(32)
+        deselect_all_btn = QPushButton("✗ Seçimi Kaldır")
+        deselect_all_btn.setFixedHeight(34)
         deselect_all_btn.setCursor(Qt.PointingHandCursor)
+        deselect_all_btn.setStyleSheet("""
+            QPushButton {
+                background: #6b7280;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-weight: 600;
+                padding: 6px 14px;
+            }
+            QPushButton:hover {
+                background: #4b5563;
+            }
+        """)
         deselect_all_btn.clicked.connect(self.deselect_all_students)
         
-        edit_student_btn = QPushButton("Düzenle")
-        edit_student_btn.setFixedHeight(32)
+        edit_student_btn = QPushButton("✎ Düzenle")
+        edit_student_btn.setFixedHeight(34)
         edit_student_btn.setCursor(Qt.PointingHandCursor)
+        edit_student_btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #f59e0b, stop:1 #d97706);
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-weight: 600;
+                padding: 6px 14px;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #d97706, stop:1 #b45309);
+            }
+        """)
         edit_student_btn.clicked.connect(self.edit_selected_student)
         
-        delete_student_btn = QPushButton("Sil")
-        delete_student_btn.setFixedHeight(32)
+        delete_student_btn = QPushButton("🗑 Sil")
+        delete_student_btn.setFixedHeight(34)
         delete_student_btn.setCursor(Qt.PointingHandCursor)
-        delete_student_btn.setObjectName("dangerBtn")
+        delete_student_btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #ef4444, stop:1 #dc2626);
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-weight: 600;
+                padding: 6px 14px;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #dc2626, stop:1 #b91c1c);
+            }
+        """)
         delete_student_btn.clicked.connect(self.delete_selected_students)
         
         student_actions.addWidget(select_all_btn)
@@ -219,26 +321,75 @@ class OgrenciYukleView(QWidget):
         
         layout.addWidget(splitter, stretch=1)  # Give most space to table
         
-        # Stats
-        self.stats_label = QLabel()
-        self.stats_label.setFont(QFont("Segoe UI", 10))
-        self.stats_label.setStyleSheet("color: #6b7280; padding: 6px;")
-        layout.addWidget(self.stats_label)
+        # Bottom section with stats and info
+        bottom_container = QFrame()
+        bottom_layout = QHBoxLayout(bottom_container)
+        bottom_layout.setContentsMargins(0, 8, 0, 0)
+        bottom_layout.setSpacing(12)
         
-        # Info card at bottom - compact
-        info_card = QGroupBox("💡 Excel Format Bilgisi")
-        info_card.setMaximumHeight(100)
-        info_layout = QVBoxLayout(info_card)
-        info_layout.setContentsMargins(12, 8, 12, 8)
+        # Stats group box
+        stats_group = QGroupBox("📊 İstatistikler")
+        stats_group.setStyleSheet("""
+            QGroupBox {
+                font-weight: bold;
+                font-size: 12px;
+                color: #1f2937;
+                border: 2px solid #3b82f6;
+                border-radius: 8px;
+                margin-top: 8px;
+                padding-top: 12px;
+                background: white;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 8px;
+                background: white;
+            }
+        """)
+        stats_group_layout = QVBoxLayout(stats_group)
+        stats_group_layout.setContentsMargins(12, 8, 12, 12)
+        
+        self.stats_label = QLabel()
+        self.stats_label.setFont(QFont("Segoe UI", 11))
+        self.stats_label.setStyleSheet("color: #374151; padding: 4px;")
+        stats_group_layout.addWidget(self.stats_label)
+        
+        # Info group box
+        info_group = QGroupBox("💡 Excel Format Bilgisi")
+        info_group.setStyleSheet("""
+            QGroupBox {
+                font-weight: bold;
+                font-size: 12px;
+                color: #92400e;
+                border: 2px solid #f59e0b;
+                border-radius: 8px;
+                margin-top: 8px;
+                padding-top: 12px;
+                background: #fef3c7;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 8px;
+                background: #fef3c7;
+            }
+        """)
+        info_group_layout = QVBoxLayout(info_group)
+        info_group_layout.setContentsMargins(12, 8, 12, 12)
         
         info_text = QLabel(
-            "Excel: Öğrenci No • Ad Soyad • Sınıf"
+            "<b>Sütunlar:</b> ÖĞRENCİ NO • AD SOYAD • SINIF<br>"
+            "<b>Örnek:</b> 2020123456, Ahmet Yılmaz, 2"
         )
-        info_text.setStyleSheet("color: #6b7280; font-size: 11px;")
+        info_text.setStyleSheet("color: #92400e; font-size: 11px;")
         info_text.setWordWrap(True)
-        info_layout.addWidget(info_text)
+        info_group_layout.addWidget(info_text)
         
-        layout.addWidget(info_card)
+        bottom_layout.addWidget(stats_group)
+        bottom_layout.addWidget(info_group, stretch=1)
+        
+        layout.addWidget(bottom_container)
     
     def load_existing_ogrenciler(self):
         """Load existing students"""
@@ -307,21 +458,51 @@ class OgrenciYukleView(QWidget):
             ModernMessageBox.warning(self, "Uyarı", "Excel dosyasında öğrenci bulunamadı!")
             return
         
+        # Check for existing students
+        existing_count = 0
+        new_count = 0
+        existing_details = []
+        
+        for idx, ogrenci in enumerate(ogrenciler, start=1):
+            excel_row = idx + 1  # +1 for header row
+            existing = self.ogrenci_model.get_ogrenci_by_no(ogrenci.get('ogrenci_no', ''))
+            if existing:
+                existing_count += 1
+                existing_details.append(
+                    f"Satır {excel_row}: {ogrenci.get('ogrenci_no')} - {ogrenci.get('ad_soyad')} - {ogrenci.get('sinif', '?')}. Sınıf"
+                )
+            else:
+                new_count += 1
+        
         self.pending_ogrenciler = ogrenciler
         self.populate_table(ogrenciler, existing=False)
         self.update_stats(0, len(ogrenciler))
         
+        # Show summary with existing student info
+        summary_msg = f"📚 Excel'den {len(ogrenciler)} öğrenci yüklendi\n\n"
+        summary_msg += f"✅ Yeni öğrenci: {new_count}\n"
+        summary_msg += f"⚠️ Zaten mevcut: {existing_count}"
+        
+        if existing_count > 0:
+            summary_msg += f"\n\n❓ Mevcut öğrenciler atlanacak. Devam edilsin mi?"
+        else:
+            summary_msg += f"\n\nVeritabanına kaydetmek istiyor musunuz?"
+        
+        # Prepare details text
+        details_text = ""
+        if existing_count > 0:
+            details_text = "⚠️ MEVCUT ÖĞRENCİLER (Atlanacak):\n\n" + "\n".join(existing_details)
+        
         confirmed = ModernMessageBox.question(
             self,
             "Öğrencileri Kaydet",
-            f"{len(ogrenciler)} öğrenci yüklendi. Veritabanına kaydetmek istiyor musunuz?",
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.Yes
+            summary_msg,
+            details_text if details_text else None
         )
 
         
         if confirmed:
-            self.save_ogrenciler()
+            self.save_ogrenciler(skip_existing=True)
     
     def on_excel_error(self, error_msg):
         """Handle Excel loading error with detailed information"""
@@ -338,19 +519,31 @@ class OgrenciYukleView(QWidget):
             detailed_text
         )
     
-    def save_ogrenciler(self):
+    def save_ogrenciler(self, skip_existing=True):
         """Save students to database with detailed error reporting"""
         if not self.pending_ogrenciler:
             return
         
         try:
             success_count = 0
+            skipped_count = 0
             error_count = 0
             error_details = []
+            skipped_details = []
             
             for idx, ogrenci in enumerate(self.pending_ogrenciler, 1):
                 excel_row = idx + 1  # +1 for header row in Excel
                 ogrenci['bolum_id'] = self.bolum_id
+                
+                # Check if student already exists
+                if skip_existing:
+                    existing = self.ogrenci_model.get_ogrenci_by_no(ogrenci.get('ogrenci_no', ''))
+                    if existing:
+                        skipped_count += 1
+                        skipped_details.append(f"Satır {excel_row}: {ogrenci.get('ogrenci_no')} - {ogrenci.get('ad_soyad')}")
+                        logger.info(f"Skipped existing student at row {excel_row}: {ogrenci.get('ogrenci_no')}")
+                        continue
+                
                 result = self.ogrenci_controller.create_ogrenci(ogrenci)
                 
                 if result['success']:
@@ -363,23 +556,52 @@ class OgrenciYukleView(QWidget):
                     logger.warning(error_msg)
             
             # Show detailed results
+            result_message = []
+            if success_count > 0:
+                result_message.append(f"✅ {success_count} yeni öğrenci kaydedildi")
+            if skipped_count > 0:
+                result_message.append(f"⏭️ {skipped_count} mevcut öğrenci atlandı")
             if error_count > 0:
-                # Show first 20 errors in detail
-                detailed_text = "\n".join(error_details[:20])
-                if len(error_details) > 20:
-                    detailed_text += f"\n\n... ve {len(error_details) - 20} hata daha"
-                
+                result_message.append(f"❌ {error_count} öğrenci kaydedilemedi")
+            
+            # Prepare detailed text
+            detailed_parts = []
+            
+            if skipped_count > 0:
+                skipped_text = "⏭️ ATLANAN ÖĞRENCİLER:\n" + "\n".join(skipped_details[:15])
+                if len(skipped_details) > 15:
+                    skipped_text += f"\n... ve {len(skipped_details) - 15} öğrenci daha"
+                detailed_parts.append(skipped_text)
+            
+            if error_count > 0:
+                error_text = "❌ HATA OLUŞAN KAYITLAR:\n" + "\n".join(error_details[:15])
+                if len(error_details) > 15:
+                    error_text += f"\n... ve {len(error_details) - 15} hata daha"
+                detailed_parts.append(error_text)
+            
+            detailed_text = "\n\n".join(detailed_parts) if detailed_parts else None
+            
+            if error_count > 0:
                 ModernMessageBox.warning(
                     self,
                     "Kaydetme Sonuçları",
-                    f"✅ {success_count} öğrenci kaydedildi\n"
-                    f"❌ {error_count} öğrenci kaydedilemedi",
+                    "\n".join(result_message),
                     detailed_text
                 )
             else:
-                ModernMessageBox.success(
-                    self, "Başarılı", f"{success_count} öğrenci başarıyla kaydedildi!"
-                )
+                message = "\n".join(result_message)
+                if skipped_count > 0 and success_count == 0:
+                    ModernMessageBox.information(
+                        self, 
+                        "Bilgi", 
+                        "Tüm öğrenciler zaten veritabanında mevcut.\n\n"
+                        f"{skipped_count} öğrenci atlandı.",
+                        detailed_text
+                    )
+                else:
+                    ModernMessageBox.success(
+                        self, "Başarılı", message
+                    )
             
             self.pending_ogrenciler = []
             self.load_existing_ogrenciler()
@@ -474,8 +696,7 @@ class OgrenciYukleView(QWidget):
             self,
             "Öğrencileri Sil",
             f"{len(student_list)} öğrenciyi silmek istediğinizden emin misiniz?\n\n"
-            "Bu işlem geri alınamaz!",
-            QMessageBox.Yes | QMessageBox.No
+            "Bu işlem geri alınamaz!"
         )
 
         

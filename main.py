@@ -281,25 +281,25 @@ class Application:
                 outline: none;
             }
         """)
-    
+
     def run(self):
         """Run application"""
         try:
             # Create and show main window
             self.main_window = SingleWindowApp()
-            
+
             # Run app
             exit_code = self.app.exec()
             return exit_code
-            
+
         except Exception as e:
             self.logger.error(f"❌ Kritik hata: {e}", exc_info=True)
-            
+
             ModernMessageBox.error(
                 None, "Kritik Hata", "Uygulama beklenmeyen biryla karşılaştı", f"\n{str(e)}\n\n"
                 "Detaylar log dosyasında bulunabilir."
             )
-            
+
             return 1
 
 
@@ -311,7 +311,7 @@ def main():
             QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
         except AttributeError:
             pass  # Qt6 doesn't need this
-    
+
     # Create and run application
     app = Application()
     sys.exit(app.run())

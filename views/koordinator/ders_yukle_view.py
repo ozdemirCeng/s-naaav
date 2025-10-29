@@ -10,8 +10,7 @@ from PySide6.QtGui import QFont, QColor
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QTableWidget, QTableWidgetItem, QHeaderView, QFrame,
-    QFileDialog, QMessageBox, QGroupBox, QSplitter,
-    QComboBox
+    QFileDialog, QGroupBox, QSplitter, QComboBox
 )
 
 from controllers.ders_controller import DersController
@@ -88,10 +87,30 @@ class DersYukleView(QWidget):
         title = QLabel("Ders Listesi")
         title.setFont(QFont("Segoe UI", 18, QFont.Bold))
         
-        upload_btn = QPushButton("Excel Yükle")
+        upload_btn = QPushButton("📤 Excel Yükle")
         upload_btn.setObjectName("primaryBtn")
         upload_btn.setFixedHeight(36)
+        upload_btn.setMinimumWidth(140)
         upload_btn.setCursor(Qt.PointingHandCursor)
+        upload_btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #3b82f6, stop:1 #2563eb);
+                color: white;
+                border: none;
+                border-radius: 6px;
+                font-weight: bold;
+                font-size: 13px;
+                padding: 8px 16px;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #2563eb, stop:1 #1d4ed8);
+            }
+            QPushButton:pressed {
+                background: #1e40af;
+            }
+        """)
         upload_btn.clicked.connect(self.upload_excel)
         
         header_layout.addWidget(title)
@@ -100,13 +119,31 @@ class DersYukleView(QWidget):
         
         layout.addWidget(header)
         
-        # Filter section - sınıf seçimi
-        filter_frame = QFrame()
-        filter_layout = QHBoxLayout(filter_frame)
-        filter_layout.setContentsMargins(0, 8, 0, 8)
+        # Modern Filter section with frame
+        filter_container = QFrame()
+        filter_container.setStyleSheet("""
+            QFrame {
+                background: white;
+                border: 2px solid #e2e8f0;
+                border-radius: 12px;
+                padding: 8px;
+            }
+        """)
+        filter_layout = QHBoxLayout(filter_container)
+        filter_layout.setContentsMargins(16, 12, 16, 12)
+        filter_layout.setSpacing(12)
         
-        filter_label = QLabel("🎓 Sınıf:")
-        filter_label.setStyleSheet("font-weight: bold; font-size: 13px;")
+        filter_icon = QLabel("🎓")
+        filter_icon.setFont(QFont("Segoe UI", 14))
+        filter_icon.setStyleSheet("background: transparent;")
+        
+        filter_label = QLabel("Sınıf Filtresi:")
+        filter_label.setStyleSheet("""
+            font-weight: bold; 
+            font-size: 13px; 
+            color: #1e293b;
+            background: transparent;
+        """)
         
         self.class_filter = QComboBox()
         self.class_filter.addItems([
@@ -117,15 +154,40 @@ class DersYukleView(QWidget):
             "4. Sınıf",
             "Seçmeli Dersler"
         ])
-        self.class_filter.setFixedHeight(32)
-        self.class_filter.setMinimumWidth(200)
+        self.class_filter.setFixedHeight(40)
+        self.class_filter.setMinimumWidth(220)
+        self.class_filter.setStyleSheet("""
+            QComboBox {
+                border: 2px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 8px 12px;
+                font-size: 13px;
+                background: white;
+                color: #1e293b;
+            }
+            QComboBox:focus {
+                border: 2px solid #3b82f6;
+            }
+            QComboBox::drop-down {
+                border: none;
+                padding-right: 8px;
+            }
+            QComboBox::down-arrow {
+                image: none;
+                border-left: 5px solid transparent;
+                border-right: 5px solid transparent;
+                border-top: 6px solid #64748b;
+                margin-right: 8px;
+            }
+        """)
         self.class_filter.currentTextChanged.connect(self.filter_by_class)
         
+        filter_layout.addWidget(filter_icon)
         filter_layout.addWidget(filter_label)
         filter_layout.addWidget(self.class_filter)
         filter_layout.addStretch()
         
-        layout.addWidget(filter_frame)
+        layout.addWidget(filter_container)
         
         # Splitter for courses and students
         splitter = QSplitter(Qt.Horizontal)
@@ -163,26 +225,84 @@ class DersYukleView(QWidget):
         
         # Course action buttons
         course_actions = QHBoxLayout()
+        course_actions.setSpacing(8)
         
-        select_all_btn = QPushButton("Tümünü Seç")
-        select_all_btn.setFixedHeight(32)
+        select_all_btn = QPushButton("✓ Tümünü Seç")
+        select_all_btn.setFixedHeight(34)
         select_all_btn.setCursor(Qt.PointingHandCursor)
+        select_all_btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #10b981, stop:1 #059669);
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-weight: 600;
+                padding: 6px 14px;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #059669, stop:1 #047857);
+            }
+        """)
         select_all_btn.clicked.connect(self.select_all_courses)
         
-        deselect_all_btn = QPushButton("Seçimi Kaldır")
-        deselect_all_btn.setFixedHeight(32)
+        deselect_all_btn = QPushButton("✗ Seçimi Kaldır")
+        deselect_all_btn.setFixedHeight(34)
         deselect_all_btn.setCursor(Qt.PointingHandCursor)
+        deselect_all_btn.setStyleSheet("""
+            QPushButton {
+                background: #6b7280;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-weight: 600;
+                padding: 6px 14px;
+            }
+            QPushButton:hover {
+                background: #4b5563;
+            }
+        """)
         deselect_all_btn.clicked.connect(self.deselect_all_courses)
         
-        edit_course_btn = QPushButton("Düzenle")
-        edit_course_btn.setFixedHeight(32)
+        edit_course_btn = QPushButton("✎ Düzenle")
+        edit_course_btn.setFixedHeight(34)
         edit_course_btn.setCursor(Qt.PointingHandCursor)
+        edit_course_btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #f59e0b, stop:1 #d97706);
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-weight: 600;
+                padding: 6px 14px;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #d97706, stop:1 #b45309);
+            }
+        """)
         edit_course_btn.clicked.connect(self.edit_selected_course)
         
-        delete_course_btn = QPushButton("Sil")
-        delete_course_btn.setFixedHeight(32)
+        delete_course_btn = QPushButton("🗑 Sil")
+        delete_course_btn.setFixedHeight(34)
         delete_course_btn.setCursor(Qt.PointingHandCursor)
-        delete_course_btn.setObjectName("dangerBtn")
+        delete_course_btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #ef4444, stop:1 #dc2626);
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-weight: 600;
+                padding: 6px 14px;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #dc2626, stop:1 #b91c1c);
+            }
+        """)
         delete_course_btn.clicked.connect(self.delete_selected_courses)
         
         course_actions.addWidget(select_all_btn)
@@ -233,26 +353,75 @@ class DersYukleView(QWidget):
         
         layout.addWidget(splitter, stretch=1)  # Give most space to table
         
-        # Stats
-        self.stats_label = QLabel()
-        self.stats_label.setFont(QFont("Segoe UI", 10))
-        self.stats_label.setStyleSheet("color: #6b7280; padding: 6px;")
-        layout.addWidget(self.stats_label)
+        # Bottom section with stats and info
+        bottom_container = QFrame()
+        bottom_layout = QHBoxLayout(bottom_container)
+        bottom_layout.setContentsMargins(0, 8, 0, 0)
+        bottom_layout.setSpacing(12)
         
-        # Info card at bottom - compact
-        info_card = QGroupBox("💡 Excel Format Bilgisi")
-        info_card.setMaximumHeight(100)
-        info_layout = QVBoxLayout(info_card)
-        info_layout.setContentsMargins(12, 8, 12, 8)
+        # Stats group box
+        stats_group = QGroupBox("📊 İstatistikler")
+        stats_group.setStyleSheet("""
+            QGroupBox {
+                font-weight: bold;
+                font-size: 12px;
+                color: #1f2937;
+                border: 2px solid #3b82f6;
+                border-radius: 8px;
+                margin-top: 8px;
+                padding-top: 12px;
+                background: white;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 8px;
+                background: white;
+            }
+        """)
+        stats_group_layout = QVBoxLayout(stats_group)
+        stats_group_layout.setContentsMargins(12, 8, 12, 12)
+        
+        self.stats_label = QLabel()
+        self.stats_label.setFont(QFont("Segoe UI", 11))
+        self.stats_label.setStyleSheet("color: #374151; padding: 4px;")
+        stats_group_layout.addWidget(self.stats_label)
+        
+        # Info group box
+        info_group = QGroupBox("💡 Excel Format Bilgisi")
+        info_group.setStyleSheet("""
+            QGroupBox {
+                font-weight: bold;
+                font-size: 12px;
+                color: #92400e;
+                border: 2px solid #f59e0b;
+                border-radius: 8px;
+                margin-top: 8px;
+                padding-top: 12px;
+                background: #fef3c7;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 8px;
+                background: #fef3c7;
+            }
+        """)
+        info_group_layout = QVBoxLayout(info_group)
+        info_group_layout.setContentsMargins(12, 8, 12, 12)
         
         info_text = QLabel(
-            "Excel: DERS KODU • DERSİN ADI • DERSİ VEREN ÖĞR. ELEMANI + Sınıf başlıkları (1. Sınıf, 2. Sınıf, vb.)"
+            "<b>Sütunlar:</b> DERS KODU • DERSİN ADI • DERSİ VEREN ÖĞR. ELEMANI<br>"
+            "<b>Sınıf Bilgisi:</b> Excel'de sınıf başlıkları kullanın (1. Sınıf, 2. Sınıf, vb.)"
         )
-        info_text.setStyleSheet("color: #6b7280; font-size: 11px;")
+        info_text.setStyleSheet("color: #92400e; font-size: 11px;")
         info_text.setWordWrap(True)
-        info_layout.addWidget(info_text)
+        info_group_layout.addWidget(info_text)
         
-        layout.addWidget(info_card)
+        bottom_layout.addWidget(stats_group)
+        bottom_layout.addWidget(info_group, stretch=1)
+        
+        layout.addWidget(bottom_container)
         
         # Store all courses
         self.all_courses = []
@@ -277,25 +446,31 @@ class DersYukleView(QWidget):
         elif filter_text == "Seçmeli Dersler":
             filtered_courses = [d for d in self.all_courses if d.get('ders_yapisi', '') == 'Seçmeli']
         
-        self.populate_table(filtered_courses, existing=True)
+        # Display filtered results without updating all_courses
+        self.display_courses(filtered_courses)
     
     def load_existing_dersler(self):
         """Load existing courses"""
         try:
             dersler = self.ders_model.get_dersler_by_bolum(self.bolum_id)
+            
+            # Reset filter to show all courses
+            if hasattr(self, 'class_filter'):
+                self.class_filter.blockSignals(True)
+                self.class_filter.setCurrentIndex(0)  # "Tüm Dersler"
+                self.class_filter.blockSignals(False)
+            
             self.populate_table(dersler, existing=True)
             self.update_stats(len(dersler), 0)
+            
+            logger.info(f"Loaded {len(dersler)} courses from database")
         except Exception as e:
             logger.error(f"Error loading courses: {e}")
             ModernMessageBox.error(self, "Hata", "Dersler yüklenirken oluştu", f"{str(e)}")
     
-    def populate_table(self, dersler, existing=False):
-        """Populate table with course data"""
+    def display_courses(self, dersler):
+        """Display courses in table without updating all_courses"""
         self.table.setRowCount(0)
-        
-        # Store for filtering
-        if not hasattr(self, 'all_courses') or not existing:
-            self.all_courses = dersler
         
         for row, ders in enumerate(dersler):
             self.table.insertRow(row)
@@ -334,6 +509,15 @@ class DersYukleView(QWidget):
             
             self.table.setItem(row, 4, tur_item)
     
+    def populate_table(self, dersler, existing=False):
+        """Populate table with course data and update all_courses if from database"""
+        # Update all_courses only when loading from database
+        if existing:
+            self.all_courses = dersler
+        
+        # Display the courses
+        self.display_courses(dersler)
+    
     def upload_excel(self):
         """Upload Excel file"""
         file_path, _ = QFileDialog.getOpenFileName(
@@ -359,27 +543,54 @@ class DersYukleView(QWidget):
             ModernMessageBox.warning(self, "Uyarı", "Excel dosyasında ders bulunamadı!")
             return
         
+        # Check for existing courses
+        existing_count = 0
+        new_count = 0
+        existing_details = []
+        
+        for idx, ders in enumerate(dersler, start=1):
+            excel_row = idx + 1  # +1 for header row
+            existing = self.ders_model.get_ders_by_kod(self.bolum_id, ders.get('ders_kodu', ''))
+            if existing:
+                existing_count += 1
+                existing_details.append(
+                    f"Satır {excel_row}: {ders.get('ders_kodu')} - {ders.get('ders_adi')} - {ders.get('sinif', '?')}. Sınıf"
+                )
+            else:
+                new_count += 1
+        
         self.pending_dersler = dersler
-        self.populate_table(dersler, existing=False)
-        self.update_stats(0, len(dersler))
+        # Display pending courses (don't update all_courses until saved)
+        self.display_courses(dersler)
+        self.update_stats(len(self.all_courses), len(dersler))
         
-        # Show summary with validation info
-        summary_msg = f"✅ {len(dersler)} ders başarıyla yüklendi"
+        # Show summary with existing course info
+        summary_msg = f"📚 Excel'den {len(dersler)} ders yüklendi\n\n"
+        summary_msg += f"✅ Yeni ders: {new_count}\n"
+        summary_msg += f"⚠️ Zaten mevcut: {existing_count}"
         
-        # Check for any validation warnings in logs
-        # (errors are already shown in on_excel_error)
+        if existing_count > 0:
+            summary_msg += f"\n\n❓ Mevcut dersler atlanacak. Devam edilsin mi?"
+        else:
+            summary_msg += f"\n\nVeritabanına kaydetmek istiyor musunuz?"
+        
+        # Prepare details text
+        details_text = ""
+        if existing_count > 0:
+            details_text = "⚠️ MEVCUT DERSLER (Atlanacak):\n\n" + "\n".join(existing_details[:15])
+            if len(existing_details) > 15:
+                details_text += f"\n\n... ve {len(existing_details) - 15} ders daha"
         
         # Ask for confirmation
         confirmed = ModernMessageBox.question(
             self,
             "Dersleri Kaydet",
-            f"{summary_msg}\n\nVeritabanına kaydetmek istiyor musunuz?",
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.Yes
+            summary_msg,
+            details_text if details_text else None
         )
 
         if confirmed:
-            self.save_dersler()
+            self.save_dersler(skip_existing=True)
     
     def on_excel_error(self, error_msg):
         """Handle Excel loading error with detailed information"""
@@ -413,19 +624,31 @@ class DersYukleView(QWidget):
                 error_msg
             )
     
-    def save_dersler(self):
+    def save_dersler(self, skip_existing=True):
         """Save courses to database with detailed error reporting"""
         if not self.pending_dersler:
             return
         
         try:
             success_count = 0
+            skipped_count = 0
             error_count = 0
             error_details = []
+            skipped_details = []
             
             for idx, ders in enumerate(self.pending_dersler, 1):
                 excel_row = idx + 1  # Account for header row
                 ders['bolum_id'] = self.bolum_id
+                
+                # Check if course already exists
+                if skip_existing:
+                    existing = self.ders_model.get_ders_by_kod(self.bolum_id, ders.get('ders_kodu', ''))
+                    if existing:
+                        skipped_count += 1
+                        skipped_details.append(f"Satır {excel_row}: {ders.get('ders_kodu')} - {ders.get('ders_adi')}")
+                        logger.info(f"Skipped existing course at row {excel_row}: {ders.get('ders_kodu')}")
+                        continue
+                
                 result = self.ders_controller.create_ders(ders)
                 
                 if result['success']:
@@ -438,23 +661,52 @@ class DersYukleView(QWidget):
                     logger.warning(error_msg)
             
             # Show detailed results
+            result_message = []
+            if success_count > 0:
+                result_message.append(f"✅ {success_count} yeni ders kaydedildi")
+            if skipped_count > 0:
+                result_message.append(f"⏭️ {skipped_count} mevcut ders atlandı")
             if error_count > 0:
-                # Show first 20 errors in detail
-                detailed_text = "\n".join(error_details[:20])
-                if len(error_details) > 20:
-                    detailed_text += f"\n\n... ve {len(error_details) - 20} hata daha"
-                
+                result_message.append(f"❌ {error_count} ders kaydedilemedi")
+            
+            # Prepare detailed text
+            detailed_parts = []
+            
+            if skipped_count > 0:
+                skipped_text = "⏭️ ATLANAN DERSLER:\n" + "\n".join(skipped_details[:15])
+                if len(skipped_details) > 15:
+                    skipped_text += f"\n... ve {len(skipped_details) - 15} ders daha"
+                detailed_parts.append(skipped_text)
+            
+            if error_count > 0:
+                error_text = "❌ HATA OLUŞAN KAYITLAR:\n" + "\n".join(error_details[:15])
+                if len(error_details) > 15:
+                    error_text += f"\n... ve {len(error_details) - 15} hata daha"
+                detailed_parts.append(error_text)
+            
+            detailed_text = "\n\n".join(detailed_parts) if detailed_parts else None
+            
+            if error_count > 0:
                 ModernMessageBox.warning(
                     self,
                     "Kaydetme Sonuçları",
-                    f"✅ {success_count} ders kaydedildi\n"
-                    f"❌ {error_count} ders kaydedilemedi",
+                    "\n".join(result_message),
                     detailed_text
                 )
             else:
-                ModernMessageBox.success(
-                    self, "Başarılı", f"{success_count} ders başarıyla kaydedildi!"
-                )
+                message = "\n".join(result_message)
+                if skipped_count > 0 and success_count == 0:
+                    ModernMessageBox.information(
+                        self, 
+                        "Bilgi", 
+                        "Tüm dersler zaten veritabanında mevcut.\n\n"
+                        f"{skipped_count} ders atlandı.",
+                        detailed_text
+                    )
+                else:
+                    ModernMessageBox.success(
+                        self, "Başarılı", message
+                    )
             
             self.pending_dersler = []
             self.load_existing_dersler()
@@ -527,46 +779,45 @@ class DersYukleView(QWidget):
             ModernMessageBox.warning(self, "Uyarı", "Lütfen düzenlemek için bir ders seçin!")
             return
         
+        # Get course code from table
         row = selected_rows[0].row()
-        durum = self.table.item(row, 5).text()
-        
-        if durum == "Beklemede":
-            ModernMessageBox.warning(self, "Uyarı", "Beklemedeki dersler düzenlenemez! Önce kaydedin.")
-            return
-        
         ders_kodu = self.table.item(row, 0).text()
-        ders_adi = self.table.item(row, 1).text()
-        kredi = self.table.item(row, 2).text()
-        yariyil = self.table.item(row, 3).text()
-        ders_yapisi = self.table.item(row, 4).text()
+        
+        # Get full course data from database
+        ders = self.ders_model.get_ders_by_kod(self.bolum_id, ders_kodu)
+        if not ders:
+            ModernMessageBox.warning(self, "Hata", "Ders bulunamadı!")
+            return
         
         # Create edit dialog
         from PySide6.QtWidgets import QDialog, QDialogButtonBox, QLineEdit, QSpinBox, QComboBox, QFormLayout
         
         dialog = QDialog(self)
         dialog.setWindowTitle("Ders Düzenle")
-        dialog.setMinimumWidth(400)
+        dialog.setMinimumWidth(450)
         
         layout = QVBoxLayout(dialog)
         form = QFormLayout()
         
-        kod_edit = QLineEdit(ders_kodu)
+        kod_edit = QLineEdit(ders.get('ders_kodu', ''))
         kod_edit.setReadOnly(True)
-        ad_edit = QLineEdit(ders_adi)
-        kredi_edit = QSpinBox()
-        kredi_edit.setRange(1, 10)
-        kredi_edit.setValue(int(kredi) if kredi else 3)
-        yariyil_edit = QSpinBox()
-        yariyil_edit.setRange(1, 8)
-        yariyil_edit.setValue(int(yariyil) if yariyil else 1)
+        
+        ad_edit = QLineEdit(ders.get('ders_adi', ''))
+        
+        ogretim_elemani_edit = QLineEdit(ders.get('ogretim_elemani', ''))
+        
+        sinif_edit = QSpinBox()
+        sinif_edit.setRange(1, 4)
+        sinif_edit.setValue(ders.get('sinif', 1))
+        
         yapi_combo = QComboBox()
         yapi_combo.addItems(["Zorunlu", "Seçmeli"])
-        yapi_combo.setCurrentText(ders_yapisi)
+        yapi_combo.setCurrentText(ders.get('ders_yapisi', 'Zorunlu'))
         
         form.addRow("Ders Kodu:", kod_edit)
         form.addRow("Ders Adı:", ad_edit)
-        form.addRow("Kredi:", kredi_edit)
-        form.addRow("Yarıyıl:", yariyil_edit)
+        form.addRow("Öğretim Elemanı:", ogretim_elemani_edit)
+        form.addRow("Sınıf:", sinif_edit)
         form.addRow("Ders Yapısı:", yapi_combo)
         
         layout.addLayout(form)
@@ -577,26 +828,21 @@ class DersYukleView(QWidget):
         layout.addWidget(buttons)
         
         if dialog.exec() == QDialog.Accepted:
-            # Update course
-            ders = self.ders_model.get_ders_by_kod(self.bolum_id, ders_kodu)
-            if not ders:
-                ModernMessageBox.warning(self, "Hata", "Ders bulunamadı!")
-                return
-            
             updated_data = {
                 'ders_adi': ad_edit.text().strip(),
-                'kredi': kredi_edit.value(),
-                'yariyil': yariyil_edit.value(),
+                'ogretim_elemani': ogretim_elemani_edit.text().strip(),
+                'sinif': sinif_edit.value(),
                 'ders_yapisi': yapi_combo.currentText()
             }
             
             result = self.ders_controller.update_ders(ders['ders_id'], updated_data)
             
             if result['success']:
-                QMessageBox.information(self, "Başarılı", result['message'])
+                ModernMessageBox.success(self, "Başarılı", result['message'])
                 self.load_existing_dersler()
+                self.refresh_main_window_ui()
             else:
-                QMessageBox.critical(self, "Hata", result['message'])
+                ModernMessageBox.error(self, "Hata", result['message'])
     
     def select_all_courses(self):
         """Select all courses in table"""
@@ -630,8 +876,7 @@ class DersYukleView(QWidget):
             self,
             "Dersleri Sil",
             f"{len(course_list)} dersi silmek istediğinizden emin misiniz?\n\n"
-            "Bu işlem geri alınamaz!",
-            QMessageBox.Yes | QMessageBox.No
+            "Bu işlem geri alınamaz!"
         )
 
         
@@ -651,11 +896,25 @@ class DersYukleView(QWidget):
                 else:
                     error_count += 1
             
-            ModernMessageBox.success(
-                self, "İşlem Tamamlandı", f"{success_count} ders silindi", f"❌ {error_count} ders silinemedi"
-            )
+            # Show result message
+            if error_count > 0:
+                ModernMessageBox.warning(
+                    self, 
+                    "İşlem Tamamlandı", 
+                    f"✅ {success_count} ders silindi\n❌ {error_count} ders silinemedi"
+                )
+            else:
+                ModernMessageBox.success(
+                    self, 
+                    "Başarılı", 
+                    f"{success_count} ders başarıyla silindi!"
+                )
             
             self.load_existing_dersler()
+            
+            # Refresh main window UI if courses were deleted
+            if success_count > 0:
+                self.refresh_main_window_ui()
     
     def delete_selected_course(self):
         """Delete selected course"""
@@ -681,8 +940,7 @@ class DersYukleView(QWidget):
             self,
             "Ders Sil",
             f"'{ders_adi}' ({ders_kodu}) dersini silmek istediğinizden emin misiniz?\n\n"
-            "Bu işlem geri alınamaz!",
-            QMessageBox.Yes | QMessageBox.No
+            "Bu işlem geri alınamaz!"
         )
 
         
@@ -690,7 +948,8 @@ class DersYukleView(QWidget):
             result = self.ders_controller.delete_ders(ders['ders_id'])
             
             if result['success']:
-                QMessageBox.information(self, "Başarılı", result['message'])
+                ModernMessageBox.success(self, "Başarılı", result['message'])
                 self.load_existing_dersler()
+                self.refresh_main_window_ui()
             else:
-                QMessageBox.critical(self, "Hata", result['message'])
+                ModernMessageBox.error(self, "Hata", result['message'])
