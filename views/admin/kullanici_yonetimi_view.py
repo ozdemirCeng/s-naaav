@@ -376,7 +376,7 @@ class KullaniciYonetimiView(QWidget):
             header.setSectionResizeMode(i, QHeaderView.Stretch)
 
         header.setFixedHeight(40)
-        self.table.verticalHeader().setDefaultSectionSize(48)
+        self.table.verticalHeader().setDefaultSectionSize(65)
 
         self.table.setStyleSheet("""
             QTableWidget {
@@ -463,67 +463,67 @@ class KullaniciYonetimiView(QWidget):
                 login_item.setForeground(Qt.darkGray)
                 self.table.setItem(row, 4, login_item)
 
-                # Actions - Better spaced buttons with text
+                # Actions - Compact buttons aligned left
                 action_widget = QWidget()
                 action_layout = QHBoxLayout(action_widget)
-                action_layout.setContentsMargins(1, 1, 1, 1)
-                action_layout.setSpacing(35)
+                action_layout.setContentsMargins(4, 2, 4, 2)
+                action_layout.setSpacing(6)
 
                 edit_btn = QPushButton("Düzenle")
-                edit_btn.setFixedHeight(34)
-                edit_btn.setMinimumWidth(85)
+                edit_btn.setFixedHeight(32)
+                edit_btn.setFixedWidth(75)
                 edit_btn.setStyleSheet("""
                     QPushButton {
-                        background-color: #4CAF50;
+                        background-color: #10b981;
                         color: white;
                         border: none;
-                        border-radius: 5px;
+                        border-radius: 6px;
                         font-weight: 600;
-                        font-size: 12px;
-                        padding: 6px 10px;
+                        font-size: 11px;
+                        padding: 4px 8px;
                     }
                     QPushButton:hover {
-                        background-color: #388E3C;
+                        background-color: #059669;
                     }
                 """)
                 edit_btn.setCursor(Qt.PointingHandCursor)
                 edit_btn.clicked.connect(lambda checked=False, u=user: self.edit_user(u))
 
                 password_btn = QPushButton("Şifre")
-                password_btn.setFixedHeight(34)
-                password_btn.setMinimumWidth(75)
+                password_btn.setFixedHeight(32)
+                password_btn.setFixedWidth(60)
                 password_btn.setStyleSheet("""
                     QPushButton {
-                        background-color: #2196F3;
+                        background-color: #3b82f6;
                         color: white;
                         border: none;
-                        border-radius: 5px;
+                        border-radius: 6px;
                         font-weight: 600;
-                        font-size: 12px;
-                        padding: 6px 10px;
+                        font-size: 11px;
+                        padding: 4px 8px;
                     }
                     QPushButton:hover {
-                        background-color: #1976D2;
+                        background-color: #2563eb;
                     }
                 """)
                 password_btn.setCursor(Qt.PointingHandCursor)
                 password_btn.clicked.connect(lambda checked=False, u=user: self.change_password(u))
 
                 delete_btn = QPushButton("Sil")
-                delete_btn.setFixedHeight(34)
-                delete_btn.setMinimumWidth(65)
+                delete_btn.setFixedHeight(32)
+                delete_btn.setFixedWidth(50)
                 delete_btn.setStyleSheet("""
                     QPushButton {
-                        background-color: #F44336;
+                        background-color: #ef4444;
                         color: white;
                         border: none;
-                        border-radius: 5px;
+                        border-radius: 6px;
                         font-weight: 600;
-                        font-size: 12px;
-                        padding: 6px 10px;
+                        font-size: 11px;
+                        padding: 4px 8px;
                     }
                     QPushButton:hover {
-                        background-color: #D32F2F;
+                        background-color: #dc2626;
                     }
                 """)
                 delete_btn.setCursor(Qt.PointingHandCursor)
@@ -736,8 +736,8 @@ class KullaniciYonetimiView(QWidget):
             available_width = viewport_width - scrollbar_width
 
             # Column percentages (total = 100%)
-            # Ad Soyad: 18%, E-posta: 23%, Rol: 12%, Bölüm: 17%, Son Giriş: 14%, İşlemler: 16%
-            percentages = [0.17, 0.22, 0.11, 0.16, 0.4, 0.30]
+            # Ad Soyad: 18%, E-posta: 24%, Rol: 12%, Bölüm: 18%, Son Giriş: 16%, İşlemler: 12%
+            percentages = [0.18, 0.24, 0.12, 0.18, 0.16, 0.12]
 
             # Calculate and set column widths
             for col, percentage in enumerate(percentages):

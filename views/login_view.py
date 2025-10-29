@@ -31,20 +31,20 @@ class AnimatedBackground(QWidget):
         self.particles = []
         self.gradient_offset = 0
 
-        # Create particles
+        # Create particles (lightweight - fewer particles, slower update)
         import random
-        for _ in range(20):
+        for _ in range(10):
             self.particles.append({
                 'x': random.randint(0, 800),
                 'y': random.randint(0, 600),
-                'size': random.randint(2, 8),
-                'speed': random.uniform(0.5, 2),
-                'opacity': random.uniform(0.1, 0.3)
+                'size': random.randint(2, 6),
+                'speed': random.uniform(0.3, 1.5),
+                'opacity': random.uniform(0.1, 0.25)
             })
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_particles)
-        self.timer.start(50)
+        self.timer.start(100)  # 100ms instead of 50ms for better performance
 
     def update_particles(self):
         self.gradient_offset = (self.gradient_offset + 0.5) % 360
@@ -95,7 +95,7 @@ class LoadingSpinner(QWidget):
     angle = Property(int, get_angle, set_angle)
 
     def start(self):
-        self.timer.start(20)
+        self.timer.start(30)  # 30ms instead of 20ms
         self.show()
 
     def stop(self):
@@ -103,7 +103,7 @@ class LoadingSpinner(QWidget):
         self.hide()
 
     def rotate(self):
-        self._angle = (self._angle + 8) % 360
+        self._angle = (self._angle + 10) % 360
         self.update()
 
     def paintEvent(self, event):
@@ -311,8 +311,8 @@ class LoginView(QWidget):
         features_layout.setContentsMargins(32, 28, 32, 28)
         features_layout.setSpacing(18)
         
-        # Load announcements from database
-        self._load_announcements(features_layout)
+        # Load announcements asynchronously (don't block UI)
+        QTimer.singleShot(100, lambda: self._load_announcements(features_layout))
 
         content_layout.addWidget(logo_label)
         content_layout.addWidget(uni_name)
@@ -344,7 +344,7 @@ class LoginView(QWidget):
         form_layout.setSpacing(24)
 
         # Header section
-        header = QLabel("Hoş Geldiniz 👋")
+        header = QLabel("Hoş Geldiniz")
         header.setObjectName("formHeader")
         header.setFont(QFont("Segoe UI", 28, QFont.Bold))
 
@@ -418,10 +418,6 @@ class LoginView(QWidget):
         form_layout.addSpacing(24)
         form_layout.addWidget(footer)
 
-        # Form opacity for entrance animation
-        self.form_effect = QGraphicsOpacityEffect(form_container)
-        form_container.setGraphicsEffect(self.form_effect)
-
         layout.addWidget(form_container)
         return panel
 
@@ -459,8 +455,8 @@ class LoginView(QWidget):
         # Button animation
         self.animate_button_click()
 
-        # Real controller call
-        QTimer.singleShot(500, lambda: self.authenticate(email, password))
+        # Real controller call (faster response)
+        QTimer.singleShot(200, lambda: self.authenticate(email, password))
 
     def authenticate(self, email, password):
         """Real database authentication"""
@@ -470,7 +466,7 @@ class LoginView(QWidget):
 
             if result['success']:
                 self.show_message(f"Hoş geldiniz, {result['user']['ad_soyad']}!", "success")
-                QTimer.singleShot(800, lambda: self.login_success.emit(result['user']))
+                QTimer.singleShot(400, lambda: self.login_success.emit(result['user']))
             else:
                 self.show_message(result['message'], "error")
                 self.set_loading_state(False)
@@ -497,13 +493,77 @@ class LoginView(QWidget):
             self.password_input.input.setEnabled(True)
 
     def handle_forgot_password(self):
-        """Forgot password process"""
+        """Forgot password process - Generate new password and send via email"""
         email = self.email_input.text().strip()
-        if email and '@' in email:
-            self.show_message(f"Şifre sıfırlama bağlantısı {email} adresine gönderildi", "success")
-        else:
-            self.show_message("Lütfen önce e-posta adresinizi girin", "error")
+        
+        if not email or '@' not in email:
+            self.show_message("Lütfen geçerli bir e-posta adresi girin", "error")
             self.email_input.input.setFocus()
+            return
+        
+        try:
+            from models.database import DatabaseManager
+            from utils.email_utils import EmailService, reset_user_password
+            
+            db = DatabaseManager()
+            
+            # Kullanıcıyı bul
+            result = db.execute_query("""
+                SELECT user_id, ad_soyad, email 
+                FROM users 
+                WHERE email = %s AND aktif = TRUE
+            """, (email,), fetch=True)
+            
+            if not result:
+                # Güvenlik için aynı mesajı göster (e-posta var mı yok mu belli olmasın)
+                self.show_message(
+                    "Eğer bu e-posta kayıtlıysa, yeni şifre gönderildi", 
+                    "success"
+                )
+                return
+            
+            user = result[0]  # İlk satır (dict)
+            user_id = user['user_id']  # Dict key ile erişim
+            user_name = user['ad_soyad']  # Dict key ile erişim
+            
+            # Yeni şifre oluştur ve kaydet
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.info(f"Şifre sıfırlama çağrılıyor: User ID {user_id}")
+            
+            new_password = reset_user_password(db, user_id)
+            
+            logger.info(f"reset_user_password sonucu: {new_password}")
+            
+            if not new_password:
+                logger.error(f"Şifre oluşturulamadı, new_password = {new_password}")
+                self.show_message("Şifre oluşturulamadı. Lütfen tekrar deneyin", "error")
+                return
+            
+            # E-posta gönder
+            email_service = EmailService()
+            success = email_service.send_new_password_email(email, new_password, user_name)
+            
+            if success:
+                self.show_message(
+                    f"✅ Yeni şifreniz {email} adresine gönderildi\n"
+                    f"E-postanızı kontrol edin", 
+                    "success"
+                )
+            else:
+                self.show_message(
+                    "E-posta gönderilemedi. Lütfen daha sonra tekrar deneyin\n"
+                    "veya sistem yöneticisi ile iletişime geçin", 
+                    "error"
+                )
+            
+        except Exception as e:
+            import logging
+            import traceback
+            logger = logging.getLogger(__name__)
+            logger.error(f"Şifre sıfırlama hatası - Tip: {type(e).__name__}, Mesaj: {str(e)}")
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            self.show_message(f"Bir hata oluştu: {str(e)}", "error")
 
     def animate_button_click(self):
         """Login button click animation"""
@@ -570,9 +630,9 @@ class LoginView(QWidget):
         self.message_label.show()
         self.message_label.setVisible(True)
 
-        # Auto hide
+        # Auto hide (faster)
         if msg_type != "error":
-            QTimer.singleShot(4000, self.hide_message)
+            QTimer.singleShot(2500, self.hide_message)
 
     def hide_message(self):
         """Hide message"""
@@ -581,13 +641,13 @@ class LoginView(QWidget):
     def _load_announcements(self, layout):
         """Load active announcements from database"""
         try:
-            # Try to load active announcements
+            # Try to load active announcements (with timeout)
             query = """
                 SELECT metin 
                 FROM duyurular 
                 WHERE aktif = TRUE 
                 ORDER BY olusturulma_tarihi DESC
-                LIMIT 10
+                LIMIT 5
             """
             try:
                 results = db.execute_query(query)
@@ -767,12 +827,14 @@ Giriş yaptıktan sonra ilgili bölüm için tüm sınav süreçlerini yönetebi
                 margin: 0;
                 padding: 0;
                 font-weight: 700;
+                background: transparent;
             }
 
             #formSubheader {
                 color: #6b7280;
                 line-height: 1.6;
                 font-weight: 400;
+                background: transparent;
             }
 
             /* Input Label */
@@ -903,6 +965,7 @@ Giriş yaptıktan sonra ilgili bölüm için tüm sınav süreçlerini yönetebi
             #footerLabel {
                 color: #94a3b8;
                 letter-spacing: 0.3px;
+                background: transparent;
             }
         """)
 

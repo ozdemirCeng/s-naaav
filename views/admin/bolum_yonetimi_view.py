@@ -220,7 +220,7 @@ class BolumYonetimiView(QWidget):
         header.setFixedHeight(40)
 
         # Row height
-        self.table.verticalHeader().setDefaultSectionSize(48)
+        self.table.verticalHeader().setDefaultSectionSize(65)
 
         self.table.setStyleSheet("""
             QTableWidget {

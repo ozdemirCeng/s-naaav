@@ -87,11 +87,11 @@ class DerslikView(QWidget):
                 font-weight: 600;
             }
             QTabBar::tab:hover {
-                color: #667eea;
+                color: #00A651;
                 background: #f1f5f9;
             }
             QTabBar::tab:selected {
-                color: #667eea;
+                color: #00A651;
                 background: white;
                 border-bottom: 2px solid white;
             }
@@ -165,7 +165,7 @@ class DerslikView(QWidget):
         self.table.setSelectionMode(QTableWidget.SingleSelection)
         self.table.setAlternatingRowColors(True)
         self.table.verticalHeader().setVisible(False)
-        self.table.verticalHeader().setDefaultSectionSize(56)
+        self.table.verticalHeader().setDefaultSectionSize(70)
         
         # Modern table style
         self.table.setStyleSheet("""
@@ -228,6 +228,24 @@ class DerslikView(QWidget):
         # Edit section (initially hidden)
         self.edit_section = QGroupBox("Seçili Dersliği Düzenle")
         self.edit_section.setVisible(False)
+        self.edit_section.setStyleSheet("""
+            QGroupBox {
+                background: white;
+                border: 2px solid #00A651;
+                border-radius: 12px;
+                padding: 16px;
+                margin-top: 12px;
+                font-size: 14px;
+                font-weight: 600;
+                color: #1e293b;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 16px;
+                padding: 0 8px;
+                color: #00A651;
+            }
+        """)
         edit_layout = QVBoxLayout(self.edit_section)
         edit_layout.setSpacing(16)
         
@@ -235,11 +253,31 @@ class DerslikView(QWidget):
         form_layout = QFormLayout()
         form_layout.setSpacing(12)
         
+        # Input style for edit form
+        edit_input_style = """
+            QLineEdit, QSpinBox {
+                border: 2px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 8px 12px;
+                font-size: 13px;
+                background: white;
+                color: #1e293b;
+            }
+            QLineEdit:focus, QSpinBox:focus {
+                border: 2px solid #00A651;
+                outline: none;
+            }
+        """
+        
         self.edit_kod = QLineEdit()
+        self.edit_kod.setFixedHeight(40)
+        self.edit_kod.setStyleSheet(edit_input_style)
         self.edit_kod.textChanged.connect(self.mark_form_modified)
         form_layout.addRow("Derslik Kodu *:", self.edit_kod)
         
         self.edit_ad = QLineEdit()
+        self.edit_ad.setFixedHeight(40)
+        self.edit_ad.setStyleSheet(edit_input_style)
         self.edit_ad.textChanged.connect(self.mark_form_modified)
         form_layout.addRow("Derslik Adı *:", self.edit_ad)
         
@@ -247,7 +285,9 @@ class DerslikView(QWidget):
         self.edit_kapasite = QSpinBox()
         self.edit_kapasite.setMinimum(1)
         self.edit_kapasite.setMaximum(500)
-        self.edit_kapasite.setFixedWidth(100)
+        self.edit_kapasite.setFixedWidth(120)
+        self.edit_kapasite.setFixedHeight(40)
+        self.edit_kapasite.setStyleSheet(edit_input_style)
         self.edit_kapasite.valueChanged.connect(self.mark_form_modified)
         kapasite_layout.addWidget(self.edit_kapasite)
         kapasite_layout.addStretch()
@@ -257,7 +297,9 @@ class DerslikView(QWidget):
         self.edit_satir = QSpinBox()
         self.edit_satir.setMinimum(1)
         self.edit_satir.setMaximum(50)
-        self.edit_satir.setFixedWidth(100)
+        self.edit_satir.setFixedWidth(120)
+        self.edit_satir.setFixedHeight(40)
+        self.edit_satir.setStyleSheet(edit_input_style)
         self.edit_satir.valueChanged.connect(self.mark_form_modified)
         self.edit_satir.valueChanged.connect(self.update_edit_hint)
         satir_layout.addWidget(self.edit_satir)
@@ -269,7 +311,9 @@ class DerslikView(QWidget):
         self.edit_sutun = QSpinBox()
         self.edit_sutun.setMinimum(1)
         self.edit_sutun.setMaximum(50)
-        self.edit_sutun.setFixedWidth(100)
+        self.edit_sutun.setFixedWidth(120)
+        self.edit_sutun.setFixedHeight(40)
+        self.edit_sutun.setStyleSheet(edit_input_style)
         self.edit_sutun.valueChanged.connect(self.mark_form_modified)
         self.edit_sutun.valueChanged.connect(self.update_edit_hint)
         sutun_layout.addWidget(self.edit_sutun)
@@ -281,7 +325,9 @@ class DerslikView(QWidget):
         self.edit_sira = QSpinBox()
         self.edit_sira.setMinimum(1)
         self.edit_sira.setMaximum(10)
-        self.edit_sira.setFixedWidth(100)
+        self.edit_sira.setFixedWidth(120)
+        self.edit_sira.setFixedHeight(40)
+        self.edit_sira.setStyleSheet(edit_input_style)
         self.edit_sira.valueChanged.connect(self.mark_form_modified)
         sira_layout.addWidget(self.edit_sira)
         sira_layout.addWidget(QLabel("kişilik"))
@@ -297,13 +343,51 @@ class DerslikView(QWidget):
         # Edit buttons
         edit_btn_layout = QHBoxLayout()
         
-        cancel_edit_btn = QPushButton("❌ İptal")
+        cancel_edit_btn = QPushButton("İptal")
         cancel_edit_btn.setFixedHeight(40)
+        cancel_edit_btn.setCursor(Qt.PointingHandCursor)
+        cancel_edit_btn.setStyleSheet("""
+            QPushButton {
+                background: white;
+                border: 2px solid #e2e8f0;
+                border-radius: 8px;
+                color: #64748b;
+                font-size: 13px;
+                font-weight: 500;
+            }
+            QPushButton:hover {
+                background: #f8fafc;
+                border-color: #cbd5e1;
+            }
+            QPushButton:pressed {
+                background: #e2e8f0;
+            }
+        """)
         cancel_edit_btn.clicked.connect(self.cancel_edit)
         
-        self.save_edit_btn = QPushButton("💾 Değişiklikleri Kaydet")
-        self.save_edit_btn.setObjectName("primaryBtn")
+        self.save_edit_btn = QPushButton("Değişiklikleri Kaydet")
         self.save_edit_btn.setFixedHeight(40)
+        self.save_edit_btn.setCursor(Qt.PointingHandCursor)
+        self.save_edit_btn.setStyleSheet("""
+            QPushButton {
+                background: #00A651;
+                border: none;
+                border-radius: 8px;
+                color: white;
+                font-size: 13px;
+                font-weight: 600;
+            }
+            QPushButton:hover {
+                background: #008F46;
+            }
+            QPushButton:pressed {
+                background: #007A3D;
+            }
+            QPushButton:disabled {
+                background: #cbd5e1;
+                color: #94a3b8;
+            }
+        """)
         self.save_edit_btn.setEnabled(False)
         self.save_edit_btn.clicked.connect(self.save_edit)
         
@@ -363,7 +447,7 @@ class DerslikView(QWidget):
                 color: #1e293b;
             }
             QLineEdit:focus, QSpinBox:focus {
-                border: 2px solid #667eea;
+                border: 2px solid #00A651;
                 outline: none;
             }
             QLineEdit::placeholder {
@@ -483,7 +567,7 @@ class DerslikView(QWidget):
         add_btn.setCursor(Qt.PointingHandCursor)
         add_btn.setStyleSheet("""
             QPushButton {
-                background: #667eea;
+                background: #00A651;
                 border: none;
                 border-radius: 8px;
                 color: white;
@@ -491,10 +575,10 @@ class DerslikView(QWidget):
                 font-weight: 600;
             }
             QPushButton:hover {
-                background: #5568d3;
+                background: #008F46;
             }
             QPushButton:pressed {
-                background: #4a5ac9;
+                background: #007A3D;
             }
         """)
         add_btn.clicked.connect(self.add_derslik)
@@ -584,21 +668,67 @@ class DerslikView(QWidget):
             view_btn.setFixedHeight(36)
             view_btn.setMinimumWidth(90)
             view_btn.setCursor(Qt.PointingHandCursor)
-            view_btn.setStyleSheet("background-color: #3b82f6; color: white;")
+            view_btn.setStyleSheet("""
+                QPushButton {
+                    background: #3b82f6;
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                    font-size: 12px;
+                    font-weight: 600;
+                }
+                QPushButton:hover {
+                    background: #2563eb;
+                }
+                QPushButton:pressed {
+                    background: #1d4ed8;
+                }
+            """)
             view_btn.clicked.connect(lambda checked=False, d=dict(derslik): self.visualize_derslik(d))
             
             edit_btn = QPushButton("Düzenle")
             edit_btn.setFixedHeight(36)
             edit_btn.setMinimumWidth(90)
             edit_btn.setCursor(Qt.PointingHandCursor)
+            edit_btn.setStyleSheet("""
+                QPushButton {
+                    background: #10b981;
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                    font-size: 12px;
+                    font-weight: 600;
+                }
+                QPushButton:hover {
+                    background: #059669;
+                }
+                QPushButton:pressed {
+                    background: #047857;
+                }
+            """)
             edit_btn.setProperty('derslik_id', derslik['derslik_id'])
             edit_btn.clicked.connect(lambda checked=False, d=dict(derslik): self.edit_derslik(d))
             
             delete_btn = QPushButton("Sil")
-            delete_btn.setObjectName("dangerBtn")
             delete_btn.setFixedHeight(36)
             delete_btn.setMinimumWidth(80)
             delete_btn.setCursor(Qt.PointingHandCursor)
+            delete_btn.setStyleSheet("""
+                QPushButton {
+                    background: #ef4444;
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                    font-size: 12px;
+                    font-weight: 600;
+                }
+                QPushButton:hover {
+                    background: #dc2626;
+                }
+                QPushButton:pressed {
+                    background: #b91c1c;
+                }
+            """)
             delete_btn.setProperty('derslik_id', derslik['derslik_id'])
             delete_btn.clicked.connect(lambda checked=False, d=dict(derslik): self.delete_derslik(d))
             
@@ -923,10 +1053,25 @@ class DerslikVisualizationDialog(QDialog):
         
         # Close button
         close_btn = QPushButton("Kapat")
-        close_btn.setObjectName("primaryBtn")
-        close_btn.setFixedHeight(40)
-        close_btn.setFixedWidth(120)
+        close_btn.setFixedHeight(44)
+        close_btn.setFixedWidth(140)
         close_btn.setCursor(Qt.PointingHandCursor)
+        close_btn.setStyleSheet("""
+            QPushButton {
+                background: #00A651;
+                border: none;
+                border-radius: 8px;
+                color: white;
+                font-size: 14px;
+                font-weight: 600;
+            }
+            QPushButton:hover {
+                background: #008F46;
+            }
+            QPushButton:pressed {
+                background: #007A3D;
+            }
+        """)
         close_btn.clicked.connect(self.accept)
         layout.addWidget(close_btn, alignment=Qt.AlignCenter)
     

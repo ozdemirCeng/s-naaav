@@ -174,6 +174,7 @@ class DuyuruYonetimiView(QWidget):
         self.table.setSelectionMode(QTableWidget.SingleSelection)
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)  # Disable editing
         self.table.verticalHeader().setVisible(False)
+        self.table.verticalHeader().setDefaultSectionSize(65)
         self.table.setShowGrid(False)
         self.table.setStyleSheet("""
             QTableWidget {
@@ -224,7 +225,7 @@ class DuyuruYonetimiView(QWidget):
             
             for row_idx, row in enumerate(results):
                 self.table.insertRow(row_idx)
-                self.table.setRowHeight(row_idx, 50)  # Butonların tam görünmesi için yeterli yükseklik
+                self.table.setRowHeight(row_idx, 65)  # Butonların tam görünmesi için yeterli yükseklik
                 
                 # Metin (truncated)
                 metin = row['metin']

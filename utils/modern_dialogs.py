@@ -176,11 +176,11 @@ class ModernMessageBox(QDialog):
         
         # Renkler ve ikonlar
         type_config = {
-            self.INFORMATION: ("ℹ️", "#3b82f6", "#eff6ff"),
+            self.INFORMATION: ("ℹ️", "#00A651", "#ecfdf5"),
             self.SUCCESS: ("✅", "#10b981", "#ecfdf5"),
             self.WARNING: ("⚠️", "#f59e0b", "#fffbeb"),
             self.ERROR: ("❌", "#ef4444", "#fef2f2"),
-            self.QUESTION: ("❓", "#8b5cf6", "#f5f3ff")
+            self.QUESTION: ("❓", "#00A651", "#ecfdf5")
         }
         
         icon, color, bg = type_config.get(self.dialog_type, type_config[self.INFORMATION])
@@ -253,7 +253,7 @@ class ModernMessageBox(QDialog):
             yes_btn.setStyleSheet("""
                 QPushButton {
                     background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                        stop:0 #10b981, stop:1 #14b8a6);
+                        stop:0 #00A651, stop:1 #10b981);
                     border: none;
                     border-radius: 12px;
                     color: white;
@@ -263,7 +263,7 @@ class ModernMessageBox(QDialog):
                 }
                 QPushButton:hover {
                     background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                        stop:0 #059669, stop:1 #0d9488);
+                        stop:0 #008F46, stop:1 #00A651);
                 }
                 QPushButton:focus {
                     outline: none;
@@ -289,8 +289,8 @@ class ModernMessageBox(QDialog):
                 btn_color = "qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #f59e0b, stop:1 #fbbf24)"
                 btn_hover = "qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #d97706, stop:1 #f59e0b)"
             else:
-                btn_color = "qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #3b82f6, stop:1 #60a5fa)"
-                btn_hover = "qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #2563eb, stop:1 #3b82f6)"
+                btn_color = "qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #00A651, stop:1 #10b981)"
+                btn_hover = "qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #008F46, stop:1 #00A651)"
             
             ok_btn.setStyleSheet(f"""
                 QPushButton {{
